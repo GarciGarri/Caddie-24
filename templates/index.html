@@ -106,15 +106,16 @@
             document.getElementById("consejo").innerHTML = "";
 
             // Enviar las coordenadas al backend
-            fetch('/calcular_distancia', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    lat: lat,
-                    lon: lon,
-                    hoyo: hoyoSeleccionado
-                })
-            })
+            fetch('https://caddie-backend-24.onrender.com', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        lat: lat,
+        lon: lon,
+        hoyo: hoyoSeleccionado
+    })
+})
+
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
