@@ -106,7 +106,7 @@
             document.getElementById("consejo").innerHTML = "";
 
             // Enviar las coordenadas al backend
-            fetch('https://caddie-backend-24.onrender.com', {
+            fetch('https://caddie-backend-24.onrender.com/calcular_distancia', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
