@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Golf Distance Tracker Beta 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #006400;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #status {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            color: #006400;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        #status span {
+            display: block;
+            font-size: 48px;
+            color: #ff4500;
+            margin-top: 10px;
+        }
+        #consejo {
+            font-size: 20px;
+            text-align: center;
+            color: #333;
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calcula la distancia a la bandera</h1>
+    <button onclick="getLocation()">Obtener ubicación</button>
+
+    <label for="hoyo">Selecciona el hoyo:</label>
+    <select id="hoyo">
+        <option value="hoyo_1">Hoyo 1</option>
+        <option value="hoyo_2">Hoyo 2</option>
+        <option value="hoyo_3">Hoyo 3</option>
+        <option value="hoyo_4">Hoyo 4</option>
+        <option value="hoyo_5">Hoyo 5</option>
+        <option value="hoyo_6">Hoyo 6</option>
+        <option value="hoyo_7">Hoyo 7</option>
+        <option value="hoyo_8">Hoyo 8</option>
+        <option value="hoyo_9">Hoyo 9</option>
+    </select>
+
+    <p id="status"></p>
+    <p id="consejo"></p>
+
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                document.getElementById("status").innerHTML = "La geolocalización no está disponible.";
+            }
+        }
+
+        function showPosition(position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+            var hoyoSeleccionado = document.getElementById("hoyo").value;
+
+            // Limpiar cualquier contenido anterior en "status" y "consejo"
+            document.getElementById("status").innerHTML = "";
+            document.getElementById("consejo").innerHTML = "";
+
+            // Enviar las coordenadas al backend
+            fetch('/calcular_distancia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lat: lat,
+                    lon: lon,
+                    hoyo: hoyoSeleccionado
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById("status").innerHTML = "Error: " + data.error;
+                } else {
+                    document.getElementById("status").innerHTML = `
+                        Distancia al ${hoyoSeleccionado}:<span>${data.distancia.toFixed(2)} m</span>
+                    `;
+                    document.getElementById("consejo").innerHTML = `<strong>Consejo:</strong> ${data.consejo}`;
+                }
+            })
+            .catch(error => {
+                document.getElementById("status").innerHTML = "Error calculando la distancia.";
+            });
+        }
+    </script>
+</body>
+</html>
