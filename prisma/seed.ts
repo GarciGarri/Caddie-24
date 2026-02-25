@@ -310,6 +310,65 @@ async function main() {
     console.log("✅ Conversation created for James");
   }
 
+  // ============================================================
+  // 5. Create WhatsApp templates
+  // ============================================================
+  const templateData = [
+    {
+      name: "bienvenida_nuevo",
+      language: "ES" as const,
+      category: "MARKETING",
+      status: "APPROVED" as const,
+      components: {
+        body: {
+          text: "¡Hola {{1}}! 👋 Bienvenido a {{2}}. Estamos encantados de tenerte como nuevo jugador. ¿Te gustaría conocer nuestras ofertas especiales para nuevos miembros?",
+        },
+      },
+    },
+    {
+      name: "promo_weekend",
+      language: "ES" as const,
+      category: "MARKETING",
+      status: "APPROVED" as const,
+      components: {
+        body: {
+          text: "¡Hola {{1}}! 🏌️ Este fin de semana tenemos una oferta especial: green fee 18 hoyos + buggy por solo {{2}}€. ¡Reserva antes del viernes! Responde SÍ para reservar.",
+        },
+      },
+    },
+    {
+      name: "invitacion_torneo",
+      language: "ES" as const,
+      category: "MARKETING",
+      status: "APPROVED" as const,
+      components: {
+        body: {
+          text: "🏆 {{1}}, estás invitado al {{2}}. Fecha: {{3}}. Inscripción abierta hasta el {{4}}. Plazas limitadas. ¿Quieres apuntarte?",
+        },
+      },
+    },
+    {
+      name: "recordatorio_reserva",
+      language: "ES" as const,
+      category: "UTILITY",
+      status: "APPROVED" as const,
+      components: {
+        body: {
+          text: "📅 Recordatorio: {{1}}, tienes reserva mañana {{2}} a las {{3}}. Si necesitas modificar o cancelar, responde a este mensaje. ¡Nos vemos en el campo!",
+        },
+      },
+    },
+  ];
+
+  for (const tpl of templateData) {
+    await prisma.whatsAppTemplate.upsert({
+      where: { name: tpl.name },
+      update: {},
+      create: tpl,
+    });
+  }
+  console.log("✅ WhatsApp templates created:", templateData.length);
+
   console.log("\n🎉 Seed completed successfully!");
   console.log("\n📋 Login credentials:");
   console.log("   Admin:   admin@caddie24.com / admin123");
