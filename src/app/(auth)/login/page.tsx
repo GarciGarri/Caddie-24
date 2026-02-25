@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
@@ -36,62 +36,70 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Email o contraseña incorrectos");
+        setError("Email o contrasena incorrectos");
       } else {
         router.push(callbackUrl);
         router.refresh();
       }
     } catch {
-      setError("Error al iniciar sesión. Inténtalo de nuevo.");
+      setError("Error al iniciar sesion. Intentalo de nuevo.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="admin@tuclub.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={isLoading}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Contrasena</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          disabled={isLoading}
+        />
+      </div>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Entrando..." : "Entrar"}
+      </Button>
+    </form>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1 text-center">
         <div className="lg:hidden text-4xl mb-2">⛳</div>
-        <CardTitle className="text-2xl font-bold">Iniciar Sesión</CardTitle>
+        <CardTitle className="text-2xl font-bold">Iniciar Sesion</CardTitle>
         <CardDescription>
-          Accede al panel de gestión de tu campo de golf
+          Accede al panel de gestion de tu campo de golf
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="admin@tuclub.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Entrando..." : "Entrar"}
-          </Button>
-        </form>
+        <Suspense fallback={<div className="text-center py-4 text-muted-foreground">Cargando...</div>}>
+          <LoginForm />
+        </Suspense>
       </CardContent>
     </Card>
   );
