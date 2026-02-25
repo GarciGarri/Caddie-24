@@ -1,20 +1,30 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
 
-// Auth middleware - temporarily permissive for development without DB
-// TODO: Re-enable full auth when PostgreSQL is connected
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export default auth((req) => {
+  const isLoggedIn = !!req.auth;
+  const { pathname } = req.nextUrl;
 
-  // In development without DB: allow all routes
-  // When ready for auth, switch to the auth() wrapper from @/lib/auth
+  // Public routes — no auth required
+  const isPublicRoute =
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/whatsapp/webhook") ||
+    pathname === "/login";
+
+  if (isPublicRoute) return;
+
+  // Redirect root to dashboard
   if (pathname === "/") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return Response.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 
-  return NextResponse.next();
-}
+  // Redirect unauthenticated users to login
+  if (!isLoggedIn) {
+    const loginUrl = new URL("/login", req.nextUrl.origin);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return Response.redirect(loginUrl);
+  }
+});
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|public).*)"],
 };
