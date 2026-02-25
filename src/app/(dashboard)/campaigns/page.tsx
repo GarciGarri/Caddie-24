@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Megaphone,
   Plus,
@@ -13,6 +14,7 @@ import {
   XCircle,
   Users,
   FileEdit,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,9 +51,11 @@ const statusConfig: Record<string, { label: string; icon: any; color: string }> 
 };
 
 export default function CampaignsPage() {
+  const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const fetchCampaigns = useCallback(async () => {
     try {
@@ -72,7 +76,7 @@ export default function CampaignsPage() {
   }, [fetchCampaigns]);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Eliminar campaña "${name}"?`)) return;
+    if (!confirm(`Eliminar campana "${name}"?`)) return;
     setDeleting(id);
     try {
       await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
@@ -81,6 +85,25 @@ export default function CampaignsPage() {
       console.error("Error:", err);
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleSendNow = async (id: string, name: string) => {
+    if (!confirm(`Enviar campana "${name}" ahora? (simulado)`)) return;
+    setSendingId(id);
+    try {
+      const res = await fetch(`/api/campaigns/${id}/send`, { method: "POST" });
+      if (res.ok) {
+        router.push(`/campaigns/${id}`);
+      } else {
+        const data = await res.json();
+        alert(data.error || "Error al enviar");
+        fetchCampaigns();
+      }
+    } catch (err) {
+      alert("Error de conexion");
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -103,15 +126,15 @@ export default function CampaignsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Campañas</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Campanas</h1>
           <p className="text-muted-foreground mt-1">
-            Gestiona tus campañas de WhatsApp segmentadas
+            Gestiona tus campanas de WhatsApp segmentadas
           </p>
         </div>
         <Link href="/campaigns/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Nueva Campaña
+            Nueva Campana
           </Button>
         </Link>
       </div>
@@ -172,12 +195,12 @@ export default function CampaignsPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Megaphone className="h-12 w-12 text-muted-foreground/20 mb-3" />
             <p className="text-muted-foreground mb-4">
-              No hay campañas aún. Crea la primera.
+              No hay campanas aun. Crea la primera.
             </p>
             <Link href="/campaigns/new">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Nueva Campaña
+                Nueva Campana
               </Button>
             </Link>
           </CardContent>
@@ -187,7 +210,7 @@ export default function CampaignsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Campaña</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Campana</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Estado</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Template</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Destinatarios</th>
@@ -200,6 +223,7 @@ export default function CampaignsPage() {
               {campaigns.map((campaign) => {
                 const sc = statusConfig[campaign.status] || statusConfig.DRAFT;
                 const Icon = sc.icon;
+                const isDraft = campaign.status === "DRAFT";
                 return (
                   <tr key={campaign.id} className="border-b hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
@@ -225,7 +249,7 @@ export default function CampaignsPage() {
                     <td className="px-4 py-3 text-sm">
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3 text-muted-foreground" />
-                        {campaign.totalRecipients || "—"}
+                        {campaign.totalRecipients || "\u2014"}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
@@ -236,7 +260,7 @@ export default function CampaignsPage() {
                             <div className="h-full bg-green-500 rounded-full" style={{ width: `${deliveryRate(campaign)}%` }} />
                           </div>
                         </div>
-                      ) : "—"}
+                      ) : "\u2014"}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {campaign.totalDelivered > 0 ? (
@@ -246,10 +270,27 @@ export default function CampaignsPage() {
                             <div className="h-full bg-blue-500 rounded-full" style={{ width: `${readRate(campaign)}%` }} />
                           </div>
                         </div>
-                      ) : "—"}
+                      ) : "\u2014"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
+                        {isDraft && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="h-8 text-xs gap-1 bg-green-600 hover:bg-green-700"
+                            onClick={() => handleSendNow(campaign.id, campaign.name)}
+                            disabled={sendingId === campaign.id}
+                            title="Enviar ahora"
+                          >
+                            {sendingId === campaign.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Rocket className="h-3 w-3" />
+                            )}
+                            Enviar
+                          </Button>
+                        )}
                         <Link href={`/campaigns/${campaign.id}`}>
                           <Button variant="ghost" size="icon" className="h-8 w-8" title="Ver detalle">
                             <Eye className="h-4 w-4" />

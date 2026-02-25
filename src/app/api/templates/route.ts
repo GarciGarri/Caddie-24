@@ -49,8 +49,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(template, { status: 201 });
   } catch (error: any) {
     if (error.name === "ZodError") {
+      const fieldErrors = error.errors.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(". ");
       return NextResponse.json(
-        { error: "Datos inválidos", details: error.errors },
+        { error: `Datos inválidos: ${fieldErrors}`, details: error.errors },
         { status: 400 }
       );
     }
