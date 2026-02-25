@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Users,
   Plus,
@@ -11,64 +12,50 @@ import {
   Phone,
   Mail,
   Trophy,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Trash2,
+  Eye,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-// Demo data — will be replaced with real API calls
-const demoPlayers = [
-  {
-    id: "1",
-    firstName: "Carlos",
-    lastName: "García",
-    phone: "+34 612 345 678",
-    email: "carlos@email.com",
-    handicap: 12.4,
-    engagementLevel: "HIGH",
-    preferredLanguage: "ES",
-    tags: ["madrugador", "torneo"],
-    lastVisit: "2026-02-20",
-  },
-  {
-    id: "2",
-    firstName: "James",
-    lastName: "Smith",
-    phone: "+44 7911 123456",
-    email: "james@email.com",
-    handicap: 8.2,
-    engagementLevel: "VIP",
-    preferredLanguage: "EN",
-    tags: ["alto_valor", "fin_de_semana"],
-    lastVisit: "2026-02-22",
-  },
-  {
-    id: "3",
-    firstName: "Hans",
-    lastName: "Müller",
-    phone: "+49 171 1234567",
-    email: "hans@email.com",
-    handicap: 18.6,
-    engagementLevel: "MEDIUM",
-    preferredLanguage: "DE",
-    tags: ["sensible_precio", "turista"],
-    lastVisit: "2026-02-15",
-  },
-  {
-    id: "4",
-    firstName: "María",
-    lastName: "López",
-    phone: "+34 698 765 432",
-    email: "maria@email.com",
-    handicap: 22.1,
-    engagementLevel: "NEW",
-    preferredLanguage: "ES",
-    tags: ["principiante"],
-    lastVisit: "2026-02-24",
-  },
-];
+interface PlayerTag {
+  id: string;
+  tag: string;
+}
+
+interface Player {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string | null;
+  handicap: number | null;
+  engagementLevel: string;
+  preferredLanguage: string;
+  tags: PlayerTag[];
+  _count: {
+    visits: number;
+    conversations: number;
+  };
+  createdAt: string;
+}
+
+interface PlayersResponse {
+  players: Player[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
 
 const engagementColors: Record<string, string> = {
   VIP: "bg-purple-100 text-purple-800",
@@ -87,15 +74,72 @@ const engagementLabels: Record<string, string> = {
 };
 
 export default function PlayersPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState<PlayersResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [engagementFilter, setEngagementFilter] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  const filtered = demoPlayers.filter(
-    (p) =>
-      p.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      p.lastName.toLowerCase().includes(search.toLowerCase()) ||
-      p.phone.includes(search) ||
-      (p.email && p.email.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const fetchPlayers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "20",
+        sortBy: "lastName",
+        sortOrder: "asc",
+      });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (engagementFilter) params.set("engagement", engagementFilter);
+
+      const res = await fetch(`/api/players?${params}`);
+      if (!res.ok) throw new Error("Error fetching players");
+      const json = await res.json();
+      setData(json);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedSearch, engagementFilter]);
+
+  useEffect(() => {
+    fetchPlayers();
+  }, [fetchPlayers]);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`¿Eliminar a ${name}? Esta acción se puede revertir.`)) return;
+    setDeleting(id);
+    try {
+      const res = await fetch(`/api/players/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchPlayers();
+      }
+    } catch (error) {
+      console.error("Error deleting:", error);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const players = data?.players || [];
+  const pagination = data?.pagination;
+
+  // Count stats from pagination total (all active) + filter locally for quick stats
+  const totalCount = pagination?.total || 0;
 
   return (
     <div className="space-y-6">
@@ -123,8 +167,8 @@ export default function PlayersPage() {
               <Users className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{demoPlayers.length}</p>
-              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-2xl font-bold">{totalCount}</p>
+              <p className="text-xs text-muted-foreground">Total Activos</p>
             </div>
           </CardContent>
         </Card>
@@ -135,7 +179,7 @@ export default function PlayersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {demoPlayers.filter((p) => p.engagementLevel === "VIP").length}
+                {players.filter((p) => p.engagementLevel === "VIP").length}
               </p>
               <p className="text-xs text-muted-foreground">VIP</p>
             </div>
@@ -148,7 +192,7 @@ export default function PlayersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {demoPlayers.filter((p) => p.engagementLevel === "HIGH").length}
+                {players.filter((p) => p.engagementLevel === "HIGH").length}
               </p>
               <p className="text-xs text-muted-foreground">Alto Engagement</p>
             </div>
@@ -161,7 +205,7 @@ export default function PlayersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {demoPlayers.filter((p) => p.engagementLevel === "NEW").length}
+                {players.filter((p) => p.engagementLevel === "NEW").length}
               </p>
               <p className="text-xs text-muted-foreground">Nuevos</p>
             </div>
@@ -174,17 +218,42 @@ export default function PlayersPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar jugadores..."
+            placeholder="Buscar por nombre, teléfono o email..."
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button variant="outline" size="sm">
+        <Button
+          variant={showFilters ? "default" : "outline"}
+          size="sm"
+          onClick={() => setShowFilters(!showFilters)}
+        >
           <Filter className="h-4 w-4 mr-2" />
           Filtros
         </Button>
       </div>
+
+      {/* Filters */}
+      {showFilters && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-muted-foreground">Engagement:</span>
+          {["", "VIP", "HIGH", "MEDIUM", "LOW", "NEW"].map((level) => (
+            <Button
+              key={level}
+              variant={engagementFilter === level ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setEngagementFilter(level);
+                setPage(1);
+              }}
+              className="text-xs"
+            >
+              {level === "" ? "Todos" : engagementLabels[level] || level}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {/* Players table */}
       <div className="rounded-lg border">
@@ -208,7 +277,7 @@ export default function PlayersPage() {
                   Etiquetas
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Última Visita
+                  Visitas
                 </th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Acciones
@@ -216,80 +285,166 @@ export default function PlayersPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((player) => (
-                <tr
-                  key={player.id}
-                  className="border-b hover:bg-muted/30 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/players/${player.id}`}
-                      className="flex items-center gap-3 hover:underline"
-                    >
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                          {player.firstName[0]}
-                          {player.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {player.firstName} {player.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {player.preferredLanguage}
-                        </p>
-                      </div>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <Phone className="h-3 w-3 text-muted-foreground" />
-                        {player.phone}
-                      </div>
-                      {player.email && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Mail className="h-3 w-3" />
-                          {player.email}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm font-mono">
-                    {player.handicap}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        engagementColors[player.engagementLevel]
-                      }`}
-                    >
-                      {engagementLabels[player.engagementLevel]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1 flex-wrap">
-                      {player.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {player.lastVisit}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Cargando jugadores...
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : players.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center">
+                    <Users className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      {debouncedSearch || engagementFilter
+                        ? "No se encontraron jugadores con esos filtros"
+                        : "No hay jugadores aún. ¡Crea el primero!"}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                players.map((player) => (
+                  <tr
+                    key={player.id}
+                    className="border-b hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/players/${player.id}`}
+                        className="flex items-center gap-3 hover:underline"
+                      >
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                            {player.firstName[0]}
+                            {player.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {player.firstName} {player.lastName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {player.preferredLanguage}
+                          </p>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 text-sm">
+                          <Phone className="h-3 w-3 text-muted-foreground" />
+                          {player.phone}
+                        </div>
+                        {player.email && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Mail className="h-3 w-3" />
+                            {player.email}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm font-mono">
+                      {player.handicap ?? "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          engagementColors[player.engagementLevel] || ""
+                        }`}
+                      >
+                        {engagementLabels[player.engagementLevel] ||
+                          player.engagementLevel}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1 flex-wrap">
+                        {player.tags.map((tag) => (
+                          <Badge
+                            key={tag.id}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {tag.tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {player._count.visits}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => router.push(`/players/${player.id}`)}
+                          title="Ver detalle"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() =>
+                            handleDelete(
+                              player.id,
+                              `${player.firstName} ${player.lastName}`
+                            )
+                          }
+                          disabled={deleting === player.id}
+                          title="Eliminar"
+                        >
+                          {deleting === player.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {(pagination.page - 1) * pagination.limit + 1}-
+              {Math.min(pagination.page * pagination.limit, pagination.total)} de{" "}
+              {pagination.total}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm">
+                {pagination.page} / {pagination.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= pagination.totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
