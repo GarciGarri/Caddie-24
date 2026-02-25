@@ -19,6 +19,14 @@ import {
   Edit2,
   Save,
   X,
+  Sparkles,
+  Send,
+  PhoneCall,
+  AlertTriangle,
+  CheckCircle,
+  Copy,
+  RefreshCw,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -522,6 +530,11 @@ export default function PlayerDetailPage() {
         </div>
       )}
 
+      {/* AI Communication Suggestions — visible in overview */}
+      {activeTab === "overview" && (
+        <AiSuggestionsPanel playerId={id} />
+      )}
+
       {activeTab === "visits" && (
         <Card>
           <CardHeader>
@@ -690,6 +703,230 @@ export default function PlayerDetailPage() {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+// --- AI Communication Suggestions Panel ---
+function AiSuggestionsPanel({ playerId }: { playerId: string }) {
+  const [suggestions, setSuggestions] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+
+  const fetchSuggestions = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/players/${playerId}/ai-suggestions`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Error al generar sugerencias");
+        return;
+      }
+      const data = await res.json();
+      setSuggestions(data);
+    } catch {
+      setError("Error de conexion");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  const riskConfig: Record<string, { color: string; bg: string; icon: any }> = {
+    BAJO: { color: "text-green-700", bg: "bg-green-50 border-green-200", icon: CheckCircle },
+    MEDIO: { color: "text-yellow-700", bg: "bg-yellow-50 border-yellow-200", icon: AlertTriangle },
+    ALTO: { color: "text-red-700", bg: "bg-red-50 border-red-200", icon: AlertTriangle },
+  };
+
+  const typeConfig: Record<string, { icon: any; label: string; color: string }> = {
+    whatsapp: { icon: MessageSquare, label: "WhatsApp", color: "text-green-600 bg-green-50" },
+    email: { icon: Mail, label: "Email", color: "text-blue-600 bg-blue-50" },
+    llamada: { icon: PhoneCall, label: "Llamada", color: "text-orange-600 bg-orange-50" },
+  };
+
+  const priorityColors: Record<string, string> = {
+    alta: "bg-red-100 text-red-700",
+    media: "bg-yellow-100 text-yellow-700",
+    baja: "bg-gray-100 text-gray-600",
+  };
+
+  // Not loaded yet — show CTA
+  if (!suggestions && !loading && !error) {
+    return (
+      <Card className="border-purple-200 bg-gradient-to-r from-purple-50/30 to-indigo-50/30">
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-3">
+            <Sparkles className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="font-semibold text-lg mb-1">Comunicacion Sugerida por IA</h3>
+          <p className="text-sm text-muted-foreground text-center max-w-md mb-4">
+            Analiza el perfil, gasto, afluencia e historial de este jugador para generar
+            sugerencias de comunicacion personalizadas
+          </p>
+          <Button
+            onClick={fetchSuggestions}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Generar Sugerencias
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Loading
+  if (loading) {
+    return (
+      <Card className="border-purple-200">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <div className="flex gap-1.5 mb-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+            <div className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+            <div className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+          <p className="text-sm text-purple-600 font-medium">Analizando perfil del jugador...</p>
+          <p className="text-xs text-muted-foreground mt-1">Generando sugerencias personalizadas con IA</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Error
+  if (error) {
+    return (
+      <Card className="border-red-200">
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <AlertTriangle className="h-8 w-8 text-red-400 mb-2" />
+          <p className="text-sm text-red-600 mb-3">{error}</p>
+          <Button variant="outline" size="sm" onClick={fetchSuggestions}>
+            <RefreshCw className="h-3 w-3 mr-1" /> Reintentar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Results
+  const risk = riskConfig[suggestions.riesgo] || riskConfig.BAJO;
+  const RiskIcon = risk.icon;
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <Card className="border-purple-200">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                <Sparkles className="h-3.5 w-3.5 text-white" />
+              </div>
+              <CardTitle className="text-lg">Comunicacion Sugerida por IA</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={fetchSuggestions} disabled={loading}>
+              <RefreshCw className={`h-3.5 w-3.5 mr-1 ${loading ? "animate-spin" : ""}`} />
+              Regenerar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Summary + Risk */}
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-lg bg-muted/50 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Analisis del Perfil</p>
+              <p className="text-sm leading-relaxed">{suggestions.resumen}</p>
+            </div>
+            <div className={`rounded-lg border p-3 ${risk.bg}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <RiskIcon className={`h-4 w-4 ${risk.color}`} />
+                <p className={`text-xs font-semibold ${risk.color}`}>
+                  Riesgo de Abandono: {suggestions.riesgo}
+                </p>
+              </div>
+              <p className="text-xs leading-relaxed">{suggestions.razonRiesgo}</p>
+            </div>
+          </div>
+
+          {/* Opportunities */}
+          {suggestions.oportunidades && suggestions.oportunidades.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <Lightbulb className="h-3 w-3" /> Oportunidades detectadas
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.oportunidades.map((opp: string, i: number) => (
+                  <span key={i} className="inline-flex items-center rounded-full bg-purple-50 px-3 py-1 text-xs text-purple-700 border border-purple-200">
+                    {opp}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Suggestion Cards */}
+      <div className="grid gap-3">
+        {suggestions.sugerencias?.map((sug: any, idx: number) => {
+          const tc = typeConfig[sug.tipo] || typeConfig.whatsapp;
+          const TypeIcon = tc.icon;
+          return (
+            <Card key={idx} className="overflow-hidden">
+              <div className="flex">
+                {/* Left accent */}
+                <div className={`w-1 ${sug.prioridad === "alta" ? "bg-red-500" : sug.prioridad === "media" ? "bg-yellow-500" : "bg-gray-300"}`} />
+                <div className="flex-1 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      {/* Header row */}
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${tc.color}`}>
+                          <TypeIcon className="h-3 w-3" />
+                          {tc.label}
+                        </span>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${priorityColors[sug.prioridad] || ""}`}>
+                          {sug.prioridad === "alta" ? "Prioridad Alta" : sug.prioridad === "media" ? "Prioridad Media" : "Prioridad Baja"}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {sug.momento}
+                        </span>
+                      </div>
+                      {/* Title */}
+                      <p className="text-sm font-semibold mb-1">{sug.asunto}</p>
+                      {/* Reason */}
+                      <p className="text-xs text-muted-foreground mb-2">{sug.razon}</p>
+                      {/* Message */}
+                      <div className="rounded-lg bg-muted/60 p-3 relative group">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap pr-8">{sug.mensaje}</p>
+                        <button
+                          onClick={() => handleCopy(sug.mensaje, idx)}
+                          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Copiar mensaje"
+                        >
+                          {copiedIdx === idx ? (
+                            <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
