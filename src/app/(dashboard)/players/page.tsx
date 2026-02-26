@@ -264,19 +264,19 @@ export default function PlayersPage() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Jugador
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden md:table-cell">
                   Contacto
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden sm:table-cell">
                   Hándicap
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Engagement
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">
                   Etiquetas
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">
                   Visitas
                 </th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
@@ -332,7 +332,7 @@ export default function PlayersPage() {
                         </div>
                       </Link>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden md:table-cell">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5 text-sm">
                           <Phone className="h-3 w-3 text-muted-foreground" />
@@ -346,7 +346,7 @@ export default function PlayersPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm font-mono">
+                    <td className="px-4 py-3 text-sm font-mono hidden sm:table-cell">
                       {player.handicap ?? "—"}
                     </td>
                     <td className="px-4 py-3">
@@ -359,7 +359,7 @@ export default function PlayersPage() {
                           player.engagementLevel}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden lg:table-cell">
                       <div className="flex gap-1 flex-wrap">
                         {player.tags.map((tag) => (
                           <Badge
@@ -372,7 +372,7 @@ export default function PlayersPage() {
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-4 py-3 text-sm text-muted-foreground hidden lg:table-cell">
                       {player._count.visits}
                     </td>
                     <td className="px-4 py-3">

@@ -139,7 +139,7 @@ export default function CampaignsPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="rounded-full bg-primary/10 p-2">
@@ -212,10 +212,10 @@ export default function CampaignsPage() {
               <tr className="border-b bg-muted/50">
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Campana</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Estado</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Template</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Destinatarios</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Entrega</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Lectura</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden md:table-cell">Template</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden sm:table-cell">Destinatarios</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">Entrega</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">Lectura</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Acciones</th>
               </tr>
             </thead>
@@ -241,18 +241,18 @@ export default function CampaignsPage() {
                         {sc.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden md:table-cell">
                       <Badge variant="secondary" className="text-xs font-mono">
                         {campaign.templateName}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm hidden sm:table-cell">
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3 text-muted-foreground" />
                         {campaign.totalRecipients || "\u2014"}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm hidden lg:table-cell">
                       {campaign.totalRecipients > 0 ? (
                         <div>
                           <span className="font-medium">{deliveryRate(campaign)}%</span>
@@ -262,7 +262,7 @@ export default function CampaignsPage() {
                         </div>
                       ) : "\u2014"}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm hidden lg:table-cell">
                       {campaign.totalDelivered > 0 ? (
                         <div>
                           <span className="font-medium">{readRate(campaign)}%</span>
