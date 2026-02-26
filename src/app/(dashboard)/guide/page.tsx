@@ -765,7 +765,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   <li>- Usa <strong>variables</strong> ({"{{1}}"}, {"{{2}}"}) para personalizar: nombre, fecha, oferta</li>
                   <li>- Manten el tono de marca configurado en Ajustes → Voz de Marca</li>
                   <li>- Templates cortos (2-3 frases) tienen mejor tasa de lectura</li>
-                  <li>- Incluye un <strong>CTA claro</strong>: "Reserva ahora", "Responde SI"</li>
+                  <li>- Incluye un <strong>CTA claro</strong>: &quot;Reserva ahora&quot;, &quot;Responde SI&quot;</li>
                   <li>- Usa el generador IA para crear y mejorar templates rapidamente</li>
                 </ul>
               </Accordion>
@@ -838,7 +838,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                       "¿Cual es el sentimiento general de los mensajes?",
                       "Sugiere acciones para mejorar la retencion",
                     ].map((q, i) => (
-                      <div key={i} className="text-xs bg-muted rounded px-2 py-1.5">"{q}"</div>
+                      <div key={i} className="text-xs bg-muted rounded px-2 py-1.5">&quot;{q}&quot;</div>
                     ))}
                   </div>
                 </div>
@@ -862,8 +862,8 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
               <Accordion title="¿Como conecto WhatsApp Business?" defaultOpen>
                 <div className="mt-2 space-y-2">
                   <ol className="space-y-1.5 list-decimal list-inside">
-                    <li>Ve a <strong>developers.facebook.com</strong> y crea una app tipo "Business"</li>
-                    <li>Selecciona el caso de uso "WhatsApp"</li>
+                    <li>Ve a <strong>developers.facebook.com</strong> y crea una app tipo &quot;Business&quot;</li>
+                    <li>Selecciona el caso de uso &quot;WhatsApp&quot;</li>
                     <li>En API Setup, obtiene tu <strong>Phone Number ID</strong> y <strong>Access Token</strong></li>
                     <li>Configura el webhook con tu URL: <code className="text-[10px] bg-muted px-1 rounded">https://tu-app.vercel.app/api/webhook/whatsapp</code></li>
                     <li>Usa el verify token: <code className="text-[10px] bg-muted px-1 rounded">caddie24-webhook-2024</code></li>
