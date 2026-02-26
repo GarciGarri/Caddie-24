@@ -1,0 +1,16 @@
+-- AlterTable
+ALTER TABLE "club_settings" ADD COLUMN     "customHolidays" JSONB,
+ADD COLUMN     "fieldCapacity" INTEGER DEFAULT 80,
+ADD COLUMN     "fieldCloseTime" TEXT DEFAULT '21:00',
+ADD COLUMN     "fieldLatitude" DOUBLE PRECISION DEFAULT 40.9651,
+ADD COLUMN     "fieldLongitude" DOUBLE PRECISION DEFAULT -5.6640,
+ADD COLUMN     "fieldName" TEXT DEFAULT 'La Valmuza Golf Club',
+ADD COLUMN     "fieldOpenTime" TEXT DEFAULT '07:00',
+ADD COLUMN     "rainClosureThreshold" DOUBLE PRECISION DEFAULT 10,
+ADD COLUMN     "rateHoliday" DOUBLE PRECISION DEFAULT 75,
+ADD COLUMN     "rateWeekday" DOUBLE PRECISION DEFAULT 45,
+ADD COLUMN     "rateWeekend" DOUBLE PRECISION DEFAULT 65,
+ADD COLUMN     "seasonConfig" JSONB,
+ADD COLUMN     "seasonMultipliers" JSONB,
+ADD COLUMN     "weatherAutomations" JSONB,
+ADD COLUMN     "windClosureThreshold" DOUBLE PRECISION DEFAULT 50;

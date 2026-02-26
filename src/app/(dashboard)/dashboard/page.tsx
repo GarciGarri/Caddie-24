@@ -11,6 +11,9 @@ import {
   Bot,
   ArrowUpRight,
   Loader2,
+  CloudSun,
+  Wind,
+  Droplets,
 } from "lucide-react";
 import {
   Card,
@@ -43,9 +46,11 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [weatherData, setWeatherData] = useState<any>(null);
 
   useEffect(() => {
     fetchDashboard();
+    fetchWeather();
   }, []);
 
   const fetchDashboard = async () => {
@@ -60,6 +65,18 @@ export default function DashboardPage() {
       console.error("Error fetching dashboard:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchWeather = async () => {
+    try {
+      const res = await fetch("/api/weather/forecast");
+      if (res.ok) {
+        const data = await res.json();
+        setWeatherData(data);
+      }
+    } catch (e) {
+      // Weather widget is optional
     }
   };
 
@@ -263,6 +280,87 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Weather Widget — Next 3 Days */}
+      {weatherData && weatherData.daily && weatherData.daily.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CloudSun className="h-5 w-5 text-blue-500" />
+                Próximos 3 Días
+              </CardTitle>
+              <CardDescription>Previsión y demanda estimada</CardDescription>
+            </div>
+            <Link href="/weather" className="text-xs text-primary hover:underline">
+              Ver 14 días
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {weatherData.daily.slice(0, 3).map((day: any, idx: number) => {
+                const pred = weatherData.predictions?.[idx];
+                return (
+                  <div key={day.date} className="rounded-lg border p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        {idx === 0 ? "Hoy" : idx === 1 ? "Mañana" : formatDayName(day.date)}
+                      </span>
+                      <span className="text-lg">{day.weatherEmoji}</span>
+                    </div>
+                    <p className="text-lg font-bold mt-1">{Math.round(day.temperatureMax)}° / {Math.round(day.temperatureMin)}°</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                      <Wind className="h-3 w-3" />{Math.round(day.windspeedMax)}km/h
+                      <Droplets className="h-3 w-3 ml-1" />{day.precipitationSum}mm
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <div className={`h-2 w-2 rounded-full ${getScoreColor(day.golfScore)}`} />
+                        <span className="text-xs font-medium">Score {day.golfScore}</span>
+                      </div>
+                      {pred && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${getDemandColor(pred.demandaPredecida)}`}>
+                          {pred.demandaPredecida}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Active alert if any */}
+            {weatherData.alerts && weatherData.alerts.length > 0 && (
+              <div className={`mt-3 text-xs p-2 rounded-lg ${
+                weatherData.alerts[0].level === "critical" ? "bg-red-50 text-red-700" :
+                weatherData.alerts[0].level === "opportunity" ? "bg-emerald-50 text-emerald-700" :
+                "bg-orange-50 text-orange-700"
+              }`}>
+                {weatherData.alerts[0].title}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
+}
+
+function formatDayName(dateStr: string): string {
+  const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  return days[new Date(dateStr).getDay()];
+}
+
+function getScoreColor(score: number): string {
+  if (score >= 80) return "bg-green-500";
+  if (score >= 60) return "bg-lime-500";
+  if (score >= 40) return "bg-yellow-500";
+  if (score >= 20) return "bg-orange-500";
+  return "bg-red-500";
+}
+
+function getDemandColor(level: string): string {
+  if (level.includes("Alta")) return "bg-green-100 text-green-700";
+  if (level === "Media") return "bg-yellow-100 text-yellow-700";
+  if (level.includes("Baja")) return "bg-orange-100 text-orange-700";
+  return "bg-red-100 text-red-700";
 }

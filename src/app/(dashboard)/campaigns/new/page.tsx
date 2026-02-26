@@ -11,6 +11,7 @@ import {
   Users,
   Check,
   FileText,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,11 +74,16 @@ export default function NewCampaignPage() {
   const [description, setDescription] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
 
+  // Tournaments
+  const [tournaments, setTournaments] = useState<Array<{ id: string; name: string; date: string; status: string }>>([]);
+  const [loadingTournaments, setLoadingTournaments] = useState(true);
+
   // Segment
   const [engagementLevels, setEngagementLevels] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
   const [handicapMin, setHandicapMin] = useState("");
   const [handicapMax, setHandicapMax] = useState("");
+  const [selectedTournaments, setSelectedTournaments] = useState<string[]>([]);
 
   // Preview
   const [previewPlayers, setPreviewPlayers] = useState<PreviewPlayer[]>([]);
@@ -90,6 +96,20 @@ export default function NewCampaignPage() {
       .then((data) => setTemplates(data.templates || []))
       .catch(() => {})
       .finally(() => setLoadingTemplates(false));
+
+    fetch("/api/tournaments?limit=50")
+      .then((r) => r.json())
+      .then((data) => {
+        const list = (data.tournaments || []).map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          date: t.date,
+          status: t.status,
+        }));
+        setTournaments(list);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingTournaments(false));
   }, []);
 
   const toggleArrayItem = (arr: string[], item: string, setter: (v: string[]) => void) => {
@@ -102,6 +122,7 @@ export default function NewCampaignPage() {
     if (languages.length > 0) segment.languages = languages;
     if (handicapMin) segment.handicapMin = Number(handicapMin);
     if (handicapMax) segment.handicapMax = Number(handicapMax);
+    if (selectedTournaments.length > 0) segment.tournamentIds = selectedTournaments;
     return segment;
   };
 
@@ -415,6 +436,44 @@ export default function NewCampaignPage() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Trophy className="h-3.5 w-3.5" />
+                Inscritos en Torneos
+              </Label>
+              {loadingTournaments ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Cargando torneos...
+                </div>
+              ) : tournaments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hay torneos registrados</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {tournaments.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                        selectedTournaments.includes(t.id)
+                          ? "bg-purple-100 text-purple-700 ring-2 ring-offset-1 ring-primary/30"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                      onClick={() => toggleArrayItem(selectedTournaments, t.id, setSelectedTournaments)}
+                    >
+                      {selectedTournaments.includes(t.id) && (
+                        <Check className="h-3 w-3 mr-1" />
+                      )}
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Selecciona torneos para enviar solo a jugadores inscritos/confirmados
+              </p>
+            </div>
+
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(1)}>
                 Atrás
@@ -467,7 +526,13 @@ export default function NewCampaignPage() {
                     Hándicap: {handicapMin || "0"}-{handicapMax || "54"}
                   </Badge>
                 )}
-                {engagementLevels.length === 0 && languages.length === 0 && !handicapMin && !handicapMax && (
+                {selectedTournaments.length > 0 && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Trophy className="h-3 w-3" />
+                    {selectedTournaments.length} torneo{selectedTournaments.length > 1 ? "s" : ""}
+                  </Badge>
+                )}
+                {engagementLevels.length === 0 && languages.length === 0 && !handicapMin && !handicapMax && selectedTournaments.length === 0 && (
                   <Badge variant="secondary">Todos los jugadores</Badge>
                 )}
               </div>

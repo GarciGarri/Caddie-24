@@ -5,21 +5,19 @@ import {
   MessageSquare,
   Search,
   Bot,
-  User as UserIcon,
   Send,
   Paperclip,
   Smile,
   Sparkles,
   MoreVertical,
   Phone,
-  Clock,
   CheckCheck,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 
 // Demo conversations
 const demoConversations = [
@@ -109,35 +107,57 @@ const sentimentColors: Record<string, string> = {
 };
 
 export default function InboxPage() {
-  const [selectedId, setSelectedId] = useState("1");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const selectedConversation = demoConversations.find(
     (c) => c.id === selectedId
   );
 
+  const filteredConversations = searchQuery
+    ? demoConversations.filter(
+        (c) =>
+          c.playerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : demoConversations;
+
+  const handleBack = () => {
+    setSelectedId(null);
+  };
+
   return (
-    <div className="flex h-[calc(100vh-7rem)] -m-6">
-      {/* Conversation list */}
-      <div className="w-80 border-r flex flex-col bg-background">
-        <div className="p-4 border-b">
+    <div className="flex h-[calc(100vh-7rem)] -m-4 sm:-m-6">
+      {/* Conversation list — visible when no conversation selected (mobile) or always (desktop) */}
+      <div
+        className={`${
+          selectedId ? "hidden md:flex" : "flex"
+        } w-full md:w-80 md:min-w-[320px] border-r flex-col bg-background`}
+      >
+        <div className="p-3 sm:p-4 border-b">
           <h2 className="font-semibold mb-3">Bandeja de Entrada</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Buscar conversaciones..." className="pl-9 h-9" />
+            <Input
+              placeholder="Buscar conversaciones..."
+              className="pl-9 h-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {demoConversations.map((conv) => (
+          {filteredConversations.map((conv) => (
             <button
               key={conv.id}
               onClick={() => setSelectedId(conv.id)}
-              className={`w-full text-left p-4 border-b hover:bg-muted/50 transition-colors ${
+              className={`w-full text-left p-3 sm:p-4 border-b hover:bg-muted/50 transition-colors ${
                 selectedId === conv.id ? "bg-muted" : ""
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className="relative">
+                <div className="relative shrink-0">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
                       {conv.playerInitials}
@@ -154,7 +174,7 @@ export default function InboxPage() {
                     <span className="text-sm font-medium truncate">
                       {conv.playerName}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground shrink-0 ml-2">
                       {conv.time}
                     </span>
                   </div>
@@ -181,24 +201,37 @@ export default function InboxPage() {
         </div>
       </div>
 
-      {/* Conversation detail */}
+      {/* Conversation detail — full width on mobile, flex on desktop */}
       {selectedConversation ? (
-        <div className="flex-1 flex flex-col">
+        <div
+          className={`${
+            selectedId ? "flex" : "hidden md:flex"
+          } flex-1 flex-col min-w-0`}
+        >
           {/* Conversation header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-9 w-9">
+          <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              {/* Back button — only on mobile */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 md:hidden shrink-0"
+                onClick={handleBack}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
                   {selectedConversation.playerInitials}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="text-sm font-medium">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">
                   {selectedConversation.playerName}
                 </p>
                 <div className="flex items-center gap-2">
                   <div
-                    className={`h-1.5 w-1.5 rounded-full ${
+                    className={`h-1.5 w-1.5 rounded-full shrink-0 ${
                       sentimentColors[selectedConversation.sentiment]
                     }`}
                   />
@@ -211,8 +244,8 @@ export default function InboxPage() {
                   </span>
                   {selectedConversation.isAiBot && (
                     <>
-                      <span className="text-xs text-muted-foreground">·</span>
-                      <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                      <span className="text-xs text-muted-foreground hidden sm:inline">·</span>
+                      <Badge variant="secondary" className="text-[10px] h-4 px-1.5 hidden sm:inline-flex">
                         <Bot className="h-2.5 w-2.5 mr-0.5" />
                         Bot IA activo
                       </Badge>
@@ -221,7 +254,7 @@ export default function InboxPage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Phone className="h-4 w-4" />
               </Button>
@@ -232,7 +265,7 @@ export default function InboxPage() {
           </div>
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-muted/20">
             {demoMessages.map((msg) => (
               <div
                 key={msg.id}
@@ -241,7 +274,7 @@ export default function InboxPage() {
                 }`}
               >
                 <div
-                  className={`max-w-[70%] rounded-lg px-3 py-2 ${
+                  className={`max-w-[85%] sm:max-w-[70%] rounded-lg px-3 py-2 ${
                     msg.direction === "OUTBOUND"
                       ? "bg-primary text-primary-foreground"
                       : "bg-background border"
@@ -269,26 +302,26 @@ export default function InboxPage() {
           </div>
 
           {/* AI draft suggestion */}
-          <div className="px-4 py-2 border-t bg-primary/5">
+          <div className="px-3 sm:px-4 py-2 border-t bg-primary/5">
             <div className="flex items-start gap-2">
               <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-primary">Borrador IA</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   &quot;El green fee para mañana es de 65€ por jugador. ¿Confirmo la
                   reserva para 2 a las 9:00? 🏌️&quot;
                 </p>
               </div>
-              <Button size="sm" variant="outline" className="h-7 text-xs">
+              <Button size="sm" variant="outline" className="h-7 text-xs shrink-0">
                 Usar
               </Button>
             </div>
           </div>
 
           {/* Message input */}
-          <div className="p-4 border-t">
+          <div className="p-3 sm:p-4 border-t">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 hidden sm:flex">
                 <Paperclip className="h-4 w-4" />
               </Button>
               <Input
@@ -297,7 +330,7 @@ export default function InboxPage() {
                 onChange={(e) => setMessageInput(e.target.value)}
                 className="flex-1"
               />
-              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 hidden sm:flex">
                 <Smile className="h-4 w-4" />
               </Button>
               <Button size="icon" className="h-9 w-9 shrink-0">
@@ -307,7 +340,7 @@ export default function InboxPage() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="hidden md:flex flex-1 items-center justify-center">
           <div className="text-center text-muted-foreground">
             <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-20" />
             <p>Selecciona una conversación</p>
