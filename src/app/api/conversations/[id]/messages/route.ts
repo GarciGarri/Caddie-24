@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { sendTextMessage, sendTemplateMessage, sendMediaMessage, mapLanguageCode } from "@/lib/services/whatsapp";
+import { sendTextMessage, sendTemplateMessage, sendMediaMessage } from "@/lib/services/whatsapp";
 import type { TemplateComponent } from "@/lib/services/whatsapp";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession();
+  const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
@@ -49,7 +49,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession();
+  const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
