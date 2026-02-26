@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 
-export const GET = auth(async function GET(
+export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!(req as any).auth) {
+  const session = await getServerSession();
+  if (!session) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
@@ -35,13 +36,14 @@ export const GET = auth(async function GET(
   }
 
   return NextResponse.json(conversation);
-} as any);
+}
 
-export const PATCH = auth(async function PATCH(
+export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!(req as any).auth) {
+  const session = await getServerSession();
+  if (!session) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
@@ -69,4 +71,4 @@ export const PATCH = auth(async function PATCH(
   });
 
   return NextResponse.json(conversation);
-} as any);
+}

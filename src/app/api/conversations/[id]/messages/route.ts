@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { sendTextMessage, sendTemplateMessage, sendMediaMessage, mapLanguageCode } from "@/lib/services/whatsapp";
 import type { TemplateComponent } from "@/lib/services/whatsapp";
 
-export const GET = auth(async function GET(
+export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!(req as any).auth) {
+  const session = await getServerSession();
+  if (!session) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
@@ -42,13 +43,14 @@ export const GET = auth(async function GET(
     hasMore: total > messages.length + (before ? 1 : 0),
     total,
   });
-} as any);
+}
 
-export const POST = auth(async function POST(
+export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!(req as any).auth) {
+  const session = await getServerSession();
+  if (!session) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
@@ -115,7 +117,7 @@ export const POST = auth(async function POST(
   }
 
   // Create message record
-  const userId = (req as any).auth?.user?.id;
+  const userId = (session as any)?.user?.id;
   const message = await prisma.message.create({
     data: {
       conversationId: params.id,
@@ -142,4 +144,4 @@ export const POST = auth(async function POST(
   });
 
   return NextResponse.json(message, { status: 201 });
-} as any);
+}

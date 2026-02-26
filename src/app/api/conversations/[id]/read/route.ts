@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 
-export const POST = auth(async function POST(
+export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!(req as any).auth) {
+  const session = await getServerSession();
+  if (!session) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
@@ -16,4 +17,4 @@ export const POST = auth(async function POST(
   });
 
   return NextResponse.json({ ok: true });
-} as any);
+}
