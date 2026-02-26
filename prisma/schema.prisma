@@ -672,3 +672,42 @@ model TournamentResult {
   @@index([playerId])
   @@map("tournament_results")
 }
+
+// ============================================================
+// WEATHER DAILY RECORDS (Historical + Accuracy Tracking)
+// ============================================================
+
+model WeatherDailyRecord {
+  id                 String   @id @default(cuid())
+  date               DateTime @unique @db.Date
+
+  // Weather data (from Open-Meteo forecast or archive API)
+  golfScore          Float
+  tempMax            Float?
+  tempMin            Float?
+  precipitation      Float?
+  windMax            Float?
+  weatherCode        Int?
+  daylightHours      Float?
+
+  // Predictions (snapshot at time of recording)
+  predictedOccupancy Float?
+  predictedReservas  Int?
+  predictedRevenue   Float?
+  confidence         Float?
+
+  // Actuals (entered by staff)
+  actualOccupancy    Float?
+  actualReservas     Int?
+  actualRevenue      Float?
+
+  // Operational
+  isClosed           Boolean  @default(false)
+  closureReason      String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([date])
+  @@map("weather_daily_records")
+}
