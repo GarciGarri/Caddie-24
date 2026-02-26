@@ -15,6 +15,7 @@ import {
   ChevronRight,
   X,
   CloudSun,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ const navItems = [
 ];
 
 const bottomItems = [
+  { title: "Guía del Sistema", href: "/guide", icon: BookOpen },
   { title: "Configuración", href: "/settings", icon: Settings },
 ];
 
