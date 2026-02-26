@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import type { SegmentQuery } from "@/lib/validations/campaign";
+import {
+  sendTemplateMessage,
+  mapLanguageCode,
+} from "@/lib/services/whatsapp";
+import type { TemplateComponent } from "@/lib/services/whatsapp";
 
 /**
  * Build Prisma where clause from a campaign's segmentQuery
@@ -64,8 +69,31 @@ export async function previewRecipients(segment: SegmentQuery) {
 }
 
 /**
- * Simulated campaign send
- * Creates recipients, simulates delivery statuses, updates campaign counters
+ * Build template components with player-specific data
+ */
+function buildTemplateComponents(
+  template: { components: any },
+  player: { firstName: string; lastName?: string }
+): TemplateComponent[] | undefined {
+  // If template has body with {{1}} placeholder, substitute with player name
+  const body = template.components?.body?.text;
+  if (!body || !body.includes("{{")) return undefined;
+
+  // Count placeholders
+  const matches = body.match(/\{\{\d+\}\}/g);
+  if (!matches) return undefined;
+
+  const params = matches.map((_match: string, idx: number) => {
+    if (idx === 0) return { type: "text" as const, text: player.firstName };
+    return { type: "text" as const, text: "" };
+  });
+
+  return [{ type: "body", parameters: params }];
+}
+
+/**
+ * Send campaign via WhatsApp Business API
+ * Creates recipients, sends template messages, tracks status
  */
 export async function sendCampaign(campaignId: string) {
   const campaign = await prisma.campaign.findUnique({
@@ -88,7 +116,7 @@ export async function sendCampaign(campaignId: string) {
   const where = buildPlayerFilter(segment);
   const players = await prisma.player.findMany({
     where,
-    select: { id: true, firstName: true, lastName: true },
+    select: { id: true, firstName: true, lastName: true, phone: true },
   });
 
   if (players.length === 0) {
@@ -100,76 +128,173 @@ export async function sendCampaign(campaignId: string) {
         totalRecipients: 0,
       },
     });
-    console.log(`[SIMULATED] Campaign "${campaign.name}" — no recipients matched`);
-    return { sent: 0 };
+    console.log(`[Campaign] "${campaign.name}" — no recipients matched`);
+    return { sent: 0, failed: 0, total: 0 };
   }
 
-  // 3. Create recipients
+  // 3. Fetch template
+  const template = await prisma.whatsAppTemplate.findUnique({
+    where: { name: campaign.templateName },
+  });
+
+  if (!template) {
+    await prisma.campaign.update({
+      where: { id: campaignId },
+      data: { status: "DRAFT" },
+    });
+    throw new Error(`Template "${campaign.templateName}" no encontrado`);
+  }
+
+  const languageCode = mapLanguageCode(template.language);
+
+  // 4. Create recipients (all PENDING initially)
   await prisma.campaignRecipient.createMany({
     data: players.map((p) => ({
       campaignId,
       playerId: p.id,
-      status: "SENT",
-      sentAt: new Date(),
+      status: "PENDING",
     })),
     skipDuplicates: true,
   });
 
-  // 4. Simulate delivery outcomes
-  const now = new Date();
-  let delivered = 0;
-  let read = 0;
-  let failed = 0;
-
+  // 5. Send template messages
   const recipients = await prisma.campaignRecipient.findMany({
     where: { campaignId },
+    include: {
+      player: { select: { id: true, phone: true, firstName: true, lastName: true } },
+    },
   });
 
+  let sent = 0;
+  let failed = 0;
+
   for (const r of recipients) {
-    const rand = Math.random();
-    if (rand < 0.05) {
-      // 5% fail
+    if (!r.player.phone) {
       await prisma.campaignRecipient.update({
         where: { id: r.id },
-        data: { status: "FAILED", failureReason: "Simulado: número no válido" },
+        data: { status: "FAILED", failureReason: "Sin número de teléfono" },
       });
       failed++;
-    } else if (rand < 0.35) {
-      // 30% read
-      await prisma.campaignRecipient.update({
-        where: { id: r.id },
-        data: { status: "READ", deliveredAt: now, readAt: now },
-      });
-      delivered++;
-      read++;
-    } else {
-      // 65% delivered but not read
-      await prisma.campaignRecipient.update({
-        where: { id: r.id },
-        data: { status: "DELIVERED", deliveredAt: now },
-      });
-      delivered++;
+      continue;
     }
+
+    try {
+      const components = buildTemplateComponents(
+        template as any,
+        { firstName: r.player.firstName, lastName: r.player.lastName || undefined }
+      );
+
+      const result = await sendTemplateMessage(
+        r.player.phone,
+        template.name,
+        languageCode,
+        components
+      );
+
+      await prisma.campaignRecipient.update({
+        where: { id: r.id },
+        data: { status: "SENT", sentAt: new Date() },
+      });
+
+      // Create message record in conversation so it shows in inbox
+      await createCampaignMessageRecord(
+        r.player.id,
+        result.whatsappMessageId,
+        template,
+        campaignId
+      );
+
+      sent++;
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : "Error desconocido";
+      await prisma.campaignRecipient.update({
+        where: { id: r.id },
+        data: { status: "FAILED", failureReason: errMsg },
+      });
+      failed++;
+    }
+
+    // Rate limiting: small delay between sends
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
-  // 5. Update campaign counters
+  // 6. Update campaign counters
   await prisma.campaign.update({
     where: { id: campaignId },
     data: {
-      status: "COMPLETED",
-      completedAt: new Date(),
-      totalRecipients: players.length,
-      totalSent: players.length - failed,
-      totalDelivered: delivered,
-      totalRead: read,
+      status: "SENT",
+      totalRecipients: recipients.length,
+      totalSent: sent,
       totalFailed: failed,
+      // totalDelivered and totalRead will be updated via webhook status updates
     },
   });
 
   console.log(
-    `[SIMULATED] Campaign "${campaign.name}" sent to ${players.length} recipients — ` +
-    `${delivered} delivered, ${read} read, ${failed} failed`
+    `[Campaign] "${campaign.name}" sent to ${recipients.length} recipients — ` +
+      `${sent} sent, ${failed} failed`
   );
 
-  return { sent: players.length, delivered, read, failed };
+  return { sent, failed, total: recipients.length };
+}
+
+/**
+ * Create a Message record in the player's conversation for campaign messages
+ * so they appear in the inbox.
+ */
+async function createCampaignMessageRecord(
+  playerId: string,
+  whatsappMessageId: string,
+  template: { name: string; components: any },
+  campaignId: string
+): Promise<void> {
+  try {
+    // Find or create conversation
+    let conversation = await prisma.conversation.findFirst({
+      where: {
+        playerId,
+        status: { in: ["OPEN", "PENDING"] },
+      },
+      orderBy: { lastMessageAt: "desc" },
+    });
+
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data: {
+          playerId,
+          status: "OPEN",
+          channel: "whatsapp",
+          lastMessageAt: new Date(),
+          isAiBotActive: true,
+        },
+      });
+    }
+
+    const content =
+      template.components?.body?.text || `[Template: ${template.name}]`;
+
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        whatsappMessageId,
+        direction: "OUTBOUND",
+        type: "TEMPLATE",
+        content,
+        templateName: template.name,
+        status: "SENT",
+        sentBy: "campaign",
+        timestamp: new Date(),
+      },
+    });
+
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: {
+        lastMessageAt: new Date(),
+        lastMessagePreview: content.substring(0, 255),
+      },
+    });
+  } catch (err) {
+    console.error("[Campaign] Error creating message record:", err);
+  }
 }
