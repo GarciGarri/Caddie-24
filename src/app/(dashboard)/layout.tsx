@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Header } from "@/components/layout/header";
+import { DashboardChatbot } from "@/components/chat/dashboard-chatbot";
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,7 @@ export default function DashboardLayout({
         <Header onMobileMenuToggle={() => setMobileMenuOpen((v) => !v)} />
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden">{children}</main>
       </div>
+      <DashboardChatbot />
     </div>
   );
 }
