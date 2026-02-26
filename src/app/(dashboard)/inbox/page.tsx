@@ -564,12 +564,20 @@ export default function InboxPage() {
 
           {/* 24h window warning */}
           {is24hExpired && messages.length > 0 && (
-            <div className="px-3 sm:px-4 py-2 border-t bg-yellow-50 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0" />
-              <p className="text-xs text-yellow-700">
-                Han pasado más de 24h desde el último mensaje del cliente. Solo
-                puedes enviar mensajes de template.
-              </p>
+            <div className="px-3 sm:px-4 py-3 border-t bg-amber-50 border-amber-200">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">
+                    Ventana de 24h expirada
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    Han pasado más de 24h desde el último mensaje del cliente.
+                    La escritura libre está deshabilitada. Solo puedes enviar
+                    mensajes usando plantillas aprobadas.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -600,14 +608,14 @@ export default function InboxPage() {
               <Input
                 placeholder={
                   is24hExpired && messages.length > 0
-                    ? "Solo templates fuera de ventana 24h..."
+                    ? "Escritura deshabilitada — usa una plantilla"
                     : "Escribe un mensaje..."
                 }
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="flex-1"
-                disabled={sending}
+                disabled={sending || (is24hExpired && messages.length > 0)}
               />
               <Button
                 variant="ghost"
@@ -620,7 +628,7 @@ export default function InboxPage() {
                 size="icon"
                 className="h-9 w-9 shrink-0"
                 onClick={handleSendMessage}
-                disabled={!messageInput.trim() || sending}
+                disabled={!messageInput.trim() || sending || (is24hExpired && messages.length > 0)}
               >
                 {sending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

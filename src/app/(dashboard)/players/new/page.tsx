@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export default function NewPlayerPage() {
   const router = useRouter();
@@ -70,8 +71,10 @@ export default function NewPlayerPage() {
       }
 
       // Success — redirect to player detail
+      toast.success("Jugador creado correctamente");
       router.push(`/players/${data.id}`);
     } catch (err) {
+      toast.error("Error al crear el jugador");
       setError("Error de conexión. Inténtalo de nuevo.");
     } finally {
       setLoading(false);

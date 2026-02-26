@@ -7,40 +7,69 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+
+interface GeneralSettings {
+  clubName: string;
+  timezone: string;
+  defaultLanguage: string;
+  currency: string;
+}
 
 export default function GeneralSettingsPage() {
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<GeneralSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch("/api/settings");
-        if (res.ok) setSettings(await res.json());
-      } catch {} finally { setLoading(false); }
+        if (res.ok) {
+          setSettings(await res.json());
+        } else {
+          setError("Error al cargar los ajustes");
+        }
+      } catch (err) {
+        console.error("Error loading general settings:", err);
+        setError("Error al cargar los ajustes");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   const handleSave = async () => {
+    setError(null);
     setSaving(true);
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clubName: settings.clubName,
-          timezone: settings.timezone,
-          defaultLanguage: settings.defaultLanguage,
-          currency: settings.currency,
+          clubName: settings?.clubName,
+          timezone: settings?.timezone,
+          defaultLanguage: settings?.defaultLanguage,
+          currency: settings?.currency,
         }),
       });
       if (res.ok) {
+        toast.success("Ajustes guardados");
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
+      } else {
+        toast.error("Error al guardar");
+        setError("Error al guardar los ajustes");
       }
-    } catch {} finally { setSaving(false); }
+    } catch (err) {
+      console.error("Error saving general settings:", err);
+      toast.error("Error al guardar");
+      setError("Error al guardar los ajustes");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -55,6 +84,12 @@ export default function GeneralSettingsPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" />Datos del Club</CardTitle>
@@ -62,12 +97,12 @@ export default function GeneralSettingsPage() {
         <CardContent className="space-y-4">
           <div>
             <Label>Nombre del club</Label>
-            <Input value={settings?.clubName || ""} onChange={(e) => setSettings({ ...settings, clubName: e.target.value })} placeholder="Nombre de tu club de golf" />
+            <Input value={settings?.clubName || ""} onChange={(e) => setSettings({ ...settings!, clubName: e.target.value })} placeholder="Nombre de tu club de golf" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Zona horaria</Label>
-              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={settings?.timezone || "Europe/Madrid"} onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}>
+              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={settings?.timezone || "Europe/Madrid"} onChange={(e) => setSettings({ ...settings!, timezone: e.target.value })}>
                 <option value="Europe/Madrid">Europe/Madrid (CET)</option>
                 <option value="Europe/London">Europe/London (GMT)</option>
                 <option value="Europe/Berlin">Europe/Berlin (CET)</option>
@@ -77,7 +112,7 @@ export default function GeneralSettingsPage() {
             </div>
             <div>
               <Label>Moneda</Label>
-              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={settings?.currency || "EUR"} onChange={(e) => setSettings({ ...settings, currency: e.target.value })}>
+              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={settings?.currency || "EUR"} onChange={(e) => setSettings({ ...settings!, currency: e.target.value })}>
                 <option value="EUR">EUR (€)</option>
                 <option value="USD">USD ($)</option>
                 <option value="GBP">GBP (£)</option>
@@ -86,7 +121,7 @@ export default function GeneralSettingsPage() {
           </div>
           <div>
             <Label>Idioma por defecto</Label>
-            <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={settings?.defaultLanguage || "ES"} onChange={(e) => setSettings({ ...settings, defaultLanguage: e.target.value })}>
+            <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={settings?.defaultLanguage || "ES"} onChange={(e) => setSettings({ ...settings!, defaultLanguage: e.target.value })}>
               <option value="ES">Español</option>
               <option value="EN">English</option>
               <option value="DE">Deutsch</option>

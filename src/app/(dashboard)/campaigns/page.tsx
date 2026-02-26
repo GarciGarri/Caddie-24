@@ -22,6 +22,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface Campaign {
   id: string;
@@ -76,32 +77,39 @@ export default function CampaignsPage() {
   }, [fetchCampaigns]);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Eliminar campana "${name}"?`)) return;
+    if (!confirm(`¿Eliminar la campaña "${name}"? Las campañas enviadas se cancelarán.`)) return;
     setDeleting(id);
     try {
-      await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Campaña eliminada");
+      } else {
+        toast.error("Error al eliminar la campaña");
+      }
       fetchCampaigns();
     } catch (err) {
       console.error("Error:", err);
+      toast.error("Error al eliminar la campaña");
     } finally {
       setDeleting(null);
     }
   };
 
   const handleSendNow = async (id: string, name: string) => {
-    if (!confirm(`Enviar campana "${name}" ahora? (simulado)`)) return;
+    if (!confirm(`Enviar campaña "${name}" ahora? (simulado)`)) return;
     setSendingId(id);
     try {
       const res = await fetch(`/api/campaigns/${id}/send`, { method: "POST" });
       if (res.ok) {
+        toast.success("Campaña enviada correctamente");
         router.push(`/campaigns/${id}`);
       } else {
         const data = await res.json();
-        alert(data.error || "Error al enviar");
+        toast.error(data.error || "Error al enviar la campaña");
         fetchCampaigns();
       }
     } catch (err) {
-      alert("Error de conexion");
+      toast.error("Error de conexión");
     } finally {
       setSendingId(null);
     }
@@ -126,15 +134,15 @@ export default function CampaignsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Campanas</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Campañas</h1>
           <p className="text-muted-foreground mt-1">
-            Gestiona tus campanas de WhatsApp segmentadas
+            Gestiona tus campañas de WhatsApp segmentadas
           </p>
         </div>
         <Link href="/campaigns/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Nueva Campana
+            Nueva Campaña
           </Button>
         </Link>
       </div>
@@ -195,12 +203,12 @@ export default function CampaignsPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Megaphone className="h-12 w-12 text-muted-foreground/20 mb-3" />
             <p className="text-muted-foreground mb-4">
-              No hay campanas aun. Crea la primera.
+              No hay campañas aún. Crea la primera.
             </p>
             <Link href="/campaigns/new">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Nueva Campana
+                Nueva Campaña
               </Button>
             </Link>
           </CardContent>
@@ -210,7 +218,7 @@ export default function CampaignsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Campana</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Campaña</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Estado</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden md:table-cell">Template</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden sm:table-cell">Destinatarios</th>

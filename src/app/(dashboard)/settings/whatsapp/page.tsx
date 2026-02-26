@@ -26,11 +26,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
+interface WhatsAppSettings {
+  whatsappPhoneNumberId: string;
+  whatsappBusinessAccountId: string;
+  whatsappAccessToken: string;
+  webhookVerifyToken: string;
+}
+
 export default function WhatsAppSettingsPage() {
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<WhatsAppSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
@@ -43,8 +51,14 @@ export default function WhatsAppSettingsPage() {
     (async () => {
       try {
         const res = await fetch("/api/settings");
-        if (res.ok) setSettings(await res.json());
-      } catch {
+        if (res.ok) {
+          setSettings(await res.json());
+        } else {
+          setError("Error al cargar los ajustes de WhatsApp");
+        }
+      } catch (err) {
+        console.error("Error loading WhatsApp settings:", err);
+        setError("Error al cargar los ajustes de WhatsApp");
       } finally {
         setLoading(false);
       }
@@ -52,24 +66,29 @@ export default function WhatsAppSettingsPage() {
   }, []);
 
   const handleSave = async () => {
+    setError(null);
     setSaving(true);
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          whatsappPhoneNumberId: settings.whatsappPhoneNumberId,
-          whatsappBusinessAccountId: settings.whatsappBusinessAccountId,
-          whatsappAccessToken: settings.whatsappAccessToken,
-          webhookVerifyToken: settings.webhookVerifyToken,
+          whatsappPhoneNumberId: settings?.whatsappPhoneNumberId,
+          whatsappBusinessAccountId: settings?.whatsappBusinessAccountId,
+          whatsappAccessToken: settings?.whatsappAccessToken,
+          webhookVerifyToken: settings?.webhookVerifyToken,
         }),
       });
       if (res.ok) {
         setSaved(true);
         setTestResult(null);
         setTimeout(() => setSaved(false), 2000);
+      } else {
+        setError("Error al guardar los ajustes de WhatsApp");
       }
-    } catch {
+    } catch (err) {
+      console.error("Error saving WhatsApp settings:", err);
+      setError("Error al guardar los ajustes de WhatsApp");
     } finally {
       setSaving(false);
     }
@@ -84,7 +103,8 @@ export default function WhatsAppSettingsPage() {
       });
       const data = await res.json();
       setTestResult(data);
-    } catch {
+    } catch (err) {
+      console.error("Error testing WhatsApp connection:", err);
       setTestResult({ success: false, error: "Error de conexión" });
     } finally {
       setTesting(false);
@@ -116,6 +136,12 @@ export default function WhatsAppSettingsPage() {
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       {/* Status card */}
       <Card
@@ -181,7 +207,7 @@ export default function WhatsAppSettingsPage() {
               value={settings?.whatsappPhoneNumberId || ""}
               onChange={(e) =>
                 setSettings({
-                  ...settings,
+                  ...settings!,
                   whatsappPhoneNumberId: e.target.value,
                 })
               }
@@ -194,7 +220,7 @@ export default function WhatsAppSettingsPage() {
               value={settings?.whatsappBusinessAccountId || ""}
               onChange={(e) =>
                 setSettings({
-                  ...settings,
+                  ...settings!,
                   whatsappBusinessAccountId: e.target.value,
                 })
               }
@@ -209,7 +235,7 @@ export default function WhatsAppSettingsPage() {
                 value={settings?.whatsappAccessToken || ""}
                 onChange={(e) =>
                   setSettings({
-                    ...settings,
+                    ...settings!,
                     whatsappAccessToken: e.target.value,
                   })
                 }
@@ -234,7 +260,7 @@ export default function WhatsAppSettingsPage() {
               value={settings?.webhookVerifyToken || ""}
               onChange={(e) =>
                 setSettings({
-                  ...settings,
+                  ...settings!,
                   webhookVerifyToken: e.target.value,
                 })
               }
@@ -270,6 +296,12 @@ export default function WhatsAppSettingsPage() {
             <code className="block bg-muted px-3 py-2 rounded text-sm mt-1">
               {settings?.webhookVerifyToken || "(configura arriba)"}
             </code>
+          </div>
+          <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-700 flex items-start gap-2">
+            <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <p>
+              <span className="font-medium">Importante:</span> Asegúrate de usar tu dominio de producción en la Callback URL (ej: https://tu-app.vercel.app). La URL mostrada arriba usa el dominio actual del navegador, que puede no ser accesible desde Internet.
+            </p>
           </div>
           <div className="rounded-lg bg-blue-50 p-3 text-xs text-blue-700">
             <p className="font-medium mb-1">

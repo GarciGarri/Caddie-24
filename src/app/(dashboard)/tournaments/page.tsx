@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const FORMAT_LABELS: Record<string, string> = {
   STABLEFORD: "Stableford",
@@ -79,9 +80,18 @@ export default function TournamentsPage() {
   }, [fetchTournaments]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Eliminar este torneo?")) return;
-    await fetch(`/api/tournaments/${id}`, { method: "DELETE" });
-    fetchTournaments();
+    if (!confirm("¿Eliminar el torneo? El torneo será desactivado.")) return;
+    try {
+      const res = await fetch(`/api/tournaments/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Torneo eliminado");
+      } else {
+        toast.error("Error al eliminar el torneo");
+      }
+      fetchTournaments();
+    } catch {
+      toast.error("Error al eliminar el torneo");
+    }
   };
 
   const now = new Date();

@@ -129,7 +129,7 @@ export default function NewCampaignPage() {
   const fetchPreview = async () => {
     setLoadingPreview(true);
     try {
-      const res = await fetch("/api/campaigns/preview/preview", {
+      const res = await fetch("/api/campaigns/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildSegment()),

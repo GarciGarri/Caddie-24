@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { sendCampaign } from "@/lib/services/campaign-sender";
 
 // POST /api/campaigns/[id]/send — Execute campaign send (simulated)
@@ -7,6 +8,14 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const result = await sendCampaign(params.id);
     return NextResponse.json({
       success: true,

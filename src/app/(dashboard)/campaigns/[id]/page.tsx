@@ -27,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   DRAFT: { label: "Borrador", color: "bg-gray-100 text-gray-700" },
@@ -82,13 +83,14 @@ export default function CampaignDetailPage() {
     try {
       const res = await fetch(`/api/campaigns/${id}/send`, { method: "POST" });
       if (res.ok) {
+        toast.success("Campaña enviada");
         fetchCampaign();
       } else {
         const data = await res.json();
-        alert(data.error || "Error al enviar");
+        toast.error(data.error || "Error al enviar la campaña");
       }
     } catch (err) {
-      alert("Error de conexión");
+      toast.error("Error de conexión");
     } finally {
       setSending(false);
     }

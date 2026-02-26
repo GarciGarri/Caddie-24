@@ -7,7 +7,15 @@ export const segmentQuerySchema = z.object({
   handicapMax: z.coerce.number().min(0).max(54).optional(),
   tags: z.array(z.string()).optional(),
   tournamentIds: z.array(z.string()).optional(),
-});
+}).refine(
+  (data) => {
+    if (data.handicapMin !== undefined && data.handicapMax !== undefined) {
+      return data.handicapMin <= data.handicapMax;
+    }
+    return true;
+  },
+  { message: "El handicap mínimo debe ser menor o igual al máximo", path: ["handicapMax"] }
+);
 
 export const createCampaignSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio").max(200),

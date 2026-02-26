@@ -31,6 +31,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface Template {
   id: string;
@@ -150,12 +151,15 @@ export default function TemplatesPage() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Error al guardar");
+        toast.error(data.error || "Error al guardar");
         return;
       }
 
+      toast.success("Template guardado");
       resetForm();
       fetchTemplates();
     } catch (err) {
+      toast.error("Error de conexión");
       setError("Error de conexion");
     } finally {
       setSaving(false);
@@ -166,10 +170,16 @@ export default function TemplatesPage() {
     if (!confirm(`Eliminar template "${name}"?`)) return;
     setDeleting(id);
     try {
-      await fetch(`/api/templates/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/templates/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Template eliminado");
+      } else {
+        toast.error("Error al eliminar el template");
+      }
       fetchTemplates();
     } catch (err) {
       console.error("Error:", err);
+      toast.error("Error al eliminar el template");
     } finally {
       setDeleting(null);
     }

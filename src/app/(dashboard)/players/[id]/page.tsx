@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 const engagementColors: Record<string, string> = {
   VIP: "bg-purple-100 text-purple-800",
@@ -136,13 +137,14 @@ export default function PlayerDetailPage() {
         const updated = await res.json();
         setPlayer((prev: any) => ({ ...prev, ...updated }));
         setEditing(false);
+        toast.success("Jugador actualizado");
         fetchPlayer(); // Refresh all data
       } else {
         const data = await res.json();
-        alert(data.error || "Error al guardar");
+        toast.error(data.error || "Error al guardar los cambios");
       }
     } catch (err) {
-      alert("Error de conexión");
+      toast.error("Error al guardar los cambios");
     } finally {
       setSaving(false);
     }

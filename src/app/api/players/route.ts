@@ -1,18 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { createPlayerSchema } from "@/lib/validations/player";
 
 // GET /api/players — List players with search, filter, pagination
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
-    const sortBy = searchParams.get("sortBy") || "lastName";
-    const sortOrder = (searchParams.get("sortOrder") || "asc") as
-      | "asc"
-      | "desc";
+    const ALLOWED_SORT_FIELDS = ["lastName", "firstName", "createdAt", "engagementLevel", "handicap", "phone"];
+    const sortBy = ALLOWED_SORT_FIELDS.includes(searchParams.get("sortBy") || "")
+      ? searchParams.get("sortBy")!
+      : "lastName";
+    const ALLOWED_SORT_ORDERS = ["asc", "desc"];
+    const sortOrder = ALLOWED_SORT_ORDERS.includes(searchParams.get("sortOrder") || "")
+      ? searchParams.get("sortOrder")!
+      : "asc";
     const engagement = searchParams.get("engagement");
     const language = searchParams.get("language");
 
@@ -38,7 +51,7 @@ export async function GET(request: NextRequest) {
       where.preferredLanguage = language;
     }
 
-    const [players, total] = await Promise.all([
+    const [players, total, vipCount, highCount, newCount] = await Promise.all([
       prisma.player.findMany({
         where,
         include: {
@@ -55,6 +68,17 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.player.count({ where }),
+      prisma.player.count({ where: { isActive: true, engagementLevel: "VIP" } }),
+      prisma.player.count({ where: { isActive: true, engagementLevel: "HIGH" } }),
+      prisma.player.count({
+        where: {
+          isActive: true,
+          engagementLevel: { in: ["NEW"] },
+          createdAt: {
+            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          },
+        },
+      }),
     ]);
 
     return NextResponse.json({
@@ -65,6 +89,7 @@ export async function GET(request: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
+      stats: { vipCount, highCount, newCount },
     });
   } catch (error) {
     console.error("Error fetching players:", error);
@@ -78,6 +103,14 @@ export async function GET(request: NextRequest) {
 // POST /api/players — Create new player
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const body = await request.json();
     const validated = createPlayerSchema.parse(body);
 

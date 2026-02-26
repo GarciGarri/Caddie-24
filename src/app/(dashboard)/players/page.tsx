@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 interface PlayerTag {
   id: string;
@@ -55,6 +56,11 @@ interface PlayersResponse {
     total: number;
     totalPages: number;
   };
+  stats: {
+    vipCount: number;
+    highCount: number;
+    newCount: number;
+  };
 }
 
 const engagementColors: Record<string, string> = {
@@ -72,6 +78,28 @@ const engagementLabels: Record<string, string> = {
   LOW: "Bajo",
   NEW: "Nuevo",
 };
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  ES: "Español",
+  EN: "English",
+  DE: "Deutsch",
+  FR: "Français",
+};
+
+function formatPhone(phone: string): string {
+  if (!phone) return "";
+  const clean = phone.replace(/\s/g, "");
+  if (clean.startsWith("+34") && clean.length === 12) {
+    return `+34 ${clean.slice(3, 6)} ${clean.slice(6, 9)} ${clean.slice(9)}`;
+  }
+  // Generic: add space every 3 digits after country code
+  if (clean.startsWith("+")) {
+    const cc = clean.slice(0, clean.length > 11 ? 3 : 2);
+    const rest = clean.slice(cc.length);
+    return `${cc} ${rest.replace(/(\d{3})/g, "$1 ").trim()}`;
+  }
+  return phone;
+}
 
 export default function PlayersPage() {
   const router = useRouter();
@@ -121,15 +149,19 @@ export default function PlayersPage() {
   }, [fetchPlayers]);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Eliminar a ${name}? Esta acción se puede revertir.`)) return;
+    if (!confirm(`¿Eliminar a ${name}? El jugador será desactivado y dejará de aparecer en listados.`)) return;
     setDeleting(id);
     try {
       const res = await fetch(`/api/players/${id}`, { method: "DELETE" });
       if (res.ok) {
+        toast.success("Jugador desactivado correctamente");
         fetchPlayers();
+      } else {
+        toast.error("Error al eliminar el jugador");
       }
     } catch (error) {
       console.error("Error deleting:", error);
+      toast.error("Error al eliminar el jugador");
     } finally {
       setDeleting(null);
     }
@@ -179,7 +211,7 @@ export default function PlayersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {players.filter((p) => p.engagementLevel === "VIP").length}
+                {data?.stats?.vipCount ?? 0}
               </p>
               <p className="text-xs text-muted-foreground">VIP</p>
             </div>
@@ -192,7 +224,7 @@ export default function PlayersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {players.filter((p) => p.engagementLevel === "HIGH").length}
+                {data?.stats?.highCount ?? 0}
               </p>
               <p className="text-xs text-muted-foreground">Alto Engagement</p>
             </div>
@@ -205,9 +237,9 @@ export default function PlayersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {players.filter((p) => p.engagementLevel === "NEW").length}
+                {data?.stats?.newCount ?? 0}
               </p>
-              <p className="text-xs text-muted-foreground">Nuevos</p>
+              <p className="text-xs text-muted-foreground">Nuevos este mes</p>
             </div>
           </CardContent>
         </Card>
@@ -228,9 +260,13 @@ export default function PlayersPage() {
           variant={showFilters ? "default" : "outline"}
           size="sm"
           onClick={() => setShowFilters(!showFilters)}
+          className="relative"
         >
           <Filter className="h-4 w-4 mr-2" />
           Filtros
+          {engagementFilter && (
+            <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />
+          )}
         </Button>
       </div>
 
@@ -327,7 +363,7 @@ export default function PlayersPage() {
                             {player.firstName} {player.lastName}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {player.preferredLanguage}
+                            {LANGUAGE_LABELS[player.preferredLanguage] || player.preferredLanguage}
                           </p>
                         </div>
                       </Link>
@@ -336,7 +372,7 @@ export default function PlayersPage() {
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5 text-sm">
                           <Phone className="h-3 w-3 text-muted-foreground" />
-                          {player.phone}
+                          {formatPhone(player.phone)}
                         </div>
                         {player.email && (
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

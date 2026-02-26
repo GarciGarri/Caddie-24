@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 interface WeatherDay {
   date: string;
@@ -160,10 +161,12 @@ export default function WeatherDashboardPage() {
     setSnapshotting(true);
     try {
       await fetch("/api/weather/snapshot", { method: "POST" });
+      toast.success("Snapshot guardado");
       setSnapshotDone(true);
       setTimeout(() => setSnapshotDone(false), 3000);
     } catch (error) {
       console.error("Error saving snapshot:", error);
+      toast.error("Error al guardar snapshot");
     } finally {
       setSnapshotting(false);
     }
@@ -184,12 +187,14 @@ export default function WeatherDashboardPage() {
           actualOccupancy: parseFloat(quickOccupancy),
         }),
       });
+      toast.success("Registro guardado");
       setQuickSaved(true);
       setTimeout(() => setQuickSaved(false), 3000);
       // Refresh if we're showing past data
       if (viewDirection !== "future") fetchForecast();
     } catch (error) {
       console.error("Error saving quick record:", error);
+      toast.error("Error al guardar registro");
     } finally {
       setQuickSaving(false);
     }

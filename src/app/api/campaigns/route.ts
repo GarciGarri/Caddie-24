@@ -6,6 +6,14 @@ import { createCampaignSchema } from "@/lib/validations/campaign";
 // GET /api/campaigns — List campaigns with filters
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const page = parseInt(searchParams.get("page") || "1");

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { z } from "zod";
+import { auth } from "@/lib/auth";
 
 const generateSchema = z.object({
   prompt: z.string().min(3, "Describe qué tipo de mensaje quieres generar").max(500),
@@ -34,6 +35,14 @@ const categoryContext: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Building2,
   MessageSquare,
@@ -67,7 +68,7 @@ export default function SettingsPage() {
 
       <div className="grid gap-3">
         {settingsSections.map((section) => (
-          <a key={section.href} href={section.href}>
+          <Link key={section.href} href={section.href}>
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="rounded-lg bg-primary/10 p-2">
@@ -82,7 +83,7 @@ export default function SettingsPage() {
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </CardContent>
             </Card>
-          </a>
+          </Link>
         ))}
       </div>
     </div>

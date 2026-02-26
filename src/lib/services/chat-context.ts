@@ -372,7 +372,7 @@ export async function fetchChatContext(): Promise<ChatContext> {
     club: {
       name: settings?.clubName || "Campo de Golf",
       capacity: settings?.fieldCapacity || 80,
-      location: settings?.fieldName || "La Valmuza Golf Club",
+      location: settings?.fieldName || "el club",
       rateWeekday: settings?.rateWeekday || 45,
       rateWeekend: settings?.rateWeekend || 65,
     },
