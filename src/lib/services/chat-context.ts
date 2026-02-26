@@ -15,6 +15,24 @@ export interface ChatContext {
     newThisMonth: number;
     topSpenders: Array<{ name: string; total: number; visits: number }>;
     recentlyInactive: number;
+    roster: Array<{
+      name: string;
+      phone: string;
+      email: string | null;
+      engagement: string;
+      handicap: number | null;
+      totalSpent: number;
+      visitCount: number;
+      lastVisit: string | null;
+      lastContact: string | null;
+      daysSinceLastVisit: number | null;
+      daysSinceLastContact: number | null;
+      tags: string[];
+      language: string;
+      playTime: string | null;
+      dayPref: string | null;
+      createdAt: string;
+    }>;
   };
   conversations: {
     total: number;
@@ -104,6 +122,8 @@ export async function fetchChatContext(): Promise<ChatContext> {
     newPlayersThisMonth,
     topSpenders,
     inactivePlayers,
+    allPlayers,
+    playerSpending,
     conversationCounts,
     openConversations,
     sentimentCounts,
@@ -149,6 +169,24 @@ export async function fetchChatContext(): Promise<ChatContext> {
         lastContactAt: { lt: thirtyDaysAgo },
       },
     }),
+    // Full player roster with details
+    prisma.player.findMany({
+      take: 100,
+      orderBy: { createdAt: "desc" },
+      include: {
+        tags: { select: { tag: true } },
+        visits: { orderBy: { date: "desc" }, take: 1, select: { date: true } },
+        _count: { select: { visits: true, consumptions: true, conversations: true } },
+      },
+    }),
+    // Per-player spending totals
+    prisma.$queryRaw`
+      SELECT p.id,
+        COALESCE(SUM(c.amount), 0)::float as total
+      FROM players p
+      LEFT JOIN consumptions c ON c."playerId" = p.id
+      GROUP BY p.id
+    ` as unknown as Array<{ id: string; total: number }>,
 
     // Conversations
     prisma.conversation.groupBy({
@@ -239,6 +277,39 @@ export async function fetchChatContext(): Promise<ChatContext> {
     }),
   ]);
 
+  // Build spending map
+  const spendingMap = new Map<string, number>();
+  playerSpending.forEach((s) => spendingMap.set(s.id, Number(s.total)));
+
+  // Build player roster
+  const roster = allPlayers.map((p: any) => {
+    const lastVisitDate = p.visits?.[0]?.date ? new Date(p.visits[0].date) : null;
+    const lastContactDate = p.lastContactAt ? new Date(p.lastContactAt) : null;
+    const nowMs = Date.now();
+    return {
+      name: `${p.firstName} ${p.lastName}`,
+      phone: p.phone,
+      email: p.email,
+      engagement: p.engagementLevel,
+      handicap: p.handicap,
+      totalSpent: spendingMap.get(p.id) || 0,
+      visitCount: p._count?.visits || 0,
+      lastVisit: lastVisitDate?.toISOString().split("T")[0] || null,
+      lastContact: lastContactDate?.toISOString().split("T")[0] || null,
+      daysSinceLastVisit: lastVisitDate
+        ? Math.floor((nowMs - lastVisitDate.getTime()) / (1000 * 60 * 60 * 24))
+        : null,
+      daysSinceLastContact: lastContactDate
+        ? Math.floor((nowMs - lastContactDate.getTime()) / (1000 * 60 * 60 * 24))
+        : null,
+      tags: (p.tags || []).map((t: any) => t.tag),
+      language: p.preferredLanguage,
+      playTime: p.preferredPlayTime,
+      dayPref: p.playDayPreference,
+      createdAt: p.createdAt?.toISOString().split("T")[0],
+    };
+  });
+
   // Process engagement counts
   const byEngagement: Record<string, number> = {};
   engagementCounts.forEach((e) => {
@@ -316,6 +387,7 @@ export async function fetchChatContext(): Promise<ChatContext> {
         visits: Number(s.visits),
       })),
       recentlyInactive: inactivePlayers,
+      roster,
     },
     conversations: {
       total: totalConversations,
@@ -420,8 +492,10 @@ Tu rol es ayudar al administrador del club a entender y gestionar su negocio usa
 ### Jugadores (${context.players.total} total, ${context.players.active} activos)
 - Distribución engagement: ${JSON.stringify(context.players.byEngagement)}
 - Nuevos este mes: ${context.players.newThisMonth}
-- Inactivos (>30 días): ${context.players.recentlyInactive}
-- Top 10 por gasto: ${context.players.topSpenders.map((s) => `${s.name}: ${s.total.toFixed(0)}€ (${s.visits} visitas)`).join("; ")}
+- Inactivos (>30 días sin contacto): ${context.players.recentlyInactive}
+
+### Listado completo de jugadores
+${context.players.roster.map((p) => `- **${p.name}** | Engagement: ${p.engagement} | Gasto total: ${p.totalSpent.toFixed(0)}€ | Visitas: ${p.visitCount} | Última visita: ${p.lastVisit || "nunca"} (${p.daysSinceLastVisit != null ? p.daysSinceLastVisit + " días" : "—"}) | Último contacto: ${p.lastContact || "nunca"} (${p.daysSinceLastContact != null ? p.daysSinceLastContact + " días" : "—"}) | Handicap: ${p.handicap ?? "—"} | Idioma: ${p.language} | Horario: ${p.playTime || "—"} | Días: ${p.dayPref || "—"} | Tags: ${p.tags.length > 0 ? p.tags.join(", ") : "ninguno"} | Tel: ${p.phone} | Email: ${p.email || "—"} | Alta: ${p.createdAt}`).join("\n")}
 
 ### Conversaciones WhatsApp (${context.conversations.total} total)
 - Abiertas: ${context.conversations.open}
