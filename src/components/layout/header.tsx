@@ -6,12 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
-export function Header() {
+interface HeaderProps {
+  onMobileMenuToggle?: () => void;
+}
+
+export function Header({ onMobileMenuToggle }: HeaderProps) {
   return (
-    <header className="flex h-16 items-center justify-between border-b px-6 bg-background">
+    <header className="flex h-14 sm:h-16 items-center justify-between border-b px-4 sm:px-6 bg-background shrink-0">
       {/* Left side */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="lg:hidden">
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden h-9 w-9"
+          onClick={onMobileMenuToggle}
+        >
           <Menu className="h-5 w-5" />
         </Button>
         <div className="relative hidden sm:block">
@@ -24,8 +33,8 @@ export function Header() {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="relative">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <Button variant="ghost" size="icon" className="relative h-9 w-9">
           <Bell className="h-5 w-5" />
           <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]">
             3
