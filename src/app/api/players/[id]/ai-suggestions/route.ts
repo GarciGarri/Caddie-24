@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 // POST /api/players/[id]/ai-suggestions — Generate AI communication suggestions
 export async function POST(
@@ -8,6 +9,14 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(

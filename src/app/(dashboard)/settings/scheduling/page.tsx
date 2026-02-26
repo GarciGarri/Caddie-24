@@ -18,18 +18,35 @@ const DAYS = [
   { value: "sunday", label: "Domingo" },
 ];
 
+interface SchedulingSettings {
+  silenceHoursStart: string;
+  silenceHoursEnd: string;
+  silenceDays: string[];
+  bookingConflictHours: number;
+}
+
 export default function SchedulingPage() {
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<SchedulingSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch("/api/settings");
-        if (res.ok) setSettings(await res.json());
-      } catch {} finally { setLoading(false); }
+        if (res.ok) {
+          setSettings(await res.json());
+        } else {
+          setError("Error al cargar los ajustes de horarios");
+        }
+      } catch (err) {
+        console.error("Error loading scheduling settings:", err);
+        setError("Error al cargar los ajustes de horarios");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -39,24 +56,35 @@ export default function SchedulingPage() {
     const updated = silenceDays.includes(day)
       ? silenceDays.filter((d: string) => d !== day)
       : [...silenceDays, day];
-    setSettings({ ...settings, silenceDays: updated });
+    setSettings({ ...settings!, silenceDays: updated });
   };
 
   const handleSave = async () => {
+    setError(null);
     setSaving(true);
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          silenceHoursStart: settings.silenceHoursStart,
-          silenceHoursEnd: settings.silenceHoursEnd,
-          silenceDays: settings.silenceDays || [],
-          bookingConflictHours: settings.bookingConflictHours,
+          silenceHoursStart: settings?.silenceHoursStart,
+          silenceHoursEnd: settings?.silenceHoursEnd,
+          silenceDays: settings?.silenceDays || [],
+          bookingConflictHours: settings?.bookingConflictHours,
         }),
       });
-      if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 2000); }
-    } catch {} finally { setSaving(false); }
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } else {
+        setError("Error al guardar los ajustes de horarios");
+      }
+    } catch (err) {
+      console.error("Error saving scheduling settings:", err);
+      setError("Error al guardar los ajustes de horarios");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -71,6 +99,12 @@ export default function SchedulingPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Moon className="h-5 w-5" />Horas de silencio</CardTitle>
@@ -80,11 +114,11 @@ export default function SchedulingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Inicio del silencio</Label>
-              <Input type="time" value={settings?.silenceHoursStart || "22:00"} onChange={(e) => setSettings({ ...settings, silenceHoursStart: e.target.value })} />
+              <Input type="time" value={settings?.silenceHoursStart || "22:00"} onChange={(e) => setSettings({ ...settings!, silenceHoursStart: e.target.value })} />
             </div>
             <div>
               <Label>Fin del silencio</Label>
-              <Input type="time" value={settings?.silenceHoursEnd || "08:00"} onChange={(e) => setSettings({ ...settings, silenceHoursEnd: e.target.value })} />
+              <Input type="time" value={settings?.silenceHoursEnd || "08:00"} onChange={(e) => setSettings({ ...settings!, silenceHoursEnd: e.target.value })} />
             </div>
           </div>
           <div>
@@ -109,7 +143,7 @@ export default function SchedulingPage() {
           <div>
             <Label>Horas de margen para conflictos de reserva</Label>
             <p className="text-xs text-muted-foreground mb-2">Si un jugador tiene una reserva dentro de estas horas, se priorizará la comunicación relacionada</p>
-            <Input type="number" value={settings?.bookingConflictHours || 24} onChange={(e) => setSettings({ ...settings, bookingConflictHours: parseInt(e.target.value) || 24 })} min={1} max={72} className="w-32" />
+            <Input type="number" value={settings?.bookingConflictHours || 24} onChange={(e) => setSettings({ ...settings!, bookingConflictHours: parseInt(e.target.value) || 24 })} min={1} max={72} className="w-32" />
             <p className="text-xs text-muted-foreground mt-1">horas</p>
           </div>
         </CardContent>

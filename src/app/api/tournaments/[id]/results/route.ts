@@ -7,6 +7,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const results = await prisma.tournamentResult.findMany({
       where: { tournamentId: params.id },
       include: {

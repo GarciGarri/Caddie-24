@@ -12,6 +12,14 @@ export default function AiPage() {
         </p>
       </div>
 
+      <div className="rounded-lg border border-dashed p-8 text-center">
+        <Bot className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+        <p className="text-sm font-medium">Aún no hay datos de IA</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Las métricas se mostrarán cuando Caddie AI procese conversaciones, genere templates o analice sentimiento.
+        </p>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">

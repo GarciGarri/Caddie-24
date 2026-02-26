@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { createTemplateSchema } from "@/lib/validations/template";
 
 // GET /api/templates — List all templates
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const language = searchParams.get("language");
@@ -31,6 +40,14 @@ export async function GET(request: NextRequest) {
 // POST /api/templates — Create new template
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const body = await request.json();
     const validated = createTemplateSchema.parse(body);
 

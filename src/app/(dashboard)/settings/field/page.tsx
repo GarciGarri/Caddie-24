@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Save, Loader2, Plus, X, DollarSign, Wind, Droplets, Calendar } from "lucide-react";
+import { ArrowLeft, MapPin, Save, Loader2, Plus, X, DollarSign, Wind, Droplets, Calendar, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 const MONTH_LABELS: Record<string, string> = {
   "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr",
@@ -36,6 +37,8 @@ export default function FieldSettingsPage() {
   const [seasonHigh, setSeasonHigh] = useState(["04","05","06","07","08","09","10"]);
   const [seasonMedium, setSeasonMedium] = useState(["03","11"]);
   const [multipliers, setMultipliers] = useState({ high: 1.2, medium: 1.0, low: 0.7 });
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -68,18 +71,24 @@ export default function FieldSettingsPage() {
       }
     } catch (e) {
       console.error("Error loading settings:", e);
+      setError("Error al cargar la configuración del campo");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
+    if (form.fieldOpenTime && form.fieldCloseTime && form.fieldOpenTime >= form.fieldCloseTime) {
+      toast.error("La hora de apertura debe ser anterior a la hora de cierre");
+      return;
+    }
+    setError(null);
     setSaving(true);
     try {
       const allMonths = ["01","02","03","04","05","06","07","08","09","10","11","12"];
       const low = allMonths.filter((m) => !seasonHigh.includes(m) && !seasonMedium.includes(m));
 
-      await fetch("/api/settings", {
+      const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,8 +98,15 @@ export default function FieldSettingsPage() {
           seasonMultipliers: multipliers,
         }),
       });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } else {
+        setError("Error al guardar la configuración del campo");
+      }
     } catch (e) {
       console.error("Error saving:", e);
+      setError("Error al guardar la configuración del campo");
     } finally {
       setSaving(false);
     }
@@ -132,11 +148,17 @@ export default function FieldSettingsPage() {
             <p className="text-muted-foreground text-sm">GPS, capacidad, tarifas, umbrales y festivos</p>
           </div>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-          Guardar
+        <Button onClick={handleSave} disabled={saving} className={saved ? "bg-green-600" : ""}>
+          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : saved ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+          {saved ? "Guardado" : "Guardar"}
         </Button>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       {/* Location & Basic Info */}
       <Card>

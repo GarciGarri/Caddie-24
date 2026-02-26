@@ -9,19 +9,36 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
+interface VoiceProfileSettings {
+  voiceTone: string;
+  voiceValues: string;
+  voiceStyle: string;
+  voiceExamples: string[];
+}
+
 export default function VoiceProfilePage() {
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<VoiceProfileSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [newExample, setNewExample] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch("/api/settings");
-        if (res.ok) setSettings(await res.json());
-      } catch {} finally { setLoading(false); }
+        if (res.ok) {
+          setSettings(await res.json());
+        } else {
+          setError("Error al cargar el perfil de voz");
+        }
+      } catch (err) {
+        console.error("Error loading voice profile settings:", err);
+        setError("Error al cargar el perfil de voz");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -30,29 +47,40 @@ export default function VoiceProfilePage() {
   const addExample = () => {
     if (!newExample.trim()) return;
     const updated = [...examples, newExample.trim()];
-    setSettings({ ...settings, voiceExamples: updated });
+    setSettings({ ...settings!, voiceExamples: updated });
     setNewExample("");
   };
 
   const removeExample = (idx: number) => {
-    setSettings({ ...settings, voiceExamples: examples.filter((_: any, i: number) => i !== idx) });
+    setSettings({ ...settings!, voiceExamples: examples.filter((_: string, i: number) => i !== idx) });
   };
 
   const handleSave = async () => {
+    setError(null);
     setSaving(true);
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          voiceTone: settings.voiceTone,
-          voiceValues: settings.voiceValues,
-          voiceStyle: settings.voiceStyle,
-          voiceExamples: settings.voiceExamples || [],
+          voiceTone: settings?.voiceTone,
+          voiceValues: settings?.voiceValues,
+          voiceStyle: settings?.voiceStyle,
+          voiceExamples: settings?.voiceExamples || [],
         }),
       });
-      if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 2000); }
-    } catch {} finally { setSaving(false); }
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } else {
+        setError("Error al guardar el perfil de voz");
+      }
+    } catch (err) {
+      console.error("Error saving voice profile settings:", err);
+      setError("Error al guardar el perfil de voz");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -67,6 +95,12 @@ export default function VoiceProfilePage() {
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Bot className="h-5 w-5" />Tono de comunicación</CardTitle>
@@ -75,15 +109,15 @@ export default function VoiceProfilePage() {
         <CardContent className="space-y-4">
           <div>
             <Label>Tono general</Label>
-            <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]" value={settings?.voiceTone || ""} onChange={(e) => setSettings({ ...settings, voiceTone: e.target.value })} placeholder="ej. Cercano y profesional. Trato de tú al jugador. Tono positivo y motivador. Evitar jerga excesivamente técnica." />
+            <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]" value={settings?.voiceTone || ""} onChange={(e) => setSettings({ ...settings!, voiceTone: e.target.value })} placeholder="ej. Cercano y profesional. Trato de tú al jugador. Tono positivo y motivador. Evitar jerga excesivamente técnica." />
           </div>
           <div>
             <Label>Valores del club</Label>
-            <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]" value={settings?.voiceValues || ""} onChange={(e) => setSettings({ ...settings, voiceValues: e.target.value })} placeholder="ej. Tradición, excelencia, comunidad deportiva, sostenibilidad, inclusión" />
+            <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]" value={settings?.voiceValues || ""} onChange={(e) => setSettings({ ...settings!, voiceValues: e.target.value })} placeholder="ej. Tradición, excelencia, comunidad deportiva, sostenibilidad, inclusión" />
           </div>
           <div>
             <Label>Estilo de escritura</Label>
-            <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]" value={settings?.voiceStyle || ""} onChange={(e) => setSettings({ ...settings, voiceStyle: e.target.value })} placeholder="ej. Frases cortas. Párrafos de máximo 3 líneas. Usar emojis con moderación. Incluir call-to-action claro." />
+            <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]" value={settings?.voiceStyle || ""} onChange={(e) => setSettings({ ...settings!, voiceStyle: e.target.value })} placeholder="ej. Frases cortas. Párrafos de máximo 3 líneas. Usar emojis con moderación. Incluir call-to-action claro." />
           </div>
         </CardContent>
       </Card>

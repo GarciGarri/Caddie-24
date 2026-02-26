@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { segmentQuerySchema } from "@/lib/validations/campaign";
 import { previewRecipients } from "@/lib/services/campaign-sender";
 
@@ -10,6 +11,14 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     let segment;
 
     if (params.id === "preview") {

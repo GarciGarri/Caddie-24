@@ -217,7 +217,7 @@ export default function GuidePage() {
                 <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl mb-1">💬</div>
                   <p className="font-medium text-foreground text-xs">WhatsApp Business</p>
-                  <p className="text-[11px] mt-1">Comunicacion directa, chatbot IA, campanas masivas</p>
+                  <p className="text-[11px] mt-1">Comunicacion directa, chatbot IA, campañas masivas</p>
                 </div>
                 <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl mb-1">🤖</div>
@@ -256,9 +256,9 @@ export default function GuidePage() {
                   </ul>
                 </div>
                 <div className="rounded-lg bg-purple-50 p-4">
-                  <p className="font-medium text-purple-700 text-xs mb-2">3. Acciones y Campanas</p>
+                  <p className="font-medium text-purple-700 text-xs mb-2">3. Acciones y Campañas</p>
                   <ul className="space-y-1 text-xs">
-                    <li>- Campanas segmentadas por WhatsApp</li>
+                    <li>- Campañas segmentadas por WhatsApp</li>
                     <li>- A/B Testing automatico</li>
                     <li>- Templates aprobados por Meta</li>
                     <li>- Alertas meteorologicas a jugadores</li>
@@ -293,7 +293,7 @@ export default function GuidePage() {
                 </div>
                 <div className="rounded-lg border p-3">
                   <Badge className="bg-yellow-100 text-yellow-700 mb-2">MANAGER</Badge>
-                  <p className="text-xs">Gestion de campanas, torneos, jugadores. Sin acceso a configuracion del sistema.</p>
+                  <p className="text-xs">Gestion de campañas, torneos, jugadores. Sin acceso a configuracion del sistema.</p>
                 </div>
                 <div className="rounded-lg border p-3">
                   <Badge className="bg-blue-100 text-blue-700 mb-2">AGENT</Badge>
@@ -315,7 +315,7 @@ export default function GuidePage() {
             route="/dashboard"
             color="bg-slate-600"
             features={[
-              "4 KPIs principales: jugadores, conversaciones, campanas, VIP",
+              "4 KPIs principales: jugadores, conversaciones, campañas, VIP",
               "Widget meteorologico con prevision 3 dias",
               "Actividad reciente de WhatsApp con indicador de sentimiento",
               "Acciones rapidas para tareas frecuentes",
@@ -353,8 +353,8 @@ export default function GuidePage() {
           />
           <ModuleCard
             icon={Megaphone}
-            title="Campanas"
-            description="Creacion y envio de campanas masivas segmentadas por WhatsApp."
+            title="Campañas"
+            description="Creacion y envio de campañas masivas segmentadas por WhatsApp."
             route="/campaigns"
             color="bg-purple-600"
             features={[
@@ -443,7 +443,7 @@ export default function GuidePage() {
             route="/dashboard (boton flotante)"
             color="bg-emerald-600"
             features={[
-              "Consulta en tiempo real: jugadores, campanas, torneos, weather, revenue",
+              "Consulta en tiempo real: jugadores, campañas, torneos, weather, revenue",
               "Respuestas streaming con GPT-4o-mini",
               "Listado completo de jugadores con datos individuales",
               "Sugerencias rapidas predefinidas",
@@ -504,7 +504,7 @@ export default function GuidePage() {
                   { name: "player_tags", desc: "Etiquetas IA/manuales por jugador" },
                   { name: "conversations", desc: "Conversaciones WhatsApp" },
                   { name: "messages", desc: "Mensajes individuales" },
-                  { name: "campaigns", desc: "Campanas de marketing" },
+                  { name: "campaigns", desc: "Campañas de marketing" },
                   { name: "campaign_recipients", desc: "Destinatarios con metricas" },
                   { name: "whatsapp_templates", desc: "Templates de mensajes" },
                   { name: "tournaments", desc: "Torneos y competiciones" },
@@ -578,7 +578,7 @@ export default function GuidePage() {
 │   │   ├── dashboard/        # Panel principal + Caddie AI
 │   │   ├── players/          # Gestion de jugadores
 │   │   ├── inbox/            # Bandeja WhatsApp
-│   │   ├── campaigns/        # Campanas de marketing
+│   │   ├── campaigns/        # Campañas de marketing
 │   │   ├── tournaments/      # Gestion de torneos
 │   │   ├── weather/          # Meteorologia y ocupacion
 │   │   │   ├── page.tsx      # Mapa de calor
@@ -593,7 +593,7 @@ export default function GuidePage() {
 │   │   ├── auth/             # NextAuth endpoints
 │   │   ├── chat/             # Caddie AI chatbot API
 │   │   ├── conversations/    # CRUD conversaciones
-│   │   ├── campaigns/        # CRUD campanas
+│   │   ├── campaigns/        # CRUD campañas
 │   │   ├── dashboard/        # Stats del dashboard
 │   │   ├── players/          # CRUD jugadores + IA suggestions
 │   │   ├── settings/         # Config del club
@@ -641,9 +641,9 @@ export default function GuidePage() {
                 </div>
               </div>
               <div className="rounded-lg bg-muted p-4">
-                <p className="font-medium text-foreground text-xs mb-2">Campana Outbound (envio masivo)</p>
+                <p className="font-medium text-foreground text-xs mb-2">Campaña Outbound (envio masivo)</p>
                 <div className="flex items-center gap-2 text-xs flex-wrap">
-                  <Badge variant="outline">Crear campana</Badge>
+                  <Badge variant="outline">Crear campaña</Badge>
                   <span>→</span>
                   <Badge variant="outline">Segmentar jugadores</Badge>
                   <span>→</span>
@@ -769,12 +769,12 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   <li>- Usa el generador IA para crear y mejorar templates rapidamente</li>
                 </ul>
               </Accordion>
-              <Accordion title="Campanas efectivas">
+              <Accordion title="Campañas efectivas">
                 <ul className="space-y-1.5 mt-2">
                   <li>- <strong>Segmenta</strong> siempre: no envies lo mismo a todos</li>
                   <li>- Usa <strong>A/B testing</strong> para descubrir que funciona mejor</li>
                   <li>- Programa envios en <strong>horas optimas</strong> (manana 9-11h, tarde 16-18h)</li>
-                  <li>- No superes 2-3 campanas por semana para evitar fatiga</li>
+                  <li>- No superes 2-3 campañas por semana para evitar fatiga</li>
                   <li>- Analiza metricas: si open rate baja del 30%, revisa el contenido</li>
                 </ul>
               </Accordion>
@@ -828,7 +828,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   <div className="grid gap-1.5 sm:grid-cols-2">
                     {[
                       "¿Que jugadores estan en riesgo de irse?",
-                      "¿Como van las campanas activas?",
+                      "¿Como van las campañas activas?",
                       "¿Quien son los top spenders?",
                       "¿Cual es la ocupacion media este mes?",
                       "Analiza las tendencias de revenue",
@@ -884,7 +884,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   <ul className="space-y-1">
                     <li><strong>NEW</strong> — Recien registrado, aun sin historial significativo</li>
                     <li><strong>LOW</strong> — Poca actividad o respuesta</li>
-                    <li><strong>MEDIUM</strong> — Actividad regular, responde a campanas</li>
+                    <li><strong>MEDIUM</strong> — Actividad regular, responde a campañas</li>
                     <li><strong>HIGH</strong> — Muy activo, visitas frecuentes, buen gasto</li>
                     <li><strong>VIP</strong> — Maxima lealtad, alto gasto, embajador del club</li>
                   </ul>

@@ -44,6 +44,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 const FORMAT_LABELS: Record<string, string> = {
   STABLEFORD: "Stableford",
@@ -92,6 +93,7 @@ export default function TournamentDetailPage() {
   const [tournament, setTournament] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchTournament = useCallback(async () => {
     try {
@@ -111,12 +113,25 @@ export default function TournamentDetailPage() {
   }, [fetchTournament]);
 
   const updateStatus = async (status: string) => {
-    await fetch(`/api/tournaments/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    fetchTournament();
+    if (actionLoading) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/tournaments/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        toast.success("Estado actualizado");
+        fetchTournament();
+      } else {
+        toast.error("Error al actualizar el estado");
+      }
+    } catch {
+      toast.error("Error al actualizar el estado");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   if (loading) {
@@ -191,8 +206,10 @@ export default function TournamentDetailPage() {
           {tournament.status === "DRAFT" && (
             <Button
               onClick={() => updateStatus("OPEN")}
+              disabled={actionLoading}
               className="bg-green-600 hover:bg-green-700"
             >
+              {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Abrir inscripciones
             </Button>
           )}
@@ -201,22 +218,26 @@ export default function TournamentDetailPage() {
               <Button
                 variant="outline"
                 onClick={() => updateStatus("CLOSED")}
+                disabled={actionLoading}
               >
+                {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Cerrar inscripciones
               </Button>
-              <Button onClick={() => updateStatus("IN_PROGRESS")}>
+              <Button onClick={() => updateStatus("IN_PROGRESS")} disabled={actionLoading}>
+                {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Iniciar torneo
               </Button>
             </>
           )}
           {tournament.status === "CLOSED" && (
-            <Button onClick={() => updateStatus("IN_PROGRESS")}>
+            <Button onClick={() => updateStatus("IN_PROGRESS")} disabled={actionLoading}>
+              {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Iniciar torneo
             </Button>
           )}
           {tournament.status === "IN_PROGRESS" && (
-            <Button onClick={() => updateStatus("COMPLETED")}>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
+            <Button onClick={() => updateStatus("COMPLETED")} disabled={actionLoading}>
+              {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
               Finalizar torneo
             </Button>
           )}
@@ -555,9 +576,10 @@ function RegistrationsTab({
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || "Error");
+        toast.error(data.error || "Error al inscribir jugador");
         return;
       }
+      toast.success("Jugador inscrito");
       onRefresh();
       setShowAddPlayer(false);
       setPlayerSearch("");
@@ -928,10 +950,11 @@ function ResultsTab({
       });
 
       if (!res.ok) throw new Error();
+      toast.success("Resultados guardados");
       setSaved(true);
       onRefresh();
     } catch {
-      alert("Error al guardar resultados");
+      toast.error("Error al guardar resultados");
     } finally {
       setSaving(false);
     }
@@ -1299,7 +1322,7 @@ Formato JSON array: [{ "tipo": "pre|post|no_participante", "asunto": "...", "men
         setAiSuggestions([{ tipo: "info", asunto: "Respuesta IA", mensaje: data.text, canal: "whatsapp", destinatarios: "todos" }]);
       }
     } catch {
-      alert("Error al generar sugerencias");
+      toast.error("Error al generar sugerencias");
     } finally {
       setLoadingAi(false);
     }

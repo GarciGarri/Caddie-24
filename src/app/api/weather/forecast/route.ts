@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import {
   fetchWeatherForecast,
   predictDemand,
@@ -9,6 +10,14 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const searchParams = req.nextUrl.searchParams;
     const range = Math.min(60, Math.max(7, parseInt(searchParams.get("range") || "14")));
     const direction = searchParams.get("direction") || "future"; // future | past | both

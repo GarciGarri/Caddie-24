@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [weatherData, setWeatherData] = useState<any>(null);
 
   useEffect(() => {
@@ -60,9 +61,13 @@ export default function DashboardPage() {
         const data = await res.json();
         setStats(data.stats);
         setActivity(data.recentActivity || []);
+        setError(null);
+      } else {
+        setError("Error al cargar el dashboard");
       }
-    } catch (error) {
-      console.error("Error fetching dashboard:", error);
+    } catch (err) {
+      console.error("Error fetching dashboard:", err);
+      setError("Error al cargar el dashboard. Comprueba tu conexión e inténtalo de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -115,6 +120,12 @@ export default function DashboardPage() {
           Bienvenido al CRM de Golf — Caddie 24
         </p>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -194,36 +205,23 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-4">
-                {[
-                  {
-                    color: "bg-blue-500",
-                    text: "Sistema CRM iniciado. Configura tu campo en Ajustes.",
-                    time: "Ahora",
-                  },
-                  {
-                    color: "bg-yellow-500",
-                    text: "Conecta WhatsApp Business API para recibir mensajes.",
-                    time: "Pendiente",
-                  },
-                  {
-                    color: "bg-yellow-500",
-                    text: "Añade tu primer jugador para comenzar.",
-                    time: "Pendiente",
-                  },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div
-                      className={`mt-1.5 h-2 w-2 rounded-full ${item.color}`}
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm">{item.text}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {item.time}
-                      </p>
+              <div>
+                <div className="text-center text-sm text-muted-foreground py-4 mb-4">
+                  No hay actividad reciente
+                </div>
+                <p className="text-xs font-medium text-muted-foreground mb-3">Pasos de configuración:</p>
+                <div className="space-y-3">
+                  {[
+                    "Configura tu campo en Ajustes.",
+                    "Conecta WhatsApp Business API para recibir mensajes.",
+                    "Añade tu primer jugador para comenzar.",
+                  ].map((text, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="mt-0.5 h-4 w-4 rounded border border-muted-foreground/30 shrink-0" />
+                      <p className="text-sm text-muted-foreground">{text}</p>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>

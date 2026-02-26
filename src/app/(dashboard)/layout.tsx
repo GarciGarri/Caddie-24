@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Header } from "@/components/layout/header";
 import { DashboardChatbot } from "@/components/chat/dashboard-chatbot";
@@ -23,6 +24,7 @@ export default function DashboardLayout({
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden">{children}</main>
       </div>
       <DashboardChatbot />
+      <Toaster richColors position="top-right" />
     </div>
   );
 }

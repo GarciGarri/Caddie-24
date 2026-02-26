@@ -5,9 +5,18 @@ import {
   calculateAccuracy,
 } from "@/lib/services/weather";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 export async function GET() {
   try {
+    const session = await auth();
+    if (!session) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const settings = await prisma.clubSettings.findFirst();
     const automations =
       (settings?.weatherAutomations as any[]) || DEFAULT_AUTOMATIONS;
