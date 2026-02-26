@@ -749,3 +749,126 @@ export function generateHistoricalData(): Array<{
 
   return data;
 }
+
+// ============================================================
+// HISTORICAL WEATHER — Open-Meteo Archive API
+// ============================================================
+
+export async function fetchHistoricalWeather(
+  lat: number,
+  lon: number,
+  startDate: string,
+  endDate: string
+): Promise<WeatherDay[]> {
+  const url =
+    `https://archive-api.open-meteo.com/v1/archive?` +
+    `latitude=${lat}&longitude=${lon}` +
+    `&start_date=${startDate}&end_date=${endDate}` +
+    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,` +
+    `wind_speed_10m_max,weather_code,sunrise,sunset` +
+    `&timezone=Europe%2FMadrid`;
+
+  const response = await fetch(url, { next: { revalidate: 86400 } }); // cache 24h
+  if (!response.ok) {
+    throw new Error(`Open-Meteo Archive API error: ${response.status}`);
+  }
+  const data = await response.json();
+
+  if (!data.daily?.time) return [];
+
+  return data.daily.time.map((date: string, i: number) => {
+    const sunrise = data.daily.sunrise?.[i] || "";
+    const sunset = data.daily.sunset?.[i] || "";
+    const sunriseDate = sunrise ? new Date(sunrise) : new Date();
+    const sunsetDate = sunset ? new Date(sunset) : new Date();
+    const daylightHours = (sunsetDate.getTime() - sunriseDate.getTime()) / (1000 * 60 * 60);
+
+    const dayData = {
+      temperatureMax: data.daily.temperature_2m_max[i] ?? 15,
+      temperatureMin: data.daily.temperature_2m_min[i] ?? 8,
+      precipitationSum: data.daily.precipitation_sum[i] ?? 0,
+      windspeedMax: data.daily.wind_speed_10m_max[i] ?? 10,
+      weatherCode: data.daily.weather_code[i] ?? 2,
+      daylightHours: Math.max(0, daylightHours),
+    };
+
+    const golfScore = calculateGolfScore(dayData);
+    const weatherInfo = getWeatherInfo(dayData.weatherCode);
+
+    return {
+      date,
+      ...dayData,
+      sunrise: sunrise.split("T")[1] || sunrise,
+      sunset: sunset.split("T")[1] || sunset,
+      weatherLabel: weatherInfo.label,
+      weatherEmoji: weatherInfo.emoji,
+      golfScore,
+      demandLevel: getDemandLevel(golfScore),
+      daylightHours: Math.round(Math.max(0, daylightHours) * 10) / 10,
+    };
+  });
+}
+
+// ============================================================
+// CALENDAR-ONLY PREDICTIONS (beyond forecast range)
+// ============================================================
+
+export function generateCalendarOnlyPredictions(
+  dates: string[],
+  config: FieldConfig,
+  tournamentDates: string[] = []
+): DemandPrediction[] {
+  // Create synthetic WeatherDay with neutral golf score
+  const syntheticDays: WeatherDay[] = dates.map((date) => ({
+    date,
+    temperatureMax: 20,
+    temperatureMin: 12,
+    precipitationSum: 0,
+    windspeedMax: 10,
+    weatherCode: 2,
+    sunrise: "07:30",
+    sunset: "20:30",
+    weatherLabel: "Sin datos meteorológicos",
+    weatherEmoji: "📅",
+    golfScore: 60,
+    demandLevel: "MEDIA" as const,
+    daylightHours: 13,
+  }));
+
+  const predictions = predictDemand(syntheticDays, config, tournamentDates);
+
+  return predictions.map((p) => ({
+    ...p,
+    confianza: "30%",
+    factorPrincipal: p.factorPrincipal + " (solo calendario)",
+  }));
+}
+
+// ============================================================
+// ACCURACY CALCULATOR
+// ============================================================
+
+export interface AccuracyResult {
+  delta: number;
+  deltaPercent: number;
+  badge: "accurate" | "close" | "missed";
+  emoji: string;
+  color: string;
+}
+
+export function calculateAccuracy(
+  predicted: number,
+  actual: number
+): AccuracyResult {
+  const delta = Math.abs(predicted - actual);
+  if (delta <= 15) {
+    return { delta, deltaPercent: delta, badge: "accurate", emoji: "✓", color: "green" };
+  } else if (delta <= 30) {
+    return { delta, deltaPercent: delta, badge: "close", emoji: "≈", color: "yellow" };
+  } else {
+    return { delta, deltaPercent: delta, badge: "missed", emoji: "✗", color: "red" };
+  }
+}
+
+// Re-export FieldConfig for API routes
+export type { FieldConfig };

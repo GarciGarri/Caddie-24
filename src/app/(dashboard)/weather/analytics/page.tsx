@@ -64,6 +64,8 @@ export default function WeatherAnalyticsPage() {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [automationStats, setAutomationStats] = useState<any>(null);
   const [forecastRevenue, setForecastRevenue] = useState<any[]>([]);
+  const [accuracy, setAccuracy] = useState<any>(null);
+  const [isSimulated, setIsSimulated] = useState(false);
 
   useEffect(() => {
     fetchAnalytics();
@@ -82,6 +84,8 @@ export default function WeatherAnalyticsPage() {
         setRevenueByWeather(data.revenueByWeather || []);
         setKpis(data.kpis);
         setAutomationStats(data.automationStats);
+        setAccuracy(data.accuracy || null);
+        setIsSimulated(data.isSimulated || false);
       }
       if (forecastRes.ok) {
         const data = await forecastRes.json();
@@ -171,6 +175,124 @@ export default function WeatherAnalyticsPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Simulated data banner */}
+      {isSimulated && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm flex items-center gap-2">
+          <span className="text-yellow-600">⚠️</span>
+          <span className="text-yellow-800">
+            Datos simulados — Se usarán datos reales cuando haya ≥30 registros diarios.
+            Usa el botón &quot;Snapshot&quot; diariamente y registra la ocupación real.
+          </span>
+        </div>
+      )}
+
+      {/* Accuracy Section */}
+      {accuracy && accuracy.totalTrackedDays > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Target className="h-5 w-5 text-green-500" />
+              Grado de Acierto de Predicciones
+            </CardTitle>
+            <CardDescription>
+              Comparación entre ocupación predicha y real — {accuracy.totalTrackedDays} días registrados
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Accuracy KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 text-center border border-green-100">
+                <p className="text-3xl font-bold text-green-700">
+                  {accuracy.accuracyScore != null ? `${accuracy.accuracyScore}%` : "—"}
+                </p>
+                <p className="text-xs text-green-600 mt-1">Acierto General</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-green-700">{accuracy.distribution.accurate}</p>
+                <p className="text-xs text-green-600 mt-1">✓ Precisos (±15%)</p>
+              </div>
+              <div className="bg-yellow-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-yellow-700">{accuracy.distribution.close}</p>
+                <p className="text-xs text-yellow-600 mt-1">≈ Cercanos (±30%)</p>
+              </div>
+              <div className="bg-red-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-red-700">{accuracy.distribution.missed}</p>
+                <p className="text-xs text-red-600 mt-1">✗ Fallidos (&gt;30%)</p>
+              </div>
+            </div>
+
+            {/* Accuracy distribution bar */}
+            {accuracy.totalTrackedDays > 0 && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Distribución</p>
+                <div className="flex h-4 rounded-full overflow-hidden">
+                  {accuracy.distribution.accurate > 0 && (
+                    <div
+                      className="bg-green-500 transition-all"
+                      style={{
+                        width: `${(accuracy.distribution.accurate / accuracy.totalTrackedDays) * 100}%`,
+                      }}
+                    />
+                  )}
+                  {accuracy.distribution.close > 0 && (
+                    <div
+                      className="bg-yellow-400 transition-all"
+                      style={{
+                        width: `${(accuracy.distribution.close / accuracy.totalTrackedDays) * 100}%`,
+                      }}
+                    />
+                  )}
+                  {accuracy.distribution.missed > 0 && (
+                    <div
+                      className="bg-red-500 transition-all"
+                      style={{
+                        width: `${(accuracy.distribution.missed / accuracy.totalTrackedDays) * 100}%`,
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Accuracy timeline chart */}
+            {accuracy.timeline.length > 3 && (
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={accuracy.timeline}
+                    margin={{ top: 10, right: 10, bottom: 20, left: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                    <Tooltip
+                      formatter={(val: number, name: string) => [`${val}%`, name]}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="predicted"
+                      name="Predicción"
+                      stroke="#6366f1"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="actual"
+                      name="Real"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Automation attribution */}

@@ -15,6 +15,10 @@ import {
   Calendar,
   BarChart3,
   Zap,
+  Camera,
+  ClipboardCheck,
+  Check,
+  Save,
 } from "lucide-react";
 import {
   Card,
@@ -41,6 +45,7 @@ interface WeatherDay {
   daylightHours: number;
   sunrise: string;
   sunset: string;
+  isCalendarOnly?: boolean;
 }
 
 interface DemandPrediction {
@@ -79,6 +84,23 @@ interface WeatherAlert {
   actionLabel?: string;
 }
 
+interface HistoricalRecord {
+  date: string;
+  golfScore: number;
+  tempMax: number | null;
+  tempMin: number | null;
+  precipitation: number | null;
+  windMax: number | null;
+  weatherCode: number | null;
+  weatherEmoji: string;
+  predictedOccupancy: number | null;
+  actualOccupancy: number | null;
+  predictedRevenue: number | null;
+  actualRevenue: number | null;
+  isClosed: boolean;
+  isPast: boolean;
+}
+
 export default function WeatherDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [daily, setDaily] = useState<WeatherDay[]>([]);
@@ -88,14 +110,33 @@ export default function WeatherDashboardPage() {
   const [fieldConfig, setFieldConfig] = useState<any>(null);
   const [tournaments, setTournaments] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<number>(0);
+  const [calendarOnlyDays, setCalendarOnlyDays] = useState<WeatherDay[]>([]);
+  const [calendarOnlyPredictions, setCalendarOnlyPredictions] = useState<DemandPrediction[]>([]);
+  const [historicalRecords, setHistoricalRecords] = useState<HistoricalRecord[]>([]);
+
+  // Heatmap controls
+  const [timeRange, setTimeRange] = useState<number>(14);
+  const [viewDirection, setViewDirection] = useState<"future" | "past" | "both">("future");
+
+  // Quick input
+  const [quickOccupancy, setQuickOccupancy] = useState("");
+  const [quickSaving, setQuickSaving] = useState(false);
+  const [quickSaved, setQuickSaved] = useState(false);
+
+  // Snapshot
+  const [snapshotting, setSnapshotting] = useState(false);
+  const [snapshotDone, setSnapshotDone] = useState(false);
 
   useEffect(() => {
     fetchForecast();
-  }, []);
+  }, [timeRange, viewDirection]);
 
   const fetchForecast = async () => {
     try {
-      const res = await fetch("/api/weather/forecast");
+      setLoading(true);
+      const res = await fetch(
+        `/api/weather/forecast?range=${timeRange}&direction=${viewDirection}`
+      );
       if (res.ok) {
         const data = await res.json();
         setDaily(data.daily || []);
@@ -104,6 +145,9 @@ export default function WeatherDashboardPage() {
         setTodayHourly(data.todayHourly || []);
         setFieldConfig(data.fieldConfig);
         setTournaments(data.tournaments || []);
+        setCalendarOnlyDays(data.calendarOnlyDays || []);
+        setCalendarOnlyPredictions(data.calendarOnlyPredictions || []);
+        setHistoricalRecords(data.historicalRecords || []);
       }
     } catch (error) {
       console.error("Error fetching forecast:", error);
@@ -112,7 +156,46 @@ export default function WeatherDashboardPage() {
     }
   };
 
-  if (loading) {
+  const handleSnapshot = async () => {
+    setSnapshotting(true);
+    try {
+      await fetch("/api/weather/snapshot", { method: "POST" });
+      setSnapshotDone(true);
+      setTimeout(() => setSnapshotDone(false), 3000);
+    } catch (error) {
+      console.error("Error saving snapshot:", error);
+    } finally {
+      setSnapshotting(false);
+    }
+  };
+
+  const handleQuickSave = async () => {
+    if (!quickOccupancy) return;
+    setQuickSaving(true);
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dateStr = yesterday.toISOString().split("T")[0];
+      await fetch("/api/weather/daily-record", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: dateStr,
+          actualOccupancy: parseFloat(quickOccupancy),
+        }),
+      });
+      setQuickSaved(true);
+      setTimeout(() => setQuickSaved(false), 3000);
+      // Refresh if we're showing past data
+      if (viewDirection !== "future") fetchForecast();
+    } catch (error) {
+      console.error("Error saving quick record:", error);
+    } finally {
+      setQuickSaving(false);
+    }
+  };
+
+  if (loading && daily.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -128,8 +211,17 @@ export default function WeatherDashboardPage() {
 
   // Summary KPIs
   const totalRevenueWeek = predictions.slice(0, 7).reduce((s, p) => s + p.revenueEstimado, 0);
-  const avgGolfScoreWeek = Math.round(daily.slice(0, 7).reduce((s, d) => s + d.golfScore, 0) / Math.min(7, daily.length));
+  const avgGolfScoreWeek = daily.length > 0
+    ? Math.round(daily.slice(0, 7).reduce((s, d) => s + d.golfScore, 0) / Math.min(7, daily.length))
+    : 0;
   const goodDays = daily.filter((d) => d.golfScore >= 70).length;
+
+  // Yesterday's prediction for quick input
+  const yesterdayRecord = historicalRecords.find((r) => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return r.date === yesterday.toISOString().split("T")[0];
+  });
 
   return (
     <div className="space-y-6">
@@ -141,10 +233,30 @@ export default function WeatherDashboardPage() {
             Meteorología y Predicción
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {fieldConfig?.name} — Próximos 14 días con predicción de demanda
+            {fieldConfig?.name} — Predicción de demanda basada en clima
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Link href="/weather/daily-input">
+            <Button variant="outline" size="sm">
+              <ClipboardCheck className="h-4 w-4 mr-1" /> Registro Diario
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSnapshot}
+            disabled={snapshotting}
+          >
+            {snapshotting ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : snapshotDone ? (
+              <Check className="h-4 w-4 mr-1 text-green-500" />
+            ) : (
+              <Camera className="h-4 w-4 mr-1" />
+            )}
+            {snapshotDone ? "Guardado" : "Snapshot"}
+          </Button>
           <Link href="/weather/calendar">
             <Button variant="outline" size="sm"><Calendar className="h-4 w-4 mr-1" /> Calendario</Button>
           </Link>
@@ -210,7 +322,7 @@ export default function WeatherDashboardPage() {
           <CardContent className="pt-4 pb-3 px-4">
             <p className="text-xs text-muted-foreground">Revenue Semana</p>
             <p className="text-xl font-bold mt-1">{totalRevenueWeek.toLocaleString("es-ES")}€</p>
-            <p className="text-xs text-muted-foreground">{goodDays} de 14 días buenos</p>
+            <p className="text-xs text-muted-foreground">{goodDays} días buenos</p>
           </CardContent>
         </Card>
         <Card>
@@ -225,7 +337,7 @@ export default function WeatherDashboardPage() {
       {/* 14-Day Forecast Strip */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Próximos 14 Días</CardTitle>
+          <CardTitle className="text-lg">Próximos {daily.length} Días</CardTitle>
           <CardDescription>Haz click en un día para ver detalle</CardDescription>
         </CardHeader>
         <CardContent>
@@ -416,16 +528,152 @@ export default function WeatherDashboardPage() {
         </Card>
       </div>
 
-      {/* Weekly Heatmap */}
+      {/* Enhanced Heatmap */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Mapa de Calor — Próximas 2 Semanas</CardTitle>
-          <CardDescription>Rojo = mal tiempo/baja demanda, Verde = perfecto/alta demanda</CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-lg">Mapa de Calor</CardTitle>
+              <CardDescription>
+                Rojo = mal tiempo/baja demanda, Verde = perfecto/alta demanda
+              </CardDescription>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {/* Time range selector */}
+              <div className="flex rounded-lg border overflow-hidden text-xs">
+                {[
+                  { value: 7, label: "1 Sem" },
+                  { value: 14, label: "2 Sem" },
+                  { value: 21, label: "3 Sem" },
+                  { value: 30, label: "1 Mes" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTimeRange(opt.value)}
+                    className={`px-3 py-1.5 transition-colors ${
+                      timeRange === opt.value
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {/* Direction toggle */}
+              <div className="flex rounded-lg border overflow-hidden text-xs">
+                {[
+                  { value: "future" as const, label: "Futuro" },
+                  { value: "past" as const, label: "Pasado" },
+                  { value: "both" as const, label: "Ambos" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setViewDirection(opt.value)}
+                    className={`px-3 py-1.5 transition-colors ${
+                      viewDirection === opt.value
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <WeeklyHeatmap daily={daily} predictions={predictions} />
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <WeeklyHeatmap
+              daily={daily}
+              predictions={predictions}
+              calendarOnlyDays={calendarOnlyDays}
+              calendarOnlyPredictions={calendarOnlyPredictions}
+              historicalRecords={historicalRecords}
+              viewDirection={viewDirection}
+            />
+          )}
+
+          {/* Legend */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4 pt-3 border-t text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded ring-2 ring-blue-500 bg-blue-50" /> Hoy
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="font-bold text-green-700">✓</span> Preciso (±15%)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="font-bold text-yellow-600">≈</span> Cercano (±30%)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="font-bold text-red-600">✗</span> Fallido (&gt;30%)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded border border-dashed border-gray-400 opacity-60" /> Solo calendario
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-gray-500">?</span> Sin datos reales
+            </span>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Quick Input: Yesterday */}
+      {viewDirection !== "future" && (
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex-1">
+                <p className="text-sm font-medium">Registro Rápido — Ayer</p>
+                <p className="text-xs text-muted-foreground">
+                  {yesterdayRecord
+                    ? `Predicción: ${yesterdayRecord.predictedOccupancy ?? "—"}% ocupación`
+                    : "Sin predicción guardada"}
+                  {yesterdayRecord?.actualOccupancy != null &&
+                    ` → Real: ${yesterdayRecord.actualOccupancy}%`}
+                </p>
+              </div>
+              {!yesterdayRecord?.actualOccupancy ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Ocupación real:</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={quickOccupancy}
+                    onChange={(e) => setQuickOccupancy(e.target.value)}
+                    placeholder="%"
+                    className="w-16 h-8 text-sm border rounded px-2"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleQuickSave}
+                    disabled={quickSaving || !quickOccupancy}
+                  >
+                    {quickSaving ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : quickSaved ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <Save className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                  <Check className="h-3 w-3 mr-1" /> Registrado
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -476,31 +724,146 @@ function DemandBadge({ level }: { level: string }) {
   );
 }
 
-function WeeklyHeatmap({ daily, predictions }: { daily: WeatherDay[]; predictions: DemandPrediction[] }) {
+interface HeatmapCell {
+  date: string;
+  golfScore: number | null;
+  weatherEmoji: string;
+  occupancy: number;
+  isPast: boolean;
+  isToday: boolean;
+  isCalendarOnly: boolean;
+  actualOccupancy: number | null;
+  predictedOccupancy: number | null;
+  accuracy: { delta: number; badge: string; emoji: string; color: string } | null;
+}
+
+function WeeklyHeatmap({
+  daily,
+  predictions,
+  calendarOnlyDays,
+  calendarOnlyPredictions,
+  historicalRecords,
+  viewDirection,
+}: {
+  daily: WeatherDay[];
+  predictions: DemandPrediction[];
+  calendarOnlyDays: WeatherDay[];
+  calendarOnlyPredictions: DemandPrediction[];
+  historicalRecords: HistoricalRecord[];
+  viewDirection: string;
+}) {
   const dayLabels = ["L", "M", "X", "J", "V", "S", "D"];
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  // Build unified cell list
+  const cells: HeatmapCell[] = [];
+
+  // Past records
+  if (viewDirection === "past" || viewDirection === "both") {
+    historicalRecords.forEach((r) => {
+      const hasAccuracy = r.predictedOccupancy != null && r.actualOccupancy != null;
+      const delta = hasAccuracy
+        ? Math.abs(r.predictedOccupancy! - r.actualOccupancy!)
+        : 0;
+      cells.push({
+        date: r.date,
+        golfScore: r.golfScore,
+        weatherEmoji: r.weatherEmoji || "📊",
+        occupancy: r.actualOccupancy ?? r.predictedOccupancy ?? 0,
+        isPast: true,
+        isToday: r.date === todayStr,
+        isCalendarOnly: false,
+        actualOccupancy: r.actualOccupancy,
+        predictedOccupancy: r.predictedOccupancy,
+        accuracy: hasAccuracy
+          ? {
+              delta,
+              badge: delta <= 15 ? "accurate" : delta <= 30 ? "close" : "missed",
+              emoji: delta <= 15 ? "✓" : delta <= 30 ? "≈" : "✗",
+              color: delta <= 15 ? "green" : delta <= 30 ? "yellow" : "red",
+            }
+          : null,
+      });
+    });
+  }
+
+  // Future real forecast
+  if (viewDirection === "future" || viewDirection === "both") {
+    daily.forEach((day, idx) => {
+      const pred = predictions[idx];
+      cells.push({
+        date: day.date,
+        golfScore: day.golfScore,
+        weatherEmoji: day.weatherEmoji,
+        occupancy: pred ? parseInt(pred.ocupacionEstimada) : 0,
+        isPast: false,
+        isToday: day.date === todayStr,
+        isCalendarOnly: false,
+        actualOccupancy: null,
+        predictedOccupancy: pred ? parseInt(pred.ocupacionEstimada) : null,
+        accuracy: null,
+      });
+    });
+
+    // Calendar-only future
+    calendarOnlyDays.forEach((day, idx) => {
+      const pred = calendarOnlyPredictions[idx];
+      cells.push({
+        date: day.date,
+        golfScore: null,
+        weatherEmoji: "📅",
+        occupancy: pred ? parseInt(pred.ocupacionEstimada) : 0,
+        isPast: false,
+        isToday: false,
+        isCalendarOnly: true,
+        actualOccupancy: null,
+        predictedOccupancy: pred ? parseInt(pred.ocupacionEstimada) : null,
+        accuracy: null,
+      });
+    });
+  }
+
+  // Sort by date and deduplicate
+  cells.sort((a, b) => a.date.localeCompare(b.date));
+  const uniqueCells: HeatmapCell[] = [];
+  const seenDates = new Set<string>();
+  for (const cell of cells) {
+    if (!seenDates.has(cell.date)) {
+      seenDates.add(cell.date);
+      uniqueCells.push(cell);
+    }
+  }
 
   // Group by weeks
-  const weeks: Array<Array<{ day: WeatherDay; pred: DemandPrediction } | null>> = [];
-  let currentWeek: Array<{ day: WeatherDay; pred: DemandPrediction } | null> = [];
+  const weeks: Array<Array<HeatmapCell | null>> = [];
+  let currentWeek: Array<HeatmapCell | null> = [];
 
-  daily.forEach((day, idx) => {
-    const d = new Date(day.date);
+  uniqueCells.forEach((cell, idx) => {
+    const d = new Date(cell.date);
     const dow = d.getDay() === 0 ? 6 : d.getDay() - 1; // Mon=0, Sun=6
 
-    // Pad first week with nulls
     if (idx === 0) {
       for (let i = 0; i < dow; i++) currentWeek.push(null);
     }
 
-    currentWeek.push({ day, pred: predictions[idx] });
+    currentWeek.push(cell);
 
-    if (dow === 6 || idx === daily.length - 1) {
-      // Pad remaining days of week
+    if (dow === 6 || idx === uniqueCells.length - 1) {
       while (currentWeek.length < 7) currentWeek.push(null);
       weeks.push(currentWeek);
       currentWeek = [];
     }
   });
+
+  if (uniqueCells.length === 0) {
+    return (
+      <div className="py-8 text-center text-sm text-muted-foreground">
+        {viewDirection === "past"
+          ? "No hay datos históricos aún. Los datos se irán acumulando con el Snapshot diario."
+          : "No hay datos disponibles"}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1">
@@ -517,27 +880,59 @@ function WeeklyHeatmap({ daily, predictions }: { daily: WeatherDay[]; prediction
       {weeks.map((week, wi) => (
         <div key={wi} className="flex gap-1">
           <div className="w-16 text-xs text-muted-foreground flex items-center">
-            {week.find((d) => d)?.day.date
-              ? `Sem ${getWeekNumber(week.find((d) => d)!.day.date)}`
+            {week.find((d) => d)?.date
+              ? `Sem ${getWeekNumber(week.find((d) => d)!.date)}`
               : ""}
           </div>
           {week.map((cell, ci) => {
             if (!cell) {
-              return <div key={ci} className="flex-1 h-14 rounded bg-gray-50" />;
+              return <div key={ci} className="flex-1 h-16 rounded bg-gray-50" />;
             }
-            const { day, pred } = cell;
-            const score = day.golfScore;
-            const bgColor = getHeatmapColor(score);
-            const ocupacion = parseInt(pred.ocupacionEstimada);
+
+            const score = cell.golfScore ?? 60;
+            const bgColor = cell.isCalendarOnly
+              ? "bg-gray-100 text-gray-600"
+              : getHeatmapColor(score);
+
             return (
               <div
                 key={ci}
-                className={`flex-1 h-14 rounded flex flex-col items-center justify-center text-[10px] gap-0.5 ${bgColor}`}
-                title={`${formatDayLong(day.date)}: Score ${score}, ${pred.demandaPredecida}`}
+                className={`flex-1 h-16 rounded flex flex-col items-center justify-center text-[10px] gap-0.5 relative ${bgColor} ${
+                  cell.isToday ? "ring-2 ring-blue-500" : ""
+                } ${
+                  cell.isCalendarOnly ? "border border-dashed border-gray-400 opacity-70" : ""
+                }`}
+                title={`${formatDayLong(cell.date)}: Score ${score}, ${cell.occupancy}% ocupación${
+                  cell.accuracy ? ` (Acierto: ${cell.accuracy.emoji})` : ""
+                }`}
               >
-                <span>{day.weatherEmoji}</span>
-                <span className="font-medium">{score}</span>
-                <span className="opacity-75">{ocupacion}%</span>
+                <span>{cell.weatherEmoji}</span>
+                <span className="font-medium">{cell.golfScore != null ? cell.golfScore : "—"}</span>
+                <span className="opacity-75">{cell.occupancy}%</span>
+                {/* Accuracy badge for past data */}
+                {cell.isPast && cell.accuracy && (
+                  <span
+                    className={`absolute top-0.5 right-0.5 text-[8px] font-bold leading-none ${
+                      cell.accuracy.color === "green"
+                        ? "text-green-700"
+                        : cell.accuracy.color === "yellow"
+                        ? "text-yellow-700"
+                        : "text-red-700"
+                    }`}
+                  >
+                    {cell.accuracy.emoji}
+                  </span>
+                )}
+                {/* No data indicator */}
+                {cell.isPast && !cell.accuracy && cell.actualOccupancy == null && (
+                  <span className="absolute top-0.5 right-1 text-[8px] text-gray-500">?</span>
+                )}
+                {/* Today indicator */}
+                {cell.isToday && (
+                  <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[7px] text-blue-600 font-bold">
+                    HOY
+                  </span>
+                )}
               </div>
             );
           })}
