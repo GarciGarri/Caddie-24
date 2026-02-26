@@ -483,6 +483,23 @@ model ClubSettings {
 
   bookingConflictHours      Int             @default(24)
 
+  // Field / Weather configuration
+  fieldLatitude             Float?          @default(40.9651)
+  fieldLongitude            Float?          @default(-5.6640)
+  fieldName                 String?         @default("La Valmuza Golf Club")
+  fieldCapacity             Int?            @default(80)
+  fieldOpenTime             String?         @default("07:00")
+  fieldCloseTime            String?         @default("21:00")
+  rateWeekday               Float?          @default(45)
+  rateWeekend               Float?          @default(65)
+  rateHoliday               Float?          @default(75)
+  rainClosureThreshold      Float?          @default(10)
+  windClosureThreshold      Float?          @default(50)
+  customHolidays            Json?           // [{ date: "2026-03-19", name: "San José" }, ...]
+  seasonConfig              Json?           // { high: ["04","05","06","07","08","09","10"], medium: ["03","11"], low: ["12","01","02"] }
+  seasonMultipliers         Json?           // { high: 1.2, medium: 1.0, low: 0.7 }
+  weatherAutomations        Json?           // Array of automation rules with on/off state
+
   updatedAt                 DateTime        @updatedAt
 
   @@map("club_settings")

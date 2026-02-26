@@ -6,6 +6,7 @@ import {
   Shield,
   Users,
   ChevronRight,
+  MapPin,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -15,6 +16,12 @@ const settingsSections = [
     description: "Nombre del club, zona horaria, idioma por defecto",
     icon: Building2,
     href: "/settings/general",
+  },
+  {
+    title: "Campo y Meteorología",
+    description: "Coordenadas GPS, capacidad, tarifas, umbrales de cierre, festivos",
+    icon: MapPin,
+    href: "/settings/field",
   },
   {
     title: "WhatsApp",

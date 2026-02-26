@@ -29,6 +29,15 @@ export function buildPlayerFilter(segment: SegmentQuery) {
     };
   }
 
+  if (segment.tournamentIds && segment.tournamentIds.length > 0) {
+    where.tournamentRegistrations = {
+      some: {
+        tournamentId: { in: segment.tournamentIds },
+        status: { in: ["REGISTERED", "CONFIRMED"] },
+      },
+    };
+  }
+
   return where;
 }
 

@@ -6,6 +6,7 @@ export const segmentQuerySchema = z.object({
   handicapMin: z.coerce.number().min(0).max(54).optional(),
   handicapMax: z.coerce.number().min(0).max(54).optional(),
   tags: z.array(z.string()).optional(),
+  tournamentIds: z.array(z.string()).optional(),
 });
 
 export const createCampaignSchema = z.object({

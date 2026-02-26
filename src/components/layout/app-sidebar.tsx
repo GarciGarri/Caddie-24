@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  CloudSun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const navItems = [
   { title: "Bandeja de Entrada", href: "/inbox", icon: MessageSquare },
   { title: "Campañas", href: "/campaigns", icon: Megaphone },
   { title: "Torneos", href: "/tournaments", icon: Trophy },
+  { title: "Meteorología", href: "/weather", icon: CloudSun },
   { title: "Templates", href: "/templates", icon: FileText },
   { title: "IA Insights", href: "/ai", icon: Bot },
 ];
