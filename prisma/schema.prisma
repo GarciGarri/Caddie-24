@@ -106,12 +106,14 @@ model Player {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  visits              Visit[]
-  consumptions        Consumption[]
-  tags                PlayerTag[]
-  conversations       Conversation[]
-  campaignRecipients  CampaignRecipient[]
-  engagementEvents    EngagementEvent[]
+  visits                  Visit[]
+  consumptions            Consumption[]
+  tags                    PlayerTag[]
+  conversations           Conversation[]
+  campaignRecipients      CampaignRecipient[]
+  engagementEvents        EngagementEvent[]
+  tournamentRegistrations TournamentRegistration[]
+  tournamentResults       TournamentResult[]
 
   @@index([phone])
   @@index([whatsappId])
@@ -525,4 +527,131 @@ enum AiAnalysisType {
   ESCALATION_CHECK
   AB_ANALYSIS
   CHATBOT_RESPONSE
+}
+
+// ============================================================
+// TOURNAMENTS
+// ============================================================
+
+model Tournament {
+  id                String           @id @default(cuid())
+  name              String
+  description       String?          @db.Text
+  date              DateTime
+  teeTime           String?          // e.g. "09:00"
+  format            TournamentFormat
+  handicapSystem    String?          @default("EGA")
+  maxParticipants   Int
+  entryFee          Decimal?         @db.Decimal(10, 2)
+  totalPrize        Decimal?         @db.Decimal(10, 2)
+  cancellationPolicy String?        @db.Text
+  sponsors          Json?            // [{ name, logo?, contribution? }]
+  preferredChannel  String?          @default("whatsapp")
+  status            TournamentStatus @default(DRAFT)
+  isActive          Boolean          @default(true)
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  categories        TournamentCategory[]
+  registrations     TournamentRegistration[]
+  results           TournamentResult[]
+
+  @@index([date])
+  @@index([status])
+  @@map("tournaments")
+}
+
+enum TournamentFormat {
+  STABLEFORD
+  MEDAL
+  SCRAMBLE
+  MATCH_PLAY
+  BEST_BALL
+  FOURBALL
+}
+
+enum TournamentStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model TournamentCategory {
+  id              String     @id @default(cuid())
+  tournamentId    String
+  name            String     // e.g. "1ª Categoría Masculina"
+  type            String     // GROSS, NET, HANDICAP_RANGE, GENDER
+  handicapMin     Float?
+  handicapMax     Float?
+  gender          String?    // M, F, MIXED
+  maxPlayers      Int?
+  prizeAmount     Decimal?   @db.Decimal(10, 2)
+
+  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
+  @@map("tournament_categories")
+}
+
+model TournamentRegistration {
+  id              String               @id @default(cuid())
+  tournamentId    String
+  playerId        String
+  categoryName    String?
+  status          RegistrationStatus   @default(REGISTERED)
+  paymentStatus   PaymentStatus        @default(PENDING)
+  waitlistPosition Int?
+  handicapAtRegistration Float?
+  registeredAt    DateTime             @default(now())
+  cancelledAt     DateTime?
+
+  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player          Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, playerId])
+  @@index([tournamentId, status])
+  @@index([playerId])
+  @@map("tournament_registrations")
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  WAITLIST
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  WAIVED
+}
+
+model TournamentResult {
+  id              String     @id @default(cuid())
+  tournamentId    String
+  playerId        String
+  grossScore      Int?
+  netScore        Int?
+  handicapUsed    Float?
+  scorecardJson   Json?      // { holes: [{ hole: 1, par: 4, strokes: 5 }, ...] }
+  positionOverall Int?
+  positionCategory Int?
+  categoryName    String?
+  prizeWon        Decimal?   @db.Decimal(10, 2)
+  createdAt       DateTime   @default(now())
+
+  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player          Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, playerId])
+  @@index([tournamentId, positionOverall])
+  @@index([playerId])
+  @@map("tournament_results")
 }

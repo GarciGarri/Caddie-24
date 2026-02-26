@@ -7,6 +7,7 @@ import {
   Users,
   MessageSquare,
   Megaphone,
+  Trophy,
   Settings,
   Bot,
   FileText,
@@ -40,6 +41,11 @@ const navItems = [
     title: "Campañas",
     href: "/campaigns",
     icon: Megaphone,
+  },
+  {
+    title: "Torneos",
+    href: "/tournaments",
+    icon: Trophy,
   },
   {
     title: "Templates",

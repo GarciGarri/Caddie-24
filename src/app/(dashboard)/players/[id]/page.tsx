@@ -27,6 +27,10 @@ import {
   Copy,
   RefreshCw,
   Lightbulb,
+  Medal,
+  Crown,
+  Award,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +82,7 @@ export default function PlayerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "visits" | "consumption" | "conversations"
+    "overview" | "visits" | "consumption" | "conversations" | "tournaments"
   >("overview");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -174,6 +178,7 @@ export default function PlayerDetailPage() {
       key: "conversations",
       label: `Mensajes (${player._count?.conversations || 0})`,
     },
+    { key: "tournaments", label: "Torneos" },
   ] as const;
 
   return (
@@ -703,6 +708,198 @@ export default function PlayerDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {activeTab === "tournaments" && (
+        <PlayerTournamentsTab playerId={player.id} />
+      )}
+    </div>
+  );
+}
+
+// --- Player Tournaments History Tab ---
+function PlayerTournamentsTab({ playerId }: { playerId: string }) {
+  const [data, setData] = useState<{
+    registrations: any[];
+    results: any[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // Fetch all tournaments and filter by player
+        const res = await fetch("/api/tournaments?limit=100");
+        if (!res.ok) throw new Error();
+        const tournamentsData = await res.json();
+        const allTournaments = tournamentsData.tournaments || [];
+
+        // For each tournament, check if player is registered or has results
+        const registrations: any[] = [];
+        const results: any[] = [];
+
+        for (const t of allTournaments) {
+          const detailRes = await fetch(`/api/tournaments/${t.id}`);
+          if (!detailRes.ok) continue;
+          const detail = await detailRes.json();
+
+          const reg = (detail.registrations || []).find(
+            (r: any) => r.player?.id === playerId || r.playerId === playerId
+          );
+          if (reg) {
+            registrations.push({ ...reg, tournament: detail });
+          }
+
+          const result = (detail.results || []).find(
+            (r: any) => r.player?.id === playerId || r.playerId === playerId
+          );
+          if (result) {
+            results.push({ ...result, tournament: detail });
+          }
+        }
+
+        setData({ registrations, results });
+      } catch {
+        console.error("Error fetching tournament history");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [playerId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!data || (data.registrations.length === 0 && data.results.length === 0)) {
+    return (
+      <div className="text-center py-12">
+        <Trophy className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+        <p className="text-muted-foreground">
+          Este jugador no ha participado en ningún torneo
+        </p>
+      </div>
+    );
+  }
+
+  const posIcons = [Crown, Medal, Award];
+  const posColors = ["text-amber-500", "text-gray-400", "text-amber-700"];
+
+  return (
+    <div className="space-y-4">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <Trophy className="h-5 w-5 text-indigo-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold">{data.registrations.length}</p>
+            <p className="text-xs text-muted-foreground">Torneos jugados</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <Medal className="h-5 w-5 text-amber-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold">
+              {data.results.filter((r) => r.positionOverall && r.positionOverall <= 3).length}
+            </p>
+            <p className="text-xs text-muted-foreground">Podios</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <TrendingUp className="h-5 w-5 text-green-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold">
+              {data.results.length > 0
+                ? Math.min(...data.results.filter((r) => r.netScore).map((r) => r.netScore))
+                : "—"}
+            </p>
+            <p className="text-xs text-muted-foreground">Mejor score neto</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tournament history */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Historial de torneos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {data.registrations.map((reg) => {
+              const result = data.results.find(
+                (r) => r.tournament.id === reg.tournament.id
+              );
+              const isTop3 = result?.positionOverall && result.positionOverall <= 3;
+              const PosIcon = isTop3 ? posIcons[result.positionOverall - 1] : null;
+
+              return (
+                <div
+                  key={reg.id}
+                  className="flex items-center gap-4 p-3 border rounded-lg hover:bg-muted/30"
+                >
+                  {isTop3 && PosIcon ? (
+                    <PosIcon
+                      className={`h-6 w-6 shrink-0 ${
+                        posColors[result.positionOverall - 1]
+                      }`}
+                    />
+                  ) : (
+                    <Trophy className="h-5 w-5 text-muted-foreground shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{reg.tournament.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>
+                        {new Date(reg.tournament.date).toLocaleDateString("es-ES", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {reg.tournament.format}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {result ? (
+                      <>
+                        {result.positionOverall && (
+                          <p className="text-sm font-bold">
+                            #{result.positionOverall}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {result.netScore
+                            ? `Neto: ${result.netScore}`
+                            : result.grossScore
+                            ? `Bruto: ${result.grossScore}`
+                            : ""}
+                        </p>
+                      </>
+                    ) : (
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px]"
+                      >
+                        {reg.status === "REGISTERED" ? "Inscrito" : reg.status}
+                      </Badge>
+                    )}
+                  </div>
+                  <Link href={`/tournaments/${reg.tournament.id}`}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
