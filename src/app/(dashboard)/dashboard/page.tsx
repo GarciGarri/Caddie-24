@@ -168,7 +168,7 @@ export default function DashboardPage() {
                       }`}
                     />
                     <div className="flex-1">
-                      <p className="text-sm">
+                      <span className="text-sm block">
                         <span className="font-medium">{item.playerName}</span>
                         {": "}
                         {item.preview}
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                             IA
                           </Badge>
                         )}
-                      </p>
+                      </span>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {new Date(item.timestamp).toLocaleString("es-ES", {
                           hour: "2-digit",

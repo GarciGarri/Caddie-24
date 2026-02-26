@@ -7,7 +7,7 @@ export default auth((req) => {
   // Public routes — no auth required
   const isPublicRoute =
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/whatsapp/webhook") ||
+    pathname.startsWith("/api/webhook/whatsapp") ||
     pathname === "/login";
 
   if (isPublicRoute) return;
