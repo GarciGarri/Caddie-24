@@ -61,6 +61,15 @@
     "zod": "^3.23.8",
     "zustand": "^5.0.1"
   },
+  "browserslist": [
+    "chrome >= 51",
+    "firefox >= 54",
+    "safari >= 10",
+    "edge >= 15",
+    "ios >= 10",
+    "android >= 5",
+    "samsung >= 6"
+  ],
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
