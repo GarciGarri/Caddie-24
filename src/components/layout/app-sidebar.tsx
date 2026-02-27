@@ -16,6 +16,7 @@ import {
   X,
   CloudSun,
   BookOpen,
+  Presentation,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,15 @@ interface AppSidebarProps {
 export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+
+  // Check demo mode
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => setDemoMode(data.demoMode === true))
+      .catch(() => {});
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -124,6 +134,12 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
         </div>
         <nav className="flex-1 space-y-1 px-2">
           {navItems.map((item) => navLink(item, !collapsed))}
+          {demoMode && (
+            <>
+              <Separator className="my-2" />
+              {navLink({ title: "Propuesta", href: "/propuesta", icon: Presentation }, !collapsed)}
+            </>
+          )}
         </nav>
         <div className="px-2 pb-4">
           <Separator className="mb-2" />
@@ -161,6 +177,12 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
             </div>
             <nav className="flex-1 space-y-1 px-2 mt-2">
               {navItems.map((item) => navLink(item, true))}
+              {demoMode && (
+                <>
+                  <Separator className="my-2" />
+                  {navLink({ title: "Propuesta", href: "/propuesta", icon: Presentation }, true)}
+                </>
+              )}
             </nav>
             <div className="px-2 pb-4">
               <Separator className="mb-2" />
