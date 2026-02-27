@@ -92,7 +92,7 @@ export default function DashboardLayout({
         mobileOpen={mobileMenuOpen}
         onMobileClose={() => setMobileMenuOpen(false)}
       />
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 overflow-visible">
         <Header onMobileMenuToggle={() => setMobileMenuOpen((v) => !v)} />
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden">{children}</main>
       </div>
