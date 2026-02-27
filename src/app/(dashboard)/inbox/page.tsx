@@ -54,6 +54,7 @@ interface Message {
   isAiGenerated: boolean;
   templateName: string | null;
   mediaUrl: string | null;
+  aiDraft: string | null;
 }
 
 const sentimentColors: Record<string, string> = {
@@ -125,6 +126,8 @@ export default function InboxPage() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [showActions, setShowActions] = useState(false);
+  const [generatingDraft, setGeneratingDraft] = useState(false);
+  const [draftSource, setDraftSource] = useState<"manual" | "ai" | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations
@@ -224,6 +227,7 @@ export default function InboxPage() {
 
       if (res.ok) {
         setMessageInput("");
+        setDraftSource(null);
         // Refresh messages and conversations
         const msgRes = await fetch(
           `/api/conversations/${selectedId}/messages`
@@ -268,6 +272,44 @@ export default function InboxPage() {
       // ignore
     }
   };
+
+  // Generate AI draft handler
+  const handleGenerateDraft = async () => {
+    if (!selectedId || generatingDraft) return;
+    setGeneratingDraft(true);
+    try {
+      const res = await fetch(
+        `/api/conversations/${selectedId}/generate-draft`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setMessageInput(data.draft);
+        setDraftSource("ai");
+      } else {
+        const data = await res.json();
+        setSendError(data.error || "Error al generar borrador");
+      }
+    } catch {
+      setSendError("Error de conexión al generar borrador");
+    } finally {
+      setGeneratingDraft(false);
+    }
+  };
+
+  // Auto-populate AI draft from ASSISTED mode
+  useEffect(() => {
+    if (messages.length > 0 && !messageInput) {
+      const lastInbound = [...messages]
+        .reverse()
+        .find((m) => m.direction === "INBOUND");
+      if (lastInbound?.aiDraft) {
+        setMessageInput(lastInbound.aiDraft);
+        setDraftSource("ai");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
 
   // Check if 24h window is expired (can only send templates outside window)
   const lastInboundMessage = messages
@@ -426,20 +468,32 @@ export default function InboxPage() {
                       </span>
                     </>
                   )}
-                  {selectedConversation.isAiBotActive && (
-                    <>
-                      <span className="text-xs text-muted-foreground hidden sm:inline">
-                        ·
-                      </span>
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] h-4 px-1.5 hidden sm:inline-flex"
-                      >
-                        <Bot className="h-2.5 w-2.5 mr-0.5" />
-                        Bot IA activo
-                      </Badge>
-                    </>
-                  )}
+                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                    ·
+                  </span>
+                  <button
+                    onClick={() =>
+                      handleUpdateConversation(
+                        "isAiBotActive",
+                        !selectedConversation.isAiBotActive
+                      )
+                    }
+                    className={`hidden sm:inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full transition-colors ${
+                      selectedConversation.isAiBotActive
+                        ? "bg-green-100 text-green-800 hover:bg-green-200"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                    title={
+                      selectedConversation.isAiBotActive
+                        ? "Bot IA activo — clic para desactivar"
+                        : "Bot IA inactivo — clic para activar"
+                    }
+                  >
+                    <Bot className="h-2.5 w-2.5" />
+                    {selectedConversation.isAiBotActive
+                      ? "IA ON"
+                      : "IA OFF"}
+                  </button>
                 </div>
               </div>
             </div>
@@ -595,6 +649,23 @@ export default function InboxPage() {
             </div>
           )}
 
+          {/* AI Draft indicator */}
+          {draftSource === "ai" && messageInput && (
+            <div className="px-3 sm:px-4 py-2 border-t bg-purple-50 text-purple-700 text-xs flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 shrink-0" />
+              Borrador IA sugerido — revisa y edita antes de enviar
+              <button
+                className="ml-auto underline"
+                onClick={() => {
+                  setDraftSource(null);
+                  setMessageInput("");
+                }}
+              >
+                Descartar
+              </button>
+            </div>
+          )}
+
           {/* Message input */}
           <div className="p-3 sm:p-4 border-t">
             <div className="flex items-center gap-2">
@@ -605,6 +676,24 @@ export default function InboxPage() {
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0 hidden sm:flex"
+                onClick={handleGenerateDraft}
+                disabled={
+                  generatingDraft ||
+                  sending ||
+                  (is24hExpired && messages.length > 0)
+                }
+                title="Generar borrador con IA"
+              >
+                {generatingDraft ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-purple-500" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-purple-500" />
+                )}
+              </Button>
               <Input
                 placeholder={
                   is24hExpired && messages.length > 0
@@ -612,7 +701,10 @@ export default function InboxPage() {
                     : "Escribe un mensaje..."
                 }
                 value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
+                onChange={(e) => {
+                  setMessageInput(e.target.value);
+                  if (draftSource === "ai") setDraftSource("manual");
+                }}
                 onKeyDown={handleKeyDown}
                 className="flex-1"
                 disabled={sending || (is24hExpired && messages.length > 0)}
