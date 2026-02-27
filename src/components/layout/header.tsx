@@ -12,7 +12,7 @@ interface HeaderProps {
 
 export function Header({ onMobileMenuToggle }: HeaderProps) {
   return (
-    <header className="flex h-14 sm:h-16 items-center justify-between border-b px-4 sm:px-6 bg-background shrink-0">
+    <header className="flex h-14 sm:h-16 items-center justify-between border-b px-4 sm:px-6 bg-background shrink-0 overflow-visible relative z-30">
       {/* Left side */}
       <div className="flex items-center gap-3">
         <Button
