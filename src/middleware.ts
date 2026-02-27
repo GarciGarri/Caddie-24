@@ -8,7 +8,9 @@ export default auth((req) => {
   const isPublicRoute =
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/webhook/whatsapp") ||
-    pathname === "/login";
+    pathname.startsWith("/api/cron/") ||
+    pathname === "/login" ||
+    pathname === "/sw.js";
 
   if (isPublicRoute) return;
 
