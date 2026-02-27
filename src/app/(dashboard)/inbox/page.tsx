@@ -228,6 +228,9 @@ export default function InboxPage() {
       if (res.ok) {
         setMessageInput("");
         setDraftSource(null);
+        // Reset textarea height
+        const ta = document.querySelector<HTMLTextAreaElement>("textarea[placeholder]");
+        if (ta) ta.style.height = "36px";
         // Refresh messages and conversations
         const msgRes = await fetch(
           `/api/conversations/${selectedId}/messages`
@@ -694,7 +697,7 @@ export default function InboxPage() {
                   <Sparkles className="h-4 w-4 text-purple-500" />
                 )}
               </Button>
-              <Input
+              <textarea
                 placeholder={
                   is24hExpired && messages.length > 0
                     ? "Escritura deshabilitada — usa una plantilla"
@@ -706,7 +709,14 @@ export default function InboxPage() {
                   if (draftSource === "ai") setDraftSource("manual");
                 }}
                 onKeyDown={handleKeyDown}
-                className="flex-1"
+                rows={1}
+                className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ minHeight: "36px", maxHeight: "120px" }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = "36px";
+                  target.style.height = Math.min(target.scrollHeight, 120) + "px";
+                }}
                 disabled={sending || (is24hExpired && messages.length > 0)}
               />
               <Button
