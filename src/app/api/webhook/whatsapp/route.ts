@@ -6,6 +6,7 @@ import {
   normalizePhoneForDb,
 } from "@/lib/services/whatsapp";
 import { triggerAutoReply } from "@/lib/services/ai-reply";
+import { createNotificationForAllAdmins } from "@/lib/services/notifications";
 
 // --- GET: Webhook verification ---
 export async function GET(request: NextRequest) {
@@ -325,11 +326,20 @@ async function handleStatusUpdate(status: any): Promise<void> {
     data: updateData,
   });
 
-  // If failed, log the error
+  // If failed, log the error + notify admins
   if (status.status === "failed" && status.errors?.length > 0) {
-    console.error(
-      `[Webhook] Message ${status.id} failed:`,
-      status.errors[0].title || status.errors[0].message
+    const errorMsg = status.errors[0].title || status.errors[0].message || "Error desconocido";
+    console.error(`[Webhook] Message ${status.id} failed:`, errorMsg);
+
+    // Notify admins about the failure
+    createNotificationForAllAdmins({
+      type: "CAMPAIGN_ERROR",
+      title: "Error en envio de mensaje",
+      body: `Mensaje ${status.id.substring(0, 12)}... fallo: ${errorMsg}`,
+      link: "/campaigns",
+      data: { whatsappMessageId: status.id, error: errorMsg },
+    }).catch((err) =>
+      console.error("[Webhook] Notification error:", err)
     );
   }
 

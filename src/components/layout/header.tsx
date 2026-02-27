@@ -1,10 +1,10 @@
 "use client";
 
-import { Bell, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { NotificationBell } from "@/components/layout/notification-bell";
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -34,12 +34,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2 sm:gap-3">
-        <Button variant="ghost" size="icon" className="relative h-9 w-9">
-          <Bell className="h-5 w-5" />
-          <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]">
-            3
-          </Badge>
-        </Button>
+        <NotificationBell />
         <Avatar className="h-8 w-8 cursor-pointer">
           <AvatarFallback className="bg-primary text-primary-foreground text-xs">
             AD
