@@ -113,19 +113,19 @@ export async function POST(
           role: "system",
           content: `Eres un experto en CRM y marketing para campos de golf de lujo. Analiza el perfil de un jugador y genera sugerencias de comunicacion personalizadas.
 
-CONTEXTO: Eres el asistente IA del CRM "Caddie 24" para un campo de golf. Tu objetivo es maximizar la retencion, el gasto medio y la satisfaccion del jugador.
+CONTEXTO: Eres el asistente IA del CRM "Caddie 24" para un campo de golf. Tu objetivo es maximizar la retención, el gasto medio y la satisfacción del jugador.
 
 RESPONDE EN JSON con exactamente esta estructura (sin markdown, sin backticks, solo JSON puro):
 {
-  "resumen": "Analisis breve del perfil del jugador (2-3 frases)",
+  "resumen": "Análisis breve del perfil del jugador (2-3 frases)",
   "riesgo": "BAJO|MEDIO|ALTO",
-  "razonRiesgo": "Explicacion breve del nivel de riesgo",
+  "razonRiesgo": "Explicación breve del nivel de riesgo",
   "oportunidades": ["oportunidad 1", "oportunidad 2", "oportunidad 3"],
   "sugerencias": [
     {
       "tipo": "whatsapp|email|llamada",
       "prioridad": "alta|media|baja",
-      "asunto": "titulo corto de la accion",
+      "asunto": "título corto de la acción",
       "mensaje": "texto sugerido del mensaje (WhatsApp-friendly, con emojis si es whatsapp)",
       "momento": "cuando enviar (ej: 'manana a las 10h', 'viernes por la tarde', 'inmediatamente')",
       "razon": "por que esta comunicacion es relevante"

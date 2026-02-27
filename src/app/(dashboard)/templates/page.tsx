@@ -56,10 +56,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const langLabels: Record<string, string> = {
-  ES: "Espanol",
+  ES: "Español",
   EN: "English",
   DE: "Deutsch",
-  FR: "Francais",
+  FR: "Français",
 };
 
 export default function TemplatesPage() {
@@ -228,7 +228,7 @@ export default function TemplatesPage() {
 
   const handleGenerate = () => {
     if (!aiPrompt.trim()) {
-      setAiError("Escribe una descripcion del mensaje que quieres generar");
+      setAiError("Escribe una descripción del mensaje que quieres generar");
       return;
     }
     callAiGenerate("generate");
@@ -236,7 +236,7 @@ export default function TemplatesPage() {
 
   const handleRegenerate = () => {
     if (!aiPrompt.trim()) {
-      setAiError("Escribe una descripcion para regenerar");
+      setAiError("Escribe una descripción para regenerar");
       return;
     }
     callAiGenerate("generate");

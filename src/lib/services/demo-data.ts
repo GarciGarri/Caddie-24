@@ -59,7 +59,7 @@ const DEMO_TOURNAMENTS = [
   {
     id: "demo-t01",
     name: "Torneo de Primavera 2026",
-    description: "Gran torneo de apertura de temporada. Stableford individual con premios en todas las categorias.",
+    description: "Gran torneo de apertura de temporada. Stableford individual con premios en todas las categorías.",
     date: "2026-04-15T08:00:00Z",
     teeTime: "08:30",
     format: "STABLEFORD",
@@ -71,7 +71,7 @@ const DEMO_TOURNAMENTS = [
     isActive: true,
     sponsors: ["Titleist", "Bar El Hoyo 19"],
     preferredChannel: "whatsapp",
-    cancellationPolicy: "Cancelacion gratuita hasta 48h antes del torneo",
+    cancellationPolicy: "Cancelación gratuita hasta 48h antes del torneo",
     categories: [
       { id: "demo-tc01", name: "Primera", type: "HANDICAP", handicapMin: 0, handicapMax: 12, gender: null, maxPlayers: 16, prizeAmount: 800, tournamentId: "demo-t01" },
       { id: "demo-tc02", name: "Segunda", type: "HANDICAP", handicapMin: 12.1, handicapMax: 24, gender: null, maxPlayers: 16, prizeAmount: 600, tournamentId: "demo-t01" },
@@ -84,7 +84,7 @@ const DEMO_TOURNAMENTS = [
   {
     id: "demo-t02",
     name: "Copa del Presidente",
-    description: "Competicion anual medal play. El trofeo mas prestigioso del club.",
+    description: "Competición anual medal play. El trofeo más prestigioso del club.",
     date: "2026-05-20T07:30:00Z",
     teeTime: "08:00",
     format: "MEDAL",
@@ -129,7 +129,7 @@ const DEMO_TOURNAMENTS = [
   {
     id: "demo-t04",
     name: "Torneo Nocturno de Verano",
-    description: "Scramble por equipos de 4 con cena y fiesta posterior. El evento social del ano.",
+    description: "Scramble por equipos de 4 con cena y fiesta posterior. El evento social del año.",
     date: "2026-07-18T18:00:00Z",
     teeTime: "18:30",
     format: "SCRAMBLE",
@@ -201,7 +201,7 @@ const DEMO_CAMPAIGNS = [
   },
   {
     id: "demo-c02",
-    name: "Promocion Green Fee Primavera",
+    name: "Promoción Green Fee Primavera",
     description: "Oferta especial de green fee para la temporada de primavera: 20% descuento entre semana",
     templateName: "promocion_green_fee",
     segmentQuery: { engagementLevel: { in: ["MEDIUM", "LOW"] } },
@@ -223,7 +223,7 @@ const DEMO_CAMPAIGNS = [
   {
     id: "demo-c03",
     name: "Recordatorio Torneo Primavera",
-    description: "Recordatorio de inscripcion para el Torneo de Primavera 2026 con fecha limite",
+    description: "Recordatorio de inscripción para el Torneo de Primavera 2026 con fecha límite",
     templateName: "recordatorio_torneo",
     segmentQuery: { engagementLevel: { in: ["VIP", "HIGH", "MEDIUM"] } },
     status: "COMPLETED",
@@ -243,8 +243,8 @@ const DEMO_CAMPAIGNS = [
   },
   {
     id: "demo-c04",
-    name: "Encuesta Satisfaccion Q1 2026",
-    description: "Encuesta trimestral de satisfaccion para todos los socios activos",
+    name: "Encuesta Satisfacción Q1 2026",
+    description: "Encuesta trimestral de satisfacción para todos los socios activos",
     templateName: "encuesta_satisfaccion",
     segmentQuery: {},
     status: "SENDING",
@@ -279,7 +279,7 @@ const DEMO_CONVERSATIONS = [
     player: { id: "demo-p01", firstName: "Carlos", lastName: "Garcia Martinez", phone: "+34612345001", avatarUrl: null, engagementLevel: "VIP" },
     status: "OPEN",
     lastMessageAt: m(5),
-    lastMessagePreview: "Perfecto, entonces reservo para las 9:00 del sabado",
+    lastMessagePreview: "Perfecto, entonces reservo para las 9:00 del sábado",
     unreadCount: 1,
     currentSentiment: "POSITIVE",
     isAiBotActive: true,
@@ -294,7 +294,7 @@ const DEMO_CONVERSATIONS = [
     player: { id: "demo-p02", firstName: "Maria", lastName: "Lopez Fernandez", phone: "+34612345002", avatarUrl: null, engagementLevel: "HIGH" },
     status: "OPEN",
     lastMessageAt: m(30),
-    lastMessagePreview: "Me gustaria inscribirme en el Torneo de Primavera",
+    lastMessagePreview: "Me gustaría inscribirme en el Torneo de Primavera",
     unreadCount: 1,
     currentSentiment: "POSITIVE",
     isAiBotActive: true,
@@ -324,7 +324,7 @@ const DEMO_CONVERSATIONS = [
     player: { id: "demo-p07", firstName: "Pablo", lastName: "Jimenez Ortega", phone: "+34612345007", avatarUrl: null, engagementLevel: "NEW" },
     status: "OPEN",
     lastMessageAt: h(1),
-    lastMessagePreview: "Hola, soy nuevo en el club. Como puedo reservar un tee time?",
+    lastMessagePreview: "Hola, soy nuevo en el club. Cómo puedo reservar un tee time?",
     unreadCount: 1,
     currentSentiment: "NEUTRAL",
     isAiBotActive: true,
@@ -339,7 +339,7 @@ const DEMO_CONVERSATIONS = [
     player: { id: "demo-p09", firstName: "Miguel Angel", lastName: "Herrera Castillo", phone: "+34612345009", avatarUrl: null, engagementLevel: "VIP" },
     status: "RESOLVED",
     lastMessageAt: h(24),
-    lastMessagePreview: "Gracias por la informacion. Nos vemos en el torneo!",
+    lastMessagePreview: "Gracias por la información. Nos vemos en el torneo!",
     unreadCount: 0,
     currentSentiment: "POSITIVE",
     isAiBotActive: true,
@@ -419,30 +419,30 @@ type DemoMessage = {
 
 const DEMO_MESSAGES: Record<string, DemoMessage[]> = {
   "demo-conv01": [
-    { id: "dm01-1", conversationId: "demo-conv01", whatsappMessageId: "wam01-1", direction: "INBOUND", type: "TEXT", content: "Hola, buenos dias! Queria preguntar por disponibilidad para el sabado", status: "READ", isAiGenerated: false, timestamp: h(48), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
-    { id: "dm01-2", conversationId: "demo-conv01", whatsappMessageId: "wam01-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Carlos! Claro, el sabado tenemos disponibilidad a las 8:00, 9:00, 10:30 y 12:00. Que horario te viene mejor?", status: "READ", isAiGenerated: true, timestamp: h(47.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(47.9), readAt: h(47) },
+    { id: "dm01-1", conversationId: "demo-conv01", whatsappMessageId: "wam01-1", direction: "INBOUND", type: "TEXT", content: "Hola, buenos dias! Quería preguntar por disponibilidad para el sabado", status: "READ", isAiGenerated: false, timestamp: h(48), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm01-2", conversationId: "demo-conv01", whatsappMessageId: "wam01-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Carlos! Claro, el sabado tenemos disponibilidad a las 8:00, 9:00, 10:30 y 12:00. Qué horario te viene mejor?", status: "READ", isAiGenerated: true, timestamp: h(47.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(47.9), readAt: h(47) },
     { id: "dm01-3", conversationId: "demo-conv01", whatsappMessageId: "wam01-3", direction: "INBOUND", type: "TEXT", content: "A las 9:00 estaria perfecto. Somos 3 jugadores", status: "READ", isAiGenerated: false, timestamp: h(46), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
-    { id: "dm01-4", conversationId: "demo-conv01", whatsappMessageId: "wam01-4", direction: "OUTBOUND", type: "TEXT", content: "Perfecto! Te reservo para las 9:00 del sabado, 3 jugadores. El green fee es de 45 euros por persona entre semana y 65 euros fin de semana. Necesitas alquilar buggy o carro?", status: "READ", isAiGenerated: true, timestamp: h(45.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(45.9), readAt: h(45) },
-    { id: "dm01-5", conversationId: "demo-conv01", whatsappMessageId: "wam01-5", direction: "INBOUND", type: "TEXT", content: "Perfecto, entonces reservo para las 9:00 del sabado", status: "DELIVERED", isAiGenerated: false, timestamp: m(5), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm01-4", conversationId: "demo-conv01", whatsappMessageId: "wam01-4", direction: "OUTBOUND", type: "TEXT", content: "Perfecto! Te reservo para las 9:00 del sábado, 3 jugadores. El green fee es de 45 euros por persona entre semana y 65 euros fin de semana. Necesitas alquilar buggy o carro?", status: "READ", isAiGenerated: true, timestamp: h(45.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(45.9), readAt: h(45) },
+    { id: "dm01-5", conversationId: "demo-conv01", whatsappMessageId: "wam01-5", direction: "INBOUND", type: "TEXT", content: "Perfecto, entonces reservo para las 9:00 del sábado", status: "DELIVERED", isAiGenerated: false, timestamp: m(5), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
   ],
   "demo-conv02": [
-    { id: "dm02-1", conversationId: "demo-conv02", whatsappMessageId: "wam02-1", direction: "INBOUND", type: "TEXT", content: "Hola! He visto que hay un torneo en abril. Que hay que hacer para apuntarse?", status: "READ", isAiGenerated: false, timestamp: h(72), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
-    { id: "dm02-2", conversationId: "demo-conv02", whatsappMessageId: "wam02-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Maria! Si, el Torneo de Primavera 2026 es el 15 de abril. Es un Stableford individual con inscripcion de 35 euros. Hay premios en 3 categorias. Quieres que te inscriba?", status: "READ", isAiGenerated: true, timestamp: h(71.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(71.9), readAt: h(71) },
-    { id: "dm02-3", conversationId: "demo-conv02", whatsappMessageId: "wam02-3", direction: "INBOUND", type: "TEXT", content: "Me gustaria inscribirme en el Torneo de Primavera", status: "DELIVERED", isAiGenerated: false, timestamp: m(30), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm02-1", conversationId: "demo-conv02", whatsappMessageId: "wam02-1", direction: "INBOUND", type: "TEXT", content: "Hola! He visto que hay un torneo en abril. Qué hay que hacer para apuntarse?", status: "READ", isAiGenerated: false, timestamp: h(72), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm02-2", conversationId: "demo-conv02", whatsappMessageId: "wam02-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Maria! Si, el Torneo de Primavera 2026 es el 15 de abril. Es un Stableford individual con inscripción de 35 euros. Hay premios en 3 categorías. Quieres que te inscriba?", status: "READ", isAiGenerated: true, timestamp: h(71.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(71.9), readAt: h(71) },
+    { id: "dm02-3", conversationId: "demo-conv02", whatsappMessageId: "wam02-3", direction: "INBOUND", type: "TEXT", content: "Me gustaría inscribirme en el Torneo de Primavera", status: "DELIVERED", isAiGenerated: false, timestamp: m(30), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
   ],
   "demo-conv03": [
-    { id: "dm03-1", conversationId: "demo-conv03", whatsappMessageId: "wam03-1", direction: "INBOUND", type: "TEXT", content: "Buenos dias", status: "READ", isAiGenerated: false, timestamp: h(6), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
-    { id: "dm03-2", conversationId: "demo-conv03", whatsappMessageId: "wam03-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Fernando! Buenos dias. En que puedo ayudarte?", status: "READ", isAiGenerated: true, timestamp: h(5.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(5.9), readAt: h(5) },
-    { id: "dm03-3", conversationId: "demo-conv03", whatsappMessageId: "wam03-3", direction: "INBOUND", type: "TEXT", content: "Mira, llevo varias semanas jugando y el green del hoyo 7 esta fatal. Tiene calvas por todos lados.", status: "READ", isAiGenerated: false, timestamp: h(4), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm03-1", conversationId: "demo-conv03", whatsappMessageId: "wam03-1", direction: "INBOUND", type: "TEXT", content: "Buenos días", status: "READ", isAiGenerated: false, timestamp: h(6), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm03-2", conversationId: "demo-conv03", whatsappMessageId: "wam03-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Fernando! Buenos días. En que puedo ayudarte?", status: "READ", isAiGenerated: true, timestamp: h(5.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(5.9), readAt: h(5) },
+    { id: "dm03-3", conversationId: "demo-conv03", whatsappMessageId: "wam03-3", direction: "INBOUND", type: "TEXT", content: "Mira, llevo varias semanas jugando y el green del hoyo 7 está fatal. Tiene calvas por todos lados.", status: "READ", isAiGenerated: false, timestamp: h(4), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
     { id: "dm03-4", conversationId: "demo-conv03", whatsappMessageId: "wam03-4", direction: "INBOUND", type: "TEXT", content: "No estoy nada contento con el estado del green del hoyo 7", status: "DELIVERED", isAiGenerated: false, timestamp: h(2), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
   ],
   "demo-conv04": [
-    { id: "dm04-1", conversationId: "demo-conv04", whatsappMessageId: "wam04-1", direction: "INBOUND", type: "TEXT", content: "Hola, soy nuevo en el club. Como puedo reservar un tee time?", status: "DELIVERED", isAiGenerated: false, timestamp: h(1), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm04-1", conversationId: "demo-conv04", whatsappMessageId: "wam04-1", direction: "INBOUND", type: "TEXT", content: "Hola, soy nuevo en el club. Cómo puedo reservar un tee time?", status: "DELIVERED", isAiGenerated: false, timestamp: h(1), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
   ],
   "demo-conv05": [
-    { id: "dm05-1", conversationId: "demo-conv05", whatsappMessageId: "wam05-1", direction: "INBOUND", type: "TEXT", content: "Miguel Angel por aqui. Queria saber los premios del Memorial Don Alfonso", status: "READ", isAiGenerated: false, timestamp: h(50), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
-    { id: "dm05-2", conversationId: "demo-conv05", whatsappMessageId: "wam05-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Miguel Angel! El Memorial tiene un prize pool total de 1.800 euros: 1.000 euros para Caballeros y 800 euros para Damas. Ademas hay premios especiales al drive mas largo y approach mas cercano.", status: "READ", isAiGenerated: true, timestamp: h(49.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(49.9), readAt: h(49) },
-    { id: "dm05-3", conversationId: "demo-conv05", whatsappMessageId: "wam05-3", direction: "INBOUND", type: "TEXT", content: "Gracias por la informacion. Nos vemos en el torneo!", status: "READ", isAiGenerated: false, timestamp: h(24), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm05-1", conversationId: "demo-conv05", whatsappMessageId: "wam05-1", direction: "INBOUND", type: "TEXT", content: "Miguel Angel por aquí. Quería saber los premios del Memorial Don Alfonso", status: "READ", isAiGenerated: false, timestamp: h(50), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm05-2", conversationId: "demo-conv05", whatsappMessageId: "wam05-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Miguel Angel! El Memorial tiene un prize pool total de 1.800 euros: 1.000 euros para Caballeros y 800 euros para Damas. Además hay premios especiales al drive más largo y approach más cercano.", status: "READ", isAiGenerated: true, timestamp: h(49.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(49.9), readAt: h(49) },
+    { id: "dm05-3", conversationId: "demo-conv05", whatsappMessageId: "wam05-3", direction: "INBOUND", type: "TEXT", content: "Gracias por la información. Nos vemos en el torneo!", status: "READ", isAiGenerated: false, timestamp: h(24), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
   ],
   "demo-conv06": [
     { id: "dm06-1", conversationId: "demo-conv06", whatsappMessageId: "wam06-1", direction: "INBOUND", type: "TEXT", content: "Hello! I would like to book a tee time for Saturday morning. Is there availability?", status: "READ", isAiGenerated: false, timestamp: h(5), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
@@ -450,14 +450,14 @@ const DEMO_MESSAGES: Record<string, DemoMessage[]> = {
     { id: "dm06-3", conversationId: "demo-conv06", whatsappMessageId: "wam06-3", direction: "INBOUND", type: "TEXT", content: "I would like to book a tee time for Saturday morning", status: "DELIVERED", isAiGenerated: false, timestamp: h(3), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
   ],
   "demo-conv07": [
-    { id: "dm07-1", conversationId: "demo-conv07", whatsappMessageId: "wam07-1", direction: "INBOUND", type: "TEXT", content: "Hola! Queria preguntar por las clases de golf para mejorar mi swing", status: "READ", isAiGenerated: false, timestamp: h(72), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
-    { id: "dm07-2", conversationId: "demo-conv07", whatsappMessageId: "wam07-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Elena! Tenemos clases individuales con nuestro pro, Juan Carlos. Las sesiones son de 1 hora a 40 euros. Hay disponibilidad martes y jueves por la manana. Te interesa?", status: "READ", isAiGenerated: true, timestamp: h(71), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(71), readAt: h(70) },
+    { id: "dm07-1", conversationId: "demo-conv07", whatsappMessageId: "wam07-1", direction: "INBOUND", type: "TEXT", content: "Hola! Quería preguntar por las clases de golf para mejorar mi swing", status: "READ", isAiGenerated: false, timestamp: h(72), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm07-2", conversationId: "demo-conv07", whatsappMessageId: "wam07-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Elena! Tenemos clases individuales con nuestro pro, Juan Carlos. Las sesiones son de 1 hora a 40 euros. Hay disponibilidad martes y jueves por la mañana. Te interesa?", status: "READ", isAiGenerated: true, timestamp: h(71), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(71), readAt: h(70) },
     { id: "dm07-3", conversationId: "demo-conv07", whatsappMessageId: "wam07-3", direction: "INBOUND", type: "TEXT", content: "Si! El jueves a las 10:00 me va genial", status: "READ", isAiGenerated: false, timestamp: h(69), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
-    { id: "dm07-4", conversationId: "demo-conv07", whatsappMessageId: "wam07-4", direction: "OUTBOUND", type: "TEXT", content: "Apuntado! Clase con Juan Carlos el jueves a las 10:00. Trae tus palos y ropa comoda. Te esperamos!", status: "READ", isAiGenerated: false, timestamp: h(68), mediaUrl: null, templateName: null, aiDraft: null, sentBy: "demo-user", deliveredAt: h(68), readAt: h(67) },
+    { id: "dm07-4", conversationId: "demo-conv07", whatsappMessageId: "wam07-4", direction: "OUTBOUND", type: "TEXT", content: "Apuntado! Clase con Juan Carlos el jueves a las 10:00. Trae tus palos y ropa cómoda. Te esperamos!", status: "READ", isAiGenerated: false, timestamp: h(68), mediaUrl: null, templateName: null, aiDraft: null, sentBy: "demo-user", deliveredAt: h(68), readAt: h(67) },
     { id: "dm07-5", conversationId: "demo-conv07", whatsappMessageId: "wam07-5", direction: "INBOUND", type: "TEXT", content: "Perfecto, muchas gracias por todo!", status: "READ", isAiGenerated: false, timestamp: h(48), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
   ],
   "demo-conv08": [
-    { id: "dm08-1", conversationId: "demo-conv08", whatsappMessageId: "wam08-1", direction: "INBOUND", type: "TEXT", content: "Buenas tardes, tengo clase los miercoles a las 16:00 pero esta semana no puedo. Puedo cambiar mi horario de clase a las 17:00?", status: "READ", isAiGenerated: false, timestamp: h(2), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
+    { id: "dm08-1", conversationId: "demo-conv08", whatsappMessageId: "wam08-1", direction: "INBOUND", type: "TEXT", content: "Buenas tardes, tengo clase los miércoles a las 16:00 pero esta semana no puedo. Puedo cambiar mi horario de clase a las 17:00?", status: "READ", isAiGenerated: false, timestamp: h(2), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
     { id: "dm08-2", conversationId: "demo-conv08", whatsappMessageId: "wam08-2", direction: "OUTBOUND", type: "TEXT", content: "Hola Javier! Deja que consulte la disponibilidad del profesor a las 17:00 y te confirmo enseguida.", status: "READ", isAiGenerated: true, timestamp: h(1.9), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: h(1.9), readAt: h(1.5) },
     { id: "dm08-3", conversationId: "demo-conv08", whatsappMessageId: "wam08-3", direction: "INBOUND", type: "TEXT", content: "Puedo cambiar mi horario de clase a las 17:00?", status: "DELIVERED", isAiGenerated: false, timestamp: m(45), mediaUrl: null, templateName: null, aiDraft: null, sentBy: null, deliveredAt: null, readAt: null },
   ],
@@ -514,7 +514,7 @@ function getDemoWeatherDays() {
 
 export function getDemoDashboardData() {
   const recentActivity = [
-    { id: "da1", type: "message_in", playerName: "Carlos Garcia Martinez", preview: "Perfecto, entonces reservo para las 9:00 del sabado", timestamp: m(5), isAi: false },
+    { id: "da1", type: "message_in", playerName: "Carlos Garcia Martinez", preview: "Perfecto, entonces reservo para las 9:00 del sábado", timestamp: m(5), isAi: false },
     { id: "da2", type: "message_out", playerName: "Maria Lopez Fernandez", preview: "Hola Maria! Si, el Torneo de Primavera 2026 es el 15 de abr...", timestamp: m(30), isAi: true },
     { id: "da3", type: "message_in", playerName: "Javier Martin Perez", preview: "Puedo cambiar mi horario de clase a las 17:00?", timestamp: m(45), isAi: false },
     { id: "da4", type: "message_in", playerName: "Fernando Navarro Gil", preview: "No estoy nada contento con el estado del green del hoyo 7", timestamp: h(2), isAi: false },
@@ -661,8 +661,8 @@ export function getDemoWeatherForecast() {
 
   const alerts = [
     { title: "Lluvia intensa prevista el viernes - posible cierre", level: "warning" as const },
-    { title: "Viento fuerte (55 km/h) el dia 12 - cierre recomendado", level: "critical" as const },
-    { title: "Excelente tiempo manana - oportunidad para promocion green fee", level: "opportunity" as const },
+    { title: "Viento fuerte (55 km/h) el día 12 - cierre recomendado", level: "critical" as const },
+    { title: "Excelente tiempo mañana - oportunidad para promoción green fee", level: "opportunity" as const },
   ];
 
   return {

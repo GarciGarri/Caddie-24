@@ -311,29 +311,29 @@ export default function GuidePage() {
           <ModuleCard
             icon={LayoutDashboard}
             title="Dashboard"
-            description="Panel principal con KPIs, actividad reciente, prevision meteorologica y acciones rapidas."
+            description="Panel principal con KPIs, actividad reciente, previsión meteorológica y acciones rápidas."
             route="/dashboard"
             color="bg-slate-600"
             features={[
               "4 KPIs principales: jugadores, conversaciones, campañas, VIP",
               "Widget meteorologico con prevision 3 dias",
               "Actividad reciente de WhatsApp con indicador de sentimiento",
-              "Acciones rapidas para tareas frecuentes",
+              "Acciones rápidas para tareas frecuentes",
               "Caddie AI: chatbot con acceso a todos los datos del CRM",
             ]}
           />
           <ModuleCard
             icon={Users}
             title="Jugadores"
-            description="Gestion completa de perfiles de jugadores con historial de visitas, consumos y tags."
+            description="Gestión completa de perfiles de jugadores con historial de visitas, consumos y tags."
             route="/players"
             color="bg-blue-600"
             features={[
               "Perfil completo: handicap, idioma, preferencias de juego",
-              "Historial de visitas y consumos con categorias",
+              "Historial de visitas y consumos con categorías",
               "Nivel de engagement: NEW, LOW, MEDIUM, HIGH, VIP",
-              "Tags automaticos por IA y manuales",
-              "Sugerencias de comunicacion generadas por IA",
+              "Tags automáticos por IA y manuales",
+              "Sugerencias de comunicación generadas por IA",
             ]}
           />
           <ModuleCard
@@ -344,110 +344,110 @@ export default function GuidePage() {
             color="bg-green-600"
             features={[
               "Conversaciones en tiempo real via WhatsApp Business Cloud API",
-              "Chatbot IA con respuestas automaticas",
-              "Analisis de sentimiento (POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED)",
-              "Deteccion de intencion del mensaje",
-              "Ventana de 24h de WhatsApp y envio de templates",
+              "Chatbot IA con respuestas automáticas",
+              "Análisis de sentimiento (POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED)",
+              "Detección de intención del mensaje",
+              "Ventana de 24h de WhatsApp y envío de templates",
               "Notas internas entre agentes",
             ]}
           />
           <ModuleCard
             icon={Megaphone}
             title="Campañas"
-            description="Creacion y envio de campañas masivas segmentadas por WhatsApp."
+            description="Creación y envío de campañas masivas segmentadas por WhatsApp."
             route="/campaigns"
             color="bg-purple-600"
             features={[
-              "Segmentacion por engagement, idioma, tags, actividad",
-              "A/B Testing con analisis automatico del ganador",
-              "Programacion de envio con hora optima",
-              "Metricas: enviados, entregados, leidos, respondidos",
-              "Templates aprobados por Meta con variables dinamicas",
+              "Segmentación por engagement, idioma, tags, actividad",
+              "A/B Testing con análisis automático del ganador",
+              "Programación de envío con hora óptima",
+              "Métricas: enviados, entregados, leídos, respondidos",
+              "Templates aprobados por Meta con variables dinámicas",
             ]}
           />
           <ModuleCard
             icon={Trophy}
             title="Torneos"
-            description="Gestion completa del ciclo de vida de torneos: creacion, inscripcion, resultados."
+            description="Gestión completa del ciclo de vida de torneos: creación, inscripción, resultados."
             route="/tournaments"
             color="bg-amber-600"
             features={[
               "Formatos: Stableford, Medal, Scramble, Match Play, Best Ball, Fourball",
-              "Categorias con rangos de handicap y genero",
-              "Inscripcion con lista de espera y control de pagos",
+              "Categorías con rangos de handicap y género",
+              "Inscripción con lista de espera y control de pagos",
               "Resultados con scorecard detallado por hoyo",
-              "Comunicacion automatica a participantes",
+              "Comunicación automática a participantes",
             ]}
           />
           <ModuleCard
             icon={CloudSun}
-            title="Meteorologia"
-            description="Prevision meteorologica, prediccion de demanda y tracking de precision."
+            title="Meteorología"
+            description="Previsión meteorológica, predicción de demanda y tracking de precisión."
             route="/weather"
             color="bg-cyan-600"
             features={[
               "Mapa de calor con Golf Score (0-100) basado en clima",
-              "Prediccion de demanda: 40% clima + 35% calendario + 25% historico",
+              "Predicción de demanda: 40% clima + 35% calendario + 25% histórico",
               "Rango configurable: 1-4 semanas, pasado/futuro/ambos",
-              "Datos historicos via Open-Meteo Archive API",
-              "Input diario de ocupacion real vs predicha",
-              "Tracking de precision con badges de acierto",
+              "Datos históricos via Open-Meteo Archive API",
+              "Input diario de ocupación real vs predicha",
+              "Tracking de precisión con badges de acierto",
             ]}
           />
           <ModuleCard
             icon={FileText}
             title="Templates"
-            description="Gestion de plantillas de mensajes WhatsApp aprobadas por Meta."
+            description="Gestión de plantillas de mensajes WhatsApp aprobadas por Meta."
             route="/templates"
             color="bg-rose-600"
             features={[
-              "Generacion de templates con IA (GPT-4o-mini)",
-              "Variables dinamicas con placeholder {{1}}, {{2}}...",
-              "Modos: generar, mejorar, anadir emojis, mas formal, mas casual",
-              "Estado de aprobacion: PENDING, APPROVED, REJECTED",
+              "Generación de templates con IA (GPT-4o-mini)",
+              "Variables dinámicas con placeholder {{1}}, {{2}}...",
+              "Modos: generar, mejorar, añadir emojis, más formal, más casual",
+              "Estado de aprobación: PENDING, APPROVED, REJECTED",
               "Multi-idioma: ES, EN, DE, FR",
             ]}
           />
           <ModuleCard
             icon={Bot}
             title="IA Insights"
-            description="Centro de inteligencia artificial con analisis avanzado y metricas de uso."
+            description="Centro de inteligencia artificial con análisis avanzado y métricas de uso."
             route="/ai"
             color="bg-orange-600"
             features={[
-              "Metricas de uso de IA: mensajes generados, sentimiento medio",
-              "Log de analisis: tipo, tokens, modelo, duracion",
-              "Escalaciones automaticas por sentimiento negativo",
-              "Tasa de resolucion automatica",
+              "Métricas de uso de IA: mensajes generados, sentimiento medio",
+              "Log de análisis: tipo, tokens, modelo, duración",
+              "Escalaciones automáticas por sentimiento negativo",
+              "Tasa de resolución automática",
             ]}
           />
           <ModuleCard
             icon={Settings}
-            title="Configuracion"
-            description="Ajustes del club, conexion WhatsApp, voz de marca y automatizaciones."
+            title="Configuración"
+            description="Ajustes del club, conexión WhatsApp, voz de marca y automatizaciones."
             route="/settings"
             color="bg-gray-600"
             features={[
-              "Datos del club: nombre, ubicacion, capacidad, tarifas",
-              "Conexion WhatsApp Business: Phone ID, Token, Webhook",
+              "Datos del club: nombre, ubicación, capacidad, tarifas",
+              "Conexión WhatsApp Business: Phone ID, Token, Webhook",
               "Voz de marca: tono, valores, estilo, ejemplos",
-              "Horas de silencio y dias sin mensajes",
-              "Nivel de automatizacion: manual, asistido, semi-auto, auto completo",
-              "Umbrales de escalacion y palabras clave",
+              "Horas de silencio y días sin mensajes",
+              "Nivel de automatización: manual, asistido, semi-auto, auto completo",
+              "Umbrales de escalación y palabras clave",
             ]}
           />
           <ModuleCard
             icon={Bot}
             title="Caddie AI (Chatbot)"
             description="Asistente inteligente integrado en el dashboard con acceso a todos los datos."
-            route="/dashboard (boton flotante)"
+            route="/dashboard (botón flotante)"
             color="bg-emerald-600"
             features={[
               "Consulta en tiempo real: jugadores, campañas, torneos, weather, revenue",
               "Respuestas streaming con GPT-4o-mini",
               "Listado completo de jugadores con datos individuales",
-              "Sugerencias rapidas predefinidas",
-              "Accesible desde cualquier pagina del dashboard",
+              "Sugerencias rápidas predefinidas",
+              "Accesible desde cualquier página del dashboard",
             ]}
           />
         </div>
@@ -460,29 +460,29 @@ export default function GuidePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Cpu className="h-5 w-5 text-blue-500" />
-                Stack Tecnologico
+                Stack Tecnológico
               </CardTitle>
               <CardDescription>
-                Caddie 24 esta construido con tecnologias modernas y probadas en produccion
+                Caddie 24 está construido con tecnologías modernas y probadas en producción
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <TechCard name="Next.js" version="14.2" description="Framework React full-stack con App Router, API Routes y Server Components" category="Framework" />
               <TechCard name="React" version="18.3" description="Biblioteca UI con hooks, Suspense y concurrent rendering" category="Framework" />
-              <TechCard name="TypeScript" version="5.6" description="Superset de JavaScript con tipado estatico para mayor seguridad" category="Lenguaje" />
+              <TechCard name="TypeScript" version="5.6" description="Superset de JavaScript con tipado estático para mayor seguridad" category="Lenguaje" />
               <TechCard name="PostgreSQL" version="15+" description="Base de datos relacional alojada en Supabase con connection pooling" category="Base de Datos" />
               <TechCard name="Prisma ORM" version="5.22" description="ORM type-safe con migraciones, introspection y Prisma Studio" category="Base de Datos" />
-              <TechCard name="OpenAI GPT-4o-mini" version="API v6" description="Modelo de lenguaje para chatbot, templates, analisis de sentimiento" category="IA" />
-              <TechCard name="Anthropic Claude" version="SDK 0.32" description="Modelo alternativo disponible para analisis avanzado" category="IA" />
-              <TechCard name="Tailwind CSS" version="3.4" description="Framework CSS utility-first para diseno rapido y consistente" category="UI" />
+              <TechCard name="OpenAI GPT-4o-mini" version="API v6" description="Modelo de lenguaje para chatbot, templates, análisis de sentimiento" category="IA" />
+              <TechCard name="Anthropic Claude" version="SDK 0.32" description="Modelo alternativo disponible para análisis avanzado" category="IA" />
+              <TechCard name="Tailwind CSS" version="3.4" description="Framework CSS utility-first para diseño rápido y consistente" category="UI" />
               <TechCard name="shadcn/ui" version="—" description="Componentes accesibles basados en Radix UI con Tailwind" category="UI" />
-              <TechCard name="NextAuth.js" version="5 beta" description="Autenticacion JWT con adaptador Prisma y soporte multi-proveedor" category="Auth" />
-              <TechCard name="Zustand" version="5.0" description="Gestion de estado minimalista y performante" category="Estado/Datos" />
-              <TechCard name="React Query" version="5.62" description="Cache de datos del servidor con refetch automatico" category="Estado/Datos" />
-              <TechCard name="WhatsApp Cloud API" version="v21.0" description="API oficial de Meta para mensajeria empresarial" category="Comunicaciones" />
-              <TechCard name="Open-Meteo" version="API" description="API meteorologica gratuita con forecast y archivo historico" category="Estado/Datos" />
-              <TechCard name="Recharts" version="2.14" description="Graficos y visualizaciones para analytics y dashboards" category="UI" />
-              <TechCard name="Zod" version="3.23" description="Validacion de esquemas TypeScript-first en API routes" category="Estado/Datos" />
+              <TechCard name="NextAuth.js" version="5 beta" description="Autenticación JWT con adaptador Prisma y soporte multi-proveedor" category="Auth" />
+              <TechCard name="Zustand" version="5.0" description="Gestión de estado minimalista y performante" category="Estado/Datos" />
+              <TechCard name="React Query" version="5.62" description="Cache de datos del servidor con refetch automático" category="Estado/Datos" />
+              <TechCard name="WhatsApp Cloud API" version="v21.0" description="API oficial de Meta para mensajería empresarial" category="Comunicaciones" />
+              <TechCard name="Open-Meteo" version="API" description="API meteorológica gratuita con forecast y archivo histórico" category="Estado/Datos" />
+              <TechCard name="Recharts" version="2.14" description="Gráficos y visualizaciones para analytics y dashboards" category="UI" />
+              <TechCard name="Zod" version="3.23" description="Validación de esquemas TypeScript-first en API routes" category="Estado/Datos" />
             </CardContent>
           </Card>
 
@@ -505,13 +505,13 @@ export default function GuidePage() {
                   { name: "conversations", desc: "Conversaciones WhatsApp" },
                   { name: "messages", desc: "Mensajes individuales" },
                   { name: "campaigns", desc: "Campañas de marketing" },
-                  { name: "campaign_recipients", desc: "Destinatarios con metricas" },
+                  { name: "campaign_recipients", desc: "Destinatarios con métricas" },
                   { name: "whatsapp_templates", desc: "Templates de mensajes" },
                   { name: "tournaments", desc: "Torneos y competiciones" },
                   { name: "tournament_registrations", desc: "Inscripciones a torneos" },
                   { name: "tournament_results", desc: "Resultados y scorecards" },
-                  { name: "weather_daily_records", desc: "Datos meteo y ocupacion diaria" },
-                  { name: "club_settings", desc: "Configuracion global del club" },
+                  { name: "weather_daily_records", desc: "Datos meteo y ocupación diaria" },
+                  { name: "club_settings", desc: "Configuración global del club" },
                   { name: "ai_analysis_logs", desc: "Log de todas las operaciones IA" },
                 ].map((table) => (
                   <div key={table.name} className="rounded border p-2">
@@ -827,16 +827,16 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   <p>Caddie AI tiene acceso a todos los datos del CRM en tiempo real. Ejemplos de preguntas utiles:</p>
                   <div className="grid gap-1.5 sm:grid-cols-2">
                     {[
-                      "¿Que jugadores estan en riesgo de irse?",
-                      "¿Como van las campañas activas?",
-                      "¿Quien son los top spenders?",
-                      "¿Cual es la ocupacion media este mes?",
+                      "¿Qué jugadores están en riesgo de irse?",
+                      "¿Cómo van las campañas activas?",
+                      "¿Quién son los top spenders?",
+                      "¿Cuál es la ocupación media este mes?",
                       "Analiza las tendencias de revenue",
-                      "¿Que jugadores VIP no vienen hace tiempo?",
+                      "¿Qué jugadores VIP no vienen hace tiempo?",
                       "Resume la actividad de esta semana",
-                      "¿Que torneo tiene mas inscripciones?",
-                      "¿Cual es el sentimiento general de los mensajes?",
-                      "Sugiere acciones para mejorar la retencion",
+                      "¿Qué torneo tiene más inscripciones?",
+                      "¿Cuál es el sentimiento general de los mensajes?",
+                      "Sugiere acciones para mejorar la retención",
                     ].map((q, i) => (
                       <div key={i} className="text-xs bg-muted rounded px-2 py-1.5">&quot;{q}&quot;</div>
                     ))}
@@ -859,7 +859,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Accordion title="¿Como conecto WhatsApp Business?" defaultOpen>
+              <Accordion title="¿Cómo conecto WhatsApp Business?" defaultOpen>
                 <div className="mt-2 space-y-2">
                   <ol className="space-y-1.5 list-decimal list-inside">
                     <li>Ve a <strong>developers.facebook.com</strong> y crea una app tipo &quot;Business&quot;</li>
@@ -872,13 +872,13 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   </ol>
                 </div>
               </Accordion>
-              <Accordion title="¿Que necesito para que funcione Caddie AI?">
+              <Accordion title="¿Qué necesito para que funcione Caddie AI?">
                 <div className="mt-2 space-y-1.5">
                   <p>Solo necesitas una <strong>OPENAI_API_KEY</strong> valida en las variables de entorno. El chatbot usa GPT-4o-mini que es rapido y economico (~$0.15/1M tokens input).</p>
                   <p>El chatbot consulta la base de datos en cada pregunta, asi que siempre tiene datos actualizados.</p>
                 </div>
               </Accordion>
-              <Accordion title="¿Como funciona el sistema de engagement?">
+              <Accordion title="¿Cómo funciona el sistema de engagement?">
                 <div className="mt-2 space-y-1.5">
                   <p>Cada jugador tiene un nivel de engagement que indica su vinculacion con el club:</p>
                   <ul className="space-y-1">
@@ -898,7 +898,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   <p>La interfaz de administracion esta actualmente en espanol.</p>
                 </div>
               </Accordion>
-              <Accordion title="¿Que pasa si el campo cierra por mal tiempo?">
+              <Accordion title="¿Qué pasa si el campo cierra por mal tiempo?">
                 <div className="mt-2 space-y-1.5">
                   <p>El modulo de meteorologia permite:</p>
                   <ul className="space-y-1">
@@ -909,7 +909,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   </ul>
                 </div>
               </Accordion>
-              <Accordion title="¿Como se despliega en produccion?">
+              <Accordion title="¿Cómo se despliega en producción?">
                 <div className="mt-2 space-y-1.5">
                   <p>Caddie 24 esta optimizado para <strong>Vercel</strong>:</p>
                   <ol className="space-y-1 list-decimal list-inside">
@@ -921,7 +921,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                   <p className="mt-1.5">Para la base de datos, usamos <strong>Supabase</strong> con PostgreSQL y connection pooling via PgBouncer.</p>
                 </div>
               </Accordion>
-              <Accordion title="¿Cual es el coste de funcionamiento?">
+              <Accordion title="¿Cuál es el coste de funcionamiento?">
                 <div className="mt-2 space-y-1.5">
                   <ul className="space-y-1">
                     <li><strong>Vercel</strong>: Plan gratuito suficiente para empezar (100GB bandwidth)</li>

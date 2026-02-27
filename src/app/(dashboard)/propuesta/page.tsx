@@ -53,7 +53,7 @@ export default function PropuestaPage() {
           GreenCRM para La Valmuza Golf
         </h1>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          CRM inteligente con IA + gestion operativa dedicada diaria
+          CRM inteligente con IA + gestión operativa dedicada diaria
         </p>
       </div>
 
@@ -72,15 +72,15 @@ export default function PropuestaPage() {
               </div>
               <div className="flex items-start gap-2">
                 <Trophy className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <span>18 hoyos, Par 72, 6.040 yardas. Diseno: <strong>Severiano Ballesteros</strong> (2005)</span>
+                <span>18 hoyos, Par 72, 6.040 yardas. Diseño: <strong>Severiano Ballesteros</strong> (2005)</span>
               </div>
               <div className="flex items-start gap-2">
                 <CalendarDays className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <span>Reapertura sept. 2021 tras 7 anos cerrado. Nueva propiedad e inversion</span>
+                <span>Reapertura sept. 2021 tras 7 años cerrado. Nueva propiedad e inversión</span>
               </div>
               <div className="flex items-start gap-2">
                 <Utensils className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <span>Restaurante <strong>Aire by Tapas</strong> — gastronomia con terraza y vistas al lago</span>
+                <span>Restaurante <strong>Aire by Tapas</strong> — gastronomía con terraza y vistas al lago</span>
               </div>
             </CardContent>
           </Card>
@@ -96,7 +96,7 @@ export default function PropuestaPage() {
               </div>
               <div className="flex items-start gap-2">
                 <Star className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <span>Terreno llano, encinas centenarias, lago estrategico en hoyos 3, 9 y 18</span>
+                <span>Terreno llano, encinas centenarias, lago estratégico en hoyos 3, 9 y 18</span>
               </div>
               <div className="flex items-start gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -119,7 +119,7 @@ export default function PropuestaPage() {
             "Incrementar green fees de visitantes en horarios de baja demanda",
             "Fidelizar jugadores para evitar fuga a competencia",
             "Maximizar sinergias campo + restaurante Aire by Tapas",
-            "Profesionalizar la comunicacion y el marketing digital",
+            "Profesionalizar la comunicación y el marketing digital",
             "Explotar datos de jugadores que actualmente no se analizan",
           ].map((reto, i) => (
             <Card key={i} className="border-amber-200 bg-amber-50/30">
@@ -139,18 +139,18 @@ export default function PropuestaPage() {
           GreenCRM — Plan Managed (Tier 2)
         </h2>
         <p className="text-muted-foreground text-sm">
-          CRM inteligente con IA + gestion operativa dedicada diaria. No es solo software: es una persona de nuestro equipo dedicando <strong>1 hora cada dia laborable</strong> exclusivamente a gestionar la plataforma y ejecutar acciones para La Valmuza.
+          CRM inteligente con IA + gestión operativa dedicada diaria. No es solo software: es una persona de nuestro equipo dedicando <strong>1 hora cada dia laborable</strong> exclusivamente a gestionar la plataforma y ejecutar acciones para La Valmuza.
         </p>
         <div className="grid sm:grid-cols-2 gap-3">
           {[
-            { icon: BarChart3, title: "Dashboard inteligente", desc: "Vision 360 en tiempo real: jugadores, reservas, ingresos, tendencias", value: "Control total del negocio sin informes manuales" },
-            { icon: Users, title: "Gestion de jugadores", desc: "Perfiles completos con handicap, frecuencia, gasto, preferencias", value: "Conocer a cada abonado individualmente" },
-            { icon: Zap, title: "Segmentacion automatica", desc: "Clasificacion VIP / Premium / Standard basada en comportamiento", value: "Comunicaciones personalizadas segun valor" },
-            { icon: Shield, title: "Prediccion de churn", desc: "IA que detecta jugadores en riesgo de abandono con semanas de antelacion", value: "Actuar antes de que el abonado se vaya" },
-            { icon: TrendingUp, title: "Prediccion de demanda", desc: "Forecast basado en clima, estacionalidad, eventos y patrones historicos", value: "Optimizar precios y disponibilidad" },
-            { icon: MessageSquare, title: "Campanas automatizadas", desc: "Email marketing + WhatsApp interactivo con segmentacion dinamica", value: "Ofertas green fee, torneos, eventos Aire" },
-            { icon: Star, title: "Analisis de sentimiento", desc: "Monitorizacion de Google Reviews, Instagram, encuestas, email", value: "Detectar problemas antes de que escalen" },
-            { icon: Brain, title: "AI Copilot", desc: "Asistente conversacional para consultar metricas y lanzar campanas", value: "Cualquiera del equipo usa el CRM sin formacion" },
+            { icon: BarChart3, title: "Dashboard inteligente", desc: "Visión 360 en tiempo real: jugadores, reservas, ingresos, tendencias", value: "Control total del negocio sin informes manuales" },
+            { icon: Users, title: "Gestión de jugadores", desc: "Perfiles completos con handicap, frecuencia, gasto, preferencias", value: "Conocer a cada abonado individualmente" },
+            { icon: Zap, title: "Segmentación automática", desc: "Clasificación VIP / Premium / Standard basada en comportamiento", value: "Comunicaciones personalizadas según valor" },
+            { icon: Shield, title: "Predicción de churn", desc: "IA que detecta jugadores en riesgo de abandono con semanas de antelación", value: "Actuar antes de que el abonado se vaya" },
+            { icon: TrendingUp, title: "Predicción de demanda", desc: "Forecast basado en clima, estacionalidad, eventos y patrones históricos", value: "Optimizar precios y disponibilidad" },
+            { icon: MessageSquare, title: "Campañas automatizadas", desc: "Email marketing + WhatsApp interactivo con segmentación dinámica", value: "Ofertas green fee, torneos, eventos Aire" },
+            { icon: Star, title: "Análisis de sentimiento", desc: "Monitorización de Google Reviews, Instagram, encuestas, email", value: "Detectar problemas antes de que escalen" },
+            { icon: Brain, title: "AI Copilot", desc: "Asistente conversacional para consultar métricas y lanzar campañas", value: "Cualquiera del equipo usa el CRM sin formación" },
           ].map((mod, i) => (
             <Card key={i}>
               <CardContent className="p-4">
@@ -170,23 +170,23 @@ export default function PropuestaPage() {
         </div>
       </section>
 
-      {/* Gestion operativa */}
+      {/* Gestión operativa */}
       <section className="space-y-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <Clock className="h-5 w-5 text-blue-600" />
-          Gestion operativa incluida
+          Gestión operativa incluida
         </h2>
         <Card className="border-blue-200 bg-blue-50/30">
           <CardContent className="p-4 space-y-2">
-            <p className="font-semibold text-sm text-blue-800">1 hora/dia laborable dedicada (~22 horas/mes)</p>
+            <p className="font-semibold text-sm text-blue-800">1 hora/día laborable dedicada (~22 horas/mes)</p>
             <div className="grid sm:grid-cols-2 gap-2 text-sm">
               {[
-                "Operacion diaria de la plataforma",
-                "Ejecucion y supervision de campanas de marketing",
-                "Revision de alertas de churn y acciones correctivas",
-                "Monitorizacion de sentimiento y respuesta a tendencias",
+                "Operación diaria de la plataforma",
+                "Ejecución y supervisión de campañas de marketing",
+                "Revisión de alertas de churn y acciones correctivas",
+                "Monitorización de sentimiento y respuesta a tendencias",
                 "Informe mensual con KPIs, ROI y recomendaciones",
-                "Reunion mensual de seguimiento con direccion",
+                "Reunión mensual de seguimiento con dirección",
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
@@ -202,10 +202,10 @@ export default function PropuestaPage() {
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Estructura de precios</h2>
         <div className="grid sm:grid-cols-2 gap-4">
-          {/* Precio estandar */}
+          {/* Precio estándar */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Plan Estandar</CardTitle>
+              <CardTitle className="text-base">Plan Estándar</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
@@ -215,8 +215,8 @@ export default function PropuestaPage() {
               </div>
               <div className="space-y-1.5 text-sm">
                 <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Setup / onboarding: 0 euros</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Facturacion mensual</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Compromiso minimo: 6 meses</div>
+                <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Facturación mensual</div>
+                <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Compromiso mínimo: 6 meses</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Precio anual: 9.900 euros (2 meses gratis)</div>
               </div>
             </CardContent>
@@ -238,7 +238,7 @@ export default function PropuestaPage() {
               </div>
               <div className="space-y-1.5 text-sm">
                 <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Sin compromiso de permanencia</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Cancelacion sin penalizacion</div>
+                <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Cancelación sin penalización</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Mismo servicio completo</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> Demostrar valor con datos reales</div>
               </div>
@@ -253,10 +253,10 @@ export default function PropuestaPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-muted-foreground">
               {[
                 "Sin coste de setup",
-                "Sin migracion de datos",
-                "Sin coste de formacion",
+                "Sin migración de datos",
+                "Sin coste de formación",
                 "Sin licencias adicionales",
-                "Sin limite de usuarios",
+                "Sin límite de usuarios",
                 "Sin costes ocultos",
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-1.5">
@@ -273,19 +273,19 @@ export default function PropuestaPage() {
       <section className="space-y-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-emerald-600" />
-          Justificacion Economica / ROI
+          Justificación Económica / ROI
         </h2>
 
         <Card className="bg-emerald-50/50 border-emerald-200">
           <CardContent className="p-4 space-y-3">
             <p className="text-sm">
-              <strong>Facturacion estimada La Valmuza:</strong> 500.000 — 1.500.000 euros/ano
+              <strong>Facturacion estimada La Valmuza:</strong> 500.000 — 1.500.000 euros/año
             </p>
             <p className="text-sm">
-              <strong>Coste GreenCRM:</strong> 11.880 euros/ano = <span className="text-emerald-700 font-bold">0,8% — 2,4% de facturacion</span>
+              <strong>Coste GreenCRM:</strong> 11.880 euros/año = <span className="text-emerald-700 font-bold">0,8% — 2,4% de facturación</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              Solo necesita generar ~12.000 euros adicionales/ano para cubrir la inversion.
+              Solo necesita generar ~12.000 euros adicionales/año para cubrir la inversión.
               Equivale a ~240 green fees adicionales a 50 euros o retener 10 abonados.
             </p>
           </CardContent>
@@ -295,11 +295,11 @@ export default function PropuestaPage() {
         <h3 className="font-semibold text-base">Proyecciones de impacto (12 meses)</h3>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[
-            { metric: "Reduccion abandono abonados", value: "+15%", detail: "Deteccion temprana de churn + campanas de retencion" },
-            { metric: "Green fees en horarios valle", value: "+22%", detail: "Prediccion de demanda + ofertas dinamicas" },
-            { metric: "ROI campanas marketing", value: "8.4x", detail: "Segmentacion precisa + personalizacion por IA" },
-            { metric: "Ahorro tiempo gestion", value: "~30h/mes", detail: "Automatizacion de tareas repetitivas" },
-            { metric: "Ticket medio (cross-sell)", value: "+12%", detail: "Campanas cruzadas con Aire by Tapas" },
+            { metric: "Reducción abandono abonados", value: "+15%", detail: "Detección temprana de churn + campañas de retención" },
+            { metric: "Green fees en horarios valle", value: "+22%", detail: "Predicción de demanda + ofertas dinámicas" },
+            { metric: "ROI campañas marketing", value: "8.4x", detail: "Segmentación precisa + personalización por IA" },
+            { metric: "Ahorro tiempo gestión", value: "~30h/mes", detail: "Automatización de tareas repetitivas" },
+            { metric: "Ticket medio (cross-sell)", value: "+12%", detail: "Campañas cruzadas con Aire by Tapas" },
           ].map((item, i) => (
             <Card key={i}>
               <CardContent className="p-4">
@@ -318,7 +318,7 @@ export default function PropuestaPage() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between items-center py-1 border-b border-emerald-200/50">
-              <span>Retener 8 abonados/ano (cuota media 1.200 euros)</span>
+              <span>Retener 8 abonados/año (cuota media 1.200 euros)</span>
               <span className="font-semibold text-emerald-700">+9.600 euros</span>
             </div>
             <div className="flex justify-between items-center py-1 border-b border-emerald-200/50">
@@ -330,25 +330,25 @@ export default function PropuestaPage() {
               <span className="font-semibold text-emerald-700">+4.500 euros</span>
             </div>
             <div className="flex justify-between items-center py-1 pt-2 font-bold">
-              <span>Total conservador vs inversion 11.880 euros</span>
+              <span>Total conservador vs inversión 11.880 euros</span>
               <span className="text-emerald-700">+22.100 euros (ROI 1.86x)</span>
             </div>
           </CardContent>
         </Card>
       </section>
 
-      {/* Plan de implantacion */}
+      {/* Plan de implantación */}
       <section className="space-y-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-primary" />
-          Plan de Implantacion
+          Plan de Implantación
         </h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { week: "Semana 1", title: "Auditoria y migracion", items: ["Analisis de base de datos actual", "Importacion de abonados y jugadores", "Configuracion de integraciones"] },
-            { week: "Semana 2", title: "Configuracion", items: ["Dashboard personalizado La Valmuza", "Segmentos de jugadores", "Setup analisis de sentimiento"] },
-            { week: "Semana 3", title: "Campana piloto", items: ["Reactivacion de jugadores inactivos", "Medicion en tiempo real", "Ajustes del modelo predictivo"] },
-            { week: "Semana 4", title: "Operacion autonoma", items: ["Inicio gestion diaria", "Primer informe con metricas base", "Plan de accion mes 2"] },
+            { week: "Semana 1", title: "Auditoría y migración", items: ["Análisis de base de datos actual", "Importación de abonados y jugadores", "Configuración de integraciones"] },
+            { week: "Semana 2", title: "Configuración", items: ["Dashboard personalizado La Valmuza", "Segmentos de jugadores", "Setup análisis de sentimiento"] },
+            { week: "Semana 3", title: "Campaña piloto", items: ["Reactivación de jugadores inactivos", "Medición en tiempo real", "Ajustes del modelo predictivo"] },
+            { week: "Semana 4", title: "Operación autónoma", items: ["Inicio gestión diaria", "Primer informe con métricas base", "Plan de acción mes 2"] },
           ].map((phase, i) => (
             <Card key={i}>
               <CardContent className="p-4">

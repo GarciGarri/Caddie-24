@@ -43,14 +43,14 @@ const settingsSections = [
     href: "/settings/voice-profile",
   },
   {
-    title: "Horarios y Programacion",
+    title: "Horarios y Programación",
     description: "Horas de silencio, reglas de prioridad",
     icon: Clock,
     href: "/settings/scheduling",
   },
   {
-    title: "Automatizacion",
-    description: "Niveles de automatizacion, umbrales de escalado",
+    title: "Automatización",
+    description: "Niveles de automatización, umbrales de escalado",
     icon: Shield,
     href: "/settings/automation",
   },
@@ -102,7 +102,7 @@ export default function SettingsPage() {
       );
     } catch {
       setDemoMode(!newValue); // Revert
-      toast.error("Error de conexion");
+      toast.error("Error de conexión");
     } finally {
       setToggling(false);
     }
@@ -111,9 +111,9 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configuracion</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Configuración</h1>
         <p className="text-muted-foreground mt-1">
-          Gestiona la configuracion de tu CRM
+          Gestiona la configuración de tu CRM
         </p>
       </div>
 
