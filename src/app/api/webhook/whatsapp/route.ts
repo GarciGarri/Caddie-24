@@ -5,6 +5,7 @@ import {
   getMediaUrl,
   normalizePhoneForDb,
 } from "@/lib/services/whatsapp";
+import { triggerAutoReply } from "@/lib/services/ai-reply";
 
 // --- GET: Webhook verification ---
 export async function GET(request: NextRequest) {
@@ -153,7 +154,7 @@ async function handleIncomingMessage(
     ? new Date(parseInt(msg.timestamp) * 1000)
     : new Date();
 
-  await prisma.message.create({
+  const inboundMessage = await prisma.message.create({
     data: {
       conversationId: conversation.id,
       whatsappMessageId: msg.id,
@@ -187,6 +188,18 @@ async function handleIncomingMessage(
 
   console.log(
     `[Webhook] Incoming ${type} from ${senderPhone}: ${(content || "").substring(0, 50)}`
+  );
+
+  // 8. Trigger AI auto-reply (non-blocking)
+  triggerAutoReply(
+    conversation.id,
+    content,
+    player.id,
+    inboundMessage.id,
+    senderPhone,
+    type
+  ).catch((err) =>
+    console.error("[Webhook] Auto-reply error:", err)
   );
 }
 
