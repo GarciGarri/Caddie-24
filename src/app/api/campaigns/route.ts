@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createCampaignSchema } from "@/lib/validations/campaign";
+import { isDemoMode, getDemoCampaignsData } from "@/lib/services/demo-data";
 
 // GET /api/campaigns — List campaigns with filters
 export async function GET(request: NextRequest) {
@@ -18,6 +19,13 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
+
+    // Demo mode intercept
+    if (await isDemoMode()) {
+      return NextResponse.json(
+        getDemoCampaignsData({ page, limit, status: status || undefined })
+      );
+    }
 
     const where: any = {};
     if (status) where.status = status;

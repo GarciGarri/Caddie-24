@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createTournamentSchema } from "@/lib/validations/tournament";
+import { isDemoMode, getDemoTournamentsData } from "@/lib/services/demo-data";
 
 export async function GET(request: Request) {
   try {
@@ -18,6 +19,13 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
+
+    // Demo mode intercept
+    if (await isDemoMode()) {
+      return NextResponse.json(
+        getDemoTournamentsData({ page, limit, search, status: status || undefined })
+      );
+    }
 
     const where: any = { isActive: true };
 

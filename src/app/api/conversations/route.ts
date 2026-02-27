@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isDemoMode, getDemoConversationsData } from "@/lib/services/demo-data";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -13,6 +14,18 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search");
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "50");
+
+  // Demo mode intercept
+  if (await isDemoMode()) {
+    return NextResponse.json(
+      getDemoConversationsData({
+        page,
+        limit,
+        status: status || undefined,
+        search: search || undefined,
+      })
+    );
+  }
 
   const where: any = {};
 

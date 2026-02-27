@@ -76,12 +76,37 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+// Check demo mode status
+function useDemoMode() {
+  const [demoMode, setDemoMode] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => setDemoMode(data.demoMode === true))
+      .catch(() => {});
+
+    // Re-check every 30s (in case toggled from settings page)
+    const interval = setInterval(() => {
+      fetch("/api/settings")
+        .then((res) => res.json())
+        .then((data) => setDemoMode(data.demoMode === true))
+        .catch(() => {});
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return demoMode;
+}
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const demoMode = useDemoMode();
 
   // Register push notifications
   usePushNotifications();
@@ -93,6 +118,18 @@ export default function DashboardLayout({
         onMobileClose={() => setMobileMenuOpen(false)}
       />
       <div className="flex flex-1 flex-col min-w-0 overflow-visible">
+        {demoMode && (
+          <div className="bg-amber-400 text-amber-950 text-xs font-medium text-center py-1.5 px-4 flex items-center justify-center gap-2 shrink-0">
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-700 animate-pulse" />
+            MODO DEMO ACTIVO — Los datos mostrados son ficticios
+            <a
+              href="/settings"
+              className="underline hover:text-amber-800 ml-1"
+            >
+              Desactivar
+            </a>
+          </div>
+        )}
         <Header onMobileMenuToggle={() => setMobileMenuOpen((v) => !v)} />
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden">{children}</main>
       </div>

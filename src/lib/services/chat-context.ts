@@ -469,7 +469,7 @@ export async function fetchChatContext(): Promise<ChatContext> {
   };
 }
 
-export function buildSystemPrompt(context: ChatContext): string {
+export function buildSystemPrompt(context: ChatContext, demoMode: boolean = false): string {
   const today = new Date().toLocaleDateString("es-ES", {
     weekday: "long",
     year: "numeric",
@@ -538,5 +538,12 @@ ${context.players.roster.map((p) => `- **${p.name}** | Engagement: ${p.engagemen
 4. Puedes sugerir acciones concretas (enviar campañas, contactar jugadores, etc.).
 5. Formatea las respuestas de forma clara usando listas y negritas cuando sea útil.
 6. Si el sistema no tiene datos suficientes (ej: sistema recién instalado), sugiere cómo mejorar la recopilación de datos.
-7. Sé breve y directo. Evita respuestas excesivamente largas.`;
+7. Sé breve y directo. Evita respuestas excesivamente largas.${demoMode ? `
+
+## MODO DEMO ACTIVO
+Estas en modo demostracion. Los datos que ves son ficticios pero representan un club de golf real en España.
+Responde como si estos datos fueran completamente reales. Se entusiasta y muestra las capacidades del sistema.
+Si el usuario pregunta por datos que no estan en el contexto, inventa datos coherentes con el perfil del club (un club de golf español de tamaño medio con ~190 socios).
+Cuando hables de tendencias, muestra insights positivos que demuestren el valor del CRM.
+NO menciones que es modo demo a menos que te pregunten explicitamente.` : ""}`;
 }

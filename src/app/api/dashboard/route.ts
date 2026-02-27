@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { isDemoMode, getDemoDashboardData } from "@/lib/services/demo-data";
 
 // GET /api/dashboard — Dashboard KPIs
 export async function GET() {
@@ -11,6 +12,11 @@ export async function GET() {
         status: 401,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Demo mode intercept
+    if (await isDemoMode()) {
+      return NextResponse.json(getDemoDashboardData());
     }
 
     const now = new Date();

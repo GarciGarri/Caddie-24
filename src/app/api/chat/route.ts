@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import OpenAI from "openai";
 import { fetchChatContext, buildSystemPrompt } from "@/lib/services/chat-context";
+import { isDemoMode, getDemoChatContext } from "@/lib/services/demo-data";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -33,9 +34,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch live data from DB for context
-    const context = await fetchChatContext();
-    const systemPrompt = buildSystemPrompt(context);
+    // Check demo mode and fetch appropriate context
+    const demoActive = await isDemoMode();
+    const context = demoActive ? buildDemoContext() : await fetchChatContext();
+    const systemPrompt = buildSystemPrompt(context, demoActive);
 
     const openai = new OpenAI({ apiKey });
 
@@ -92,4 +94,109 @@ export async function POST(req: NextRequest) {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
+}
+
+// Build a ChatContext from demo data
+function buildDemoContext() {
+  const demoCtx = getDemoChatContext();
+  return {
+    club: {
+      name: demoCtx.clubInfo.clubName,
+      capacity: demoCtx.clubInfo.fieldCapacity,
+      location: `${demoCtx.clubInfo.fieldName} (${demoCtx.clubInfo.fieldLatitude}, ${demoCtx.clubInfo.fieldLongitude})`,
+      rateWeekday: demoCtx.clubInfo.rateWeekday,
+      rateWeekend: demoCtx.clubInfo.rateWeekend,
+    },
+    players: {
+      total: demoCtx.players.total,
+      active: demoCtx.players.total,
+      byEngagement: demoCtx.players.engagementDistribution,
+      newThisMonth: 12,
+      topSpenders: demoCtx.players.topSpenders.map((s: any) => ({
+        name: s.name,
+        total: s.totalSpent,
+        visits: s.visits,
+      })),
+      recentlyInactive: 8,
+      roster: demoCtx.players.recentPlayers.map((p: any) => ({
+        name: p.name,
+        phone: "+34612345XXX",
+        email: null,
+        engagement: p.engagement,
+        handicap: p.handicap,
+        totalSpent: Math.floor(Math.random() * 2000) + 500,
+        visitCount: p.visits,
+        lastVisit: null,
+        lastContact: null,
+        daysSinceLastVisit: null,
+        daysSinceLastContact: null,
+        tags: [],
+        language: "ES",
+        playTime: null,
+        dayPref: null,
+        createdAt: new Date().toISOString(),
+      })),
+    },
+    conversations: {
+      total: demoCtx.conversations.total,
+      open: demoCtx.conversations.open,
+      pending: demoCtx.conversations.pending,
+      resolved: demoCtx.conversations.resolved,
+      unreadCount: 5,
+      sentimentDistribution: { POSITIVE: 4, NEUTRAL: 3, NEGATIVE: 1 },
+      avgResponseTime: "2 minutos",
+      recentConversations: demoCtx.conversations.recent.map((c: any) => ({
+        playerName: c.player,
+        preview: c.lastMessage,
+        status: c.status,
+        sentiment: c.sentiment,
+        date: new Date().toISOString(),
+      })),
+    },
+    campaigns: {
+      total: demoCtx.campaigns.total,
+      active: 1,
+      totalSent: demoCtx.campaigns.totalSent,
+      totalDelivered: demoCtx.campaigns.totalDelivered,
+      totalRead: demoCtx.campaigns.totalRead,
+      totalReplied: 40,
+      avgOpenRate: 78,
+      recentCampaigns: demoCtx.campaigns.recent.map((c: any) => ({
+        name: c.name,
+        status: c.status,
+        recipients: c.sent,
+        sent: c.sent,
+        read: c.read,
+        date: new Date().toISOString(),
+      })),
+    },
+    tournaments: {
+      total: 5,
+      upcoming: demoCtx.tournaments.upcoming.map((t: any) => ({
+        name: t.name,
+        date: t.date,
+        format: t.format,
+        registrations: t.registered,
+        maxParticipants: t.maxParticipants,
+        status: t.status,
+      })),
+      completed: 1,
+      totalRegistrations: 141,
+    },
+    weather: {
+      recentRecords: 14,
+      avgOccupancy: 62,
+      avgGolfScore: 78,
+      closedDays: 1,
+      predictionAccuracy: 85,
+      recentDays: demoCtx.weather.forecast.map((d: any) => ({
+        date: d.date,
+        golfScore: d.golfScore,
+        predictedOccupancy: d.demandLevel === "ALTA" ? 85 : 55,
+        actualOccupancy: null,
+        isClosed: d.demandLevel === "CERRADO",
+      })),
+    },
+    revenue: demoCtx.revenue,
+  };
 }

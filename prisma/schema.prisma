@@ -502,6 +502,8 @@ model ClubSettings {
   seasonMultipliers         Json?           // { high: 1.2, medium: 1.0, low: 0.7 }
   weatherAutomations        Json?           // Array of automation rules with on/off state
 
+  demoMode                  Boolean         @default(false)
+
   updatedAt                 DateTime        @updatedAt
 
   @@map("club_settings")

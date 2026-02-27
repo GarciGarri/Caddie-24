@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createPlayerSchema } from "@/lib/validations/player";
+import { isDemoMode, getDemoPlayersData } from "@/lib/services/demo-data";
 
 // GET /api/players — List players with search, filter, pagination
 export async function GET(request: NextRequest) {
@@ -15,6 +16,18 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+
+    // Demo mode intercept
+    if (await isDemoMode()) {
+      return NextResponse.json(
+        getDemoPlayersData({
+          page: parseInt(searchParams.get("page") || "1"),
+          limit: parseInt(searchParams.get("limit") || "50"),
+          search: searchParams.get("search") || "",
+          engagement: searchParams.get("engagement") || undefined,
+        })
+      );
+    }
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");

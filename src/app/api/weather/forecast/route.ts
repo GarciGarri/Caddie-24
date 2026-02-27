@@ -25,6 +25,12 @@ export async function GET(req: NextRequest) {
     // Get field config from settings
     const settings = await prisma.clubSettings.findFirst();
 
+    // Demo mode intercept
+    if (settings?.demoMode) {
+      const { getDemoWeatherForecast } = await import("@/lib/services/demo-data");
+      return NextResponse.json(getDemoWeatherForecast());
+    }
+
     const lat = settings?.fieldLatitude ?? 40.9651;
     const lon = settings?.fieldLongitude ?? -5.664;
     const capacity = settings?.fieldCapacity ?? 80;

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendTextMessage, sendTemplateMessage, sendMediaMessage } from "@/lib/services/whatsapp";
 import type { TemplateComponent } from "@/lib/services/whatsapp";
+import { isDemoMode, getDemoConversationMessages } from "@/lib/services/demo-data";
 
 export async function GET(
   req: NextRequest,
@@ -11,6 +12,11 @@ export async function GET(
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
+  // Demo mode intercept
+  if (await isDemoMode()) {
+    return NextResponse.json(getDemoConversationMessages(params.id));
   }
 
   const searchParams = req.nextUrl.searchParams;

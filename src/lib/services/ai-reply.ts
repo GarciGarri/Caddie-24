@@ -216,7 +216,23 @@ export async function generateAiReply(
     fetchClubPublicInfo(),
   ]);
 
-  const systemPrompt = buildWhatsAppSystemPrompt(clubInfo, playerCtx);
+  // Check demo mode
+  const settings = await prisma.clubSettings.findUnique({
+    where: { id: "default" },
+    select: { demoMode: true },
+  });
+
+  let systemPrompt = buildWhatsAppSystemPrompt(clubInfo, playerCtx);
+
+  if (settings?.demoMode) {
+    systemPrompt += `\n\nMODO DEMO ACTIVO:
+Estas en modo demostracion. Genera respuestas creativas y realistas como si fueras el asistente de un club de golf real.
+Inventa disponibilidad de horarios, precios y detalles que suenen naturales.
+Se amable, profesional y muestra las mejores capacidades de respuesta automatica.
+Si preguntan por reservas, di que hay disponibilidad y ofrece horarios.
+Si preguntan por torneos, menciona los proximos eventos del club.`;
+  }
+
   const history = formatConversationHistory(recentMessages);
 
   const startTime = Date.now();
@@ -422,6 +438,21 @@ export async function triggerAutoReply(
 
   // Check automation level
   if (settings.automationLevel === "MANUAL") return;
+
+  // Demo mode: generate draft but never send via WhatsApp
+  if (settings.demoMode) {
+    try {
+      const draft = await generateAiReply(conversationId);
+      await prisma.message.update({
+        where: { id: inboundMessageId },
+        data: { aiDraft: draft },
+      });
+      console.log(`[AutoReply] DEMO MODE: Draft generated, not sent via WhatsApp`);
+    } catch (err) {
+      console.error("[AutoReply] DEMO MODE draft error:", err);
+    }
+    return;
+  }
 
   // Check conversation bot status
   const conversation = await prisma.conversation.findUnique({
