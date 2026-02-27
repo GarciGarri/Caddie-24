@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 import { sendTextMessage } from "@/lib/services/whatsapp";
+import { createNotificationForAllAdmins } from "@/lib/services/notifications";
 
 // --- Types ---
 
@@ -452,6 +453,22 @@ export async function triggerAutoReply(
       where: { id: conversationId },
       data: { status: "PENDING" },
     });
+
+    // Notify admins/managers about escalation
+    const player = await prisma.player.findUnique({
+      where: { id: playerId },
+      select: { firstName: true, lastName: true },
+    });
+    createNotificationForAllAdmins({
+      type: "ESCALATION",
+      title: "Conversacion escalada",
+      body: `${player?.firstName || ""} ${player?.lastName || ""}: ${escalation.reason}`,
+      link: "/inbox",
+      data: { conversationId, playerId },
+    }).catch((err) =>
+      console.error("[AutoReply] Notification error:", err)
+    );
+
     return;
   }
 

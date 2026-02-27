@@ -28,6 +28,8 @@ model User {
   campaignsCreated      Campaign[]     @relation("CampaignCreator")
   sessions              Session[]
   accounts              Account[]
+  notifications         Notification[]
+  pushSubscriptions     PushSubscription[]
 
   @@map("users")
 }
@@ -710,4 +712,48 @@ model WeatherDailyRecord {
 
   @@index([date])
   @@map("weather_daily_records")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+enum NotificationType {
+  ESCALATION
+  UNANSWERED
+  CAMPAIGN_ERROR
+  CAMPAIGN_COMPLETE
+  NEW_MESSAGE
 }

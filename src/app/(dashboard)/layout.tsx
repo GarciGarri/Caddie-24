@@ -1,10 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Header } from "@/components/layout/header";
 import { DashboardChatbot } from "@/components/chat/dashboard-chatbot";
+
+// Register service worker and subscribe to push notifications
+function usePushNotifications() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+
+    async function registerPush() {
+      try {
+        // Register service worker
+        const registration = await navigator.serviceWorker.register("/sw.js");
+
+        // Check if already subscribed
+        const existingSub = await registration.pushManager.getSubscription();
+        if (existingSub) return; // Already subscribed
+
+        // Get VAPID public key from env
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        if (!vapidKey) return;
+
+        // Request permission
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") return;
+
+        // Subscribe
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey).buffer as ArrayBuffer,
+        });
+
+        // Send subscription to server
+        const subJson = subscription.toJSON();
+        await fetch("/api/notifications/push-subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            endpoint: subJson.endpoint,
+            keys: {
+              p256dh: subJson.keys?.p256dh,
+              auth: subJson.keys?.auth,
+            },
+          }),
+        });
+
+        console.log("[Push] Subscribed successfully");
+      } catch (err) {
+        console.warn("[Push] Registration failed:", err);
+      }
+    }
+
+    // Delay registration to not block initial render
+    const timer = setTimeout(registerPush, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+}
+
+// Helper: Convert VAPID key to Uint8Array
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 export default function DashboardLayout({
   children,
@@ -12,6 +82,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Register push notifications
+  usePushNotifications();
 
   return (
     <div className="flex min-h-screen">
