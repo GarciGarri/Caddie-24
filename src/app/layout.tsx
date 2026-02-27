@@ -6,7 +6,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "CRM Golf - Caddie 24",
-  description: "CRM de Marketing y Comunicación para Campos de Golf",
+  description:
+    "CRM de Marketing y Comunicación para Campos de Golf con WhatsApp + IA",
 };
 
 export default function RootLayout({
