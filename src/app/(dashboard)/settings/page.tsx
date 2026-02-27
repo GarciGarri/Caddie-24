@@ -25,20 +25,20 @@ const settingsSections = [
     href: "/settings/general",
   },
   {
-    title: "Campo y Meteorologia",
+    title: "Campo y Meteorología",
     description: "Coordenadas GPS, capacidad, tarifas, umbrales de cierre, festivos",
     icon: MapPin,
     href: "/settings/field",
   },
   {
     title: "WhatsApp",
-    description: "Conexion con Meta, numero de telefono, templates",
+    description: "Conexión con Meta, número de teléfono, templates",
     icon: MessageSquare,
     href: "/settings/whatsapp",
   },
   {
     title: "Perfil de Voz IA",
-    description: "Tono, valores y estilo de comunicacion del club",
+    description: "Tono, valores y estilo de comunicación del club",
     icon: Bot,
     href: "/settings/voice-profile",
   },

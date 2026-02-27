@@ -139,7 +139,7 @@ export default function PropuestaPage() {
           GreenCRM — Plan Managed (Tier 2)
         </h2>
         <p className="text-muted-foreground text-sm">
-          CRM inteligente con IA + gestión operativa dedicada diaria. No es solo software: es una persona de nuestro equipo dedicando <strong>1 hora cada dia laborable</strong> exclusivamente a gestionar la plataforma y ejecutar acciones para La Valmuza.
+          CRM inteligente con IA + gestión operativa dedicada diaria. No es solo software: es una persona de nuestro equipo dedicando <strong>1 hora cada día laborable</strong> exclusivamente a gestionar la plataforma y ejecutar acciones para La Valmuza.
         </p>
         <div className="grid sm:grid-cols-2 gap-3">
           {[
@@ -279,7 +279,7 @@ export default function PropuestaPage() {
         <Card className="bg-emerald-50/50 border-emerald-200">
           <CardContent className="p-4 space-y-3">
             <p className="text-sm">
-              <strong>Facturacion estimada La Valmuza:</strong> 500.000 — 1.500.000 euros/año
+              <strong>Facturación estimada La Valmuza:</strong> 500.000 — 1.500.000 euros/año
             </p>
             <p className="text-sm">
               <strong>Coste GreenCRM:</strong> 11.880 euros/año = <span className="text-emerald-700 font-bold">0,8% — 2,4% de facturación</span>
