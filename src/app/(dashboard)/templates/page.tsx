@@ -160,7 +160,7 @@ export default function TemplatesPage() {
       fetchTemplates();
     } catch (err) {
       toast.error("Error de conexión");
-      setError("Error de conexion");
+      setError("Error de conexión");
     } finally {
       setSaving(false);
     }
@@ -220,7 +220,7 @@ export default function TemplatesPage() {
 
       setForm((prev) => ({ ...prev, bodyText: data.text }));
     } catch (err) {
-      setAiError("Error de conexion con la IA");
+      setAiError("Error de conexión con la IA");
     } finally {
       setAiLoading(false);
     }
@@ -343,14 +343,14 @@ export default function TemplatesPage() {
                     onChange={(e) => setForm({ ...form, language: e.target.value })}
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                   >
-                    <option value="ES">Espanol</option>
+                    <option value="ES">Español</option>
                     <option value="EN">English</option>
                     <option value="DE">Deutsch</option>
                     <option value="FR">Francais</option>
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Categoria</Label>
+                  <Label>Categoría</Label>
                   <select
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -358,7 +358,7 @@ export default function TemplatesPage() {
                   >
                     <option value="MARKETING">Marketing</option>
                     <option value="UTILITY">Utilidad</option>
-                    <option value="AUTHENTICATION">Autenticacion</option>
+                    <option value="AUTHENTICATION">Autenticación</option>
                   </select>
                 </div>
               </div>
@@ -401,7 +401,7 @@ export default function TemplatesPage() {
                       </Label>
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Ej: Promocion de green fee de fin de semana con descuento del 20%..."
+                          placeholder="Ej: Promoción de green fee de fin de semana con descuento del 20%..."
                           value={aiPrompt}
                           onChange={(e) => setAiPrompt(e.target.value)}
                           className="flex-1 text-sm border-purple-200 focus-visible:ring-purple-400"

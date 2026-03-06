@@ -36,13 +36,13 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Email o contrasena incorrectos");
+        setError("Email o contraseña incorrectos");
       } else {
         router.push(callbackUrl);
         router.refresh();
       }
     } catch {
-      setError("Error al iniciar sesion. Intentalo de nuevo.");
+      setError("Error al iniciar sesión. Inténtalo de nuevo.");
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +68,7 @@ function LoginForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Contrasena</Label>
+        <Label htmlFor="password">Contraseña</Label>
         <Input
           id="password"
           type="password"
@@ -91,9 +91,9 @@ export default function LoginPage() {
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1 text-center">
         <div className="lg:hidden text-4xl mb-2">⛳</div>
-        <CardTitle className="text-2xl font-bold">Iniciar Sesion</CardTitle>
+        <CardTitle className="text-2xl font-bold">Iniciar Sesión</CardTitle>
         <CardDescription>
-          Accede al panel de gestion de tu campo de golf
+          Accede al panel de gestión de tu campo de golf
         </CardDescription>
       </CardHeader>
       <CardContent>

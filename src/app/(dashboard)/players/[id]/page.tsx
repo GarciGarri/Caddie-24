@@ -928,7 +928,7 @@ function AiSuggestionsPanel({ playerId }: { playerId: string }) {
       const data = await res.json();
       setSuggestions(data);
     } catch {
-      setError("Error de conexion");
+      setError("Error de conexión");
     } finally {
       setLoading(false);
     }
@@ -966,10 +966,10 @@ function AiSuggestionsPanel({ playerId }: { playerId: string }) {
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-3">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
-          <h3 className="font-semibold text-lg mb-1">Comunicacion Sugerida por IA</h3>
+          <h3 className="font-semibold text-lg mb-1">Comunicación Sugerida por IA</h3>
           <p className="text-sm text-muted-foreground text-center max-w-md mb-4">
             Analiza el perfil, gasto, afluencia e historial de este jugador para generar
-            sugerencias de comunicacion personalizadas
+            sugerencias de comunicación personalizadas
           </p>
           <Button
             onClick={fetchSuggestions}
@@ -1029,7 +1029,7 @@ function AiSuggestionsPanel({ playerId }: { playerId: string }) {
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
                 <Sparkles className="h-3.5 w-3.5 text-white" />
               </div>
-              <CardTitle className="text-lg">Comunicacion Sugerida por IA</CardTitle>
+              <CardTitle className="text-lg">Comunicación Sugerida por IA</CardTitle>
             </div>
             <Button variant="ghost" size="sm" onClick={fetchSuggestions} disabled={loading}>
               <RefreshCw className={`h-3.5 w-3.5 mr-1 ${loading ? "animate-spin" : ""}`} />
@@ -1041,7 +1041,7 @@ function AiSuggestionsPanel({ playerId }: { playerId: string }) {
           {/* Summary + Risk */}
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Analisis del Perfil</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Análisis del Perfil</p>
               <p className="text-sm leading-relaxed">{suggestions.resumen}</p>
             </div>
             <div className={`rounded-lg border p-3 ${risk.bg}`}>

@@ -226,11 +226,11 @@ export async function generateAiReply(
 
   if (settings?.demoMode) {
     systemPrompt += `\n\nMODO DEMO ACTIVO:
-Estas en modo demostracion. Genera respuestas creativas y realistas como si fueras el asistente de un club de golf real.
+Estás en modo demostración. Genera respuestas creativas y realistas como si fueras el asistente de un club de golf real.
 Inventa disponibilidad de horarios, precios y detalles que suenen naturales.
-Se amable, profesional y muestra las mejores capacidades de respuesta automatica.
+Sé amable, profesional y muestra las mejores capacidades de respuesta automática.
 Si preguntan por reservas, di que hay disponibilidad y ofrece horarios.
-Si preguntan por torneos, menciona los proximos eventos del club.`;
+Si preguntan por torneos, menciona los próximos eventos del club.`;
   }
 
   const history = formatConversationHistory(recentMessages);
@@ -492,7 +492,7 @@ export async function triggerAutoReply(
     });
     createNotificationForAllAdmins({
       type: "ESCALATION",
-      title: "Conversacion escalada",
+      title: "Conversación escalada",
       body: `${player?.firstName || ""} ${player?.lastName || ""}: ${escalation.reason}`,
       link: "/inbox",
       data: { conversationId, playerId },

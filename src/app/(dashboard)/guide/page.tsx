@@ -166,10 +166,10 @@ export default function GuidePage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
           <BookOpen className="h-6 w-6 text-primary" />
-          Guia del Sistema
+          Guía del Sistema
         </h1>
         <p className="text-muted-foreground mt-1">
-          Documentacion completa de Caddie 24 — CRM inteligente para campos de golf
+          Documentación completa de Caddie 24 — CRM inteligente para campos de golf
         </p>
       </div>
 
@@ -198,31 +198,31 @@ export default function GuidePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-yellow-500" />
-                Que es Caddie 24?
+                ¿Qué es Caddie 24?
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <p>
                 <strong className="text-foreground">Caddie 24</strong> es un CRM (Customer Relationship Management)
-                inteligente disenado especificamente para la gestion de campos de golf. Integra comunicacion
-                por WhatsApp, analisis meteorologico, gestion de torneos y analisis de datos impulsado por
+                inteligente diseñado específicamente para la gestión de campos de golf. Integra comunicación
+                por WhatsApp, análisis meteorológico, gestión de torneos y análisis de datos impulsado por
                 inteligencia artificial.
               </p>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl mb-1">🏌️</div>
-                  <p className="font-medium text-foreground text-xs">Gestion de Jugadores</p>
-                  <p className="text-[11px] mt-1">Perfiles completos, engagement tracking, segmentacion inteligente</p>
+                  <p className="font-medium text-foreground text-xs">Gestión de Jugadores</p>
+                  <p className="text-[11px] mt-1">Perfiles completos, engagement tracking, segmentación inteligente</p>
                 </div>
                 <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl mb-1">💬</div>
                   <p className="font-medium text-foreground text-xs">WhatsApp Business</p>
-                  <p className="text-[11px] mt-1">Comunicacion directa, chatbot IA, campañas masivas</p>
+                  <p className="text-[11px] mt-1">Comunicación directa, chatbot IA, campañas masivas</p>
                 </div>
                 <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl mb-1">🤖</div>
                   <p className="font-medium text-foreground text-xs">IA Integrada</p>
-                  <p className="text-[11px] mt-1">Analisis de sentimiento, predicciones, asistente Caddie AI</p>
+                  <p className="text-[11px] mt-1">Análisis de sentimiento, predicciones, asistente Caddie AI</p>
                 </div>
               </div>
             </CardContent>
@@ -232,7 +232,7 @@ export default function GuidePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Workflow className="h-5 w-5 text-blue-500" />
-                Como funciona?
+                ¿Cómo funciona?
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
@@ -240,37 +240,37 @@ export default function GuidePage() {
                 <div className="rounded-lg bg-blue-50 p-4">
                   <p className="font-medium text-blue-700 text-xs mb-2">1. Entrada de Datos</p>
                   <ul className="space-y-1 text-xs">
-                    <li>- Jugadores se registran manualmente o via WhatsApp</li>
-                    <li>- Mensajes WhatsApp se reciben via webhook (Meta Cloud API)</li>
-                    <li>- Datos meteorologicos se obtienen de Open-Meteo API</li>
-                    <li>- El staff introduce datos de ocupacion/revenue diarios</li>
+                    <li>- Jugadores se registran manualmente o vía WhatsApp</li>
+                    <li>- Mensajes WhatsApp se reciben vía webhook (Meta Cloud API)</li>
+                    <li>- Datos meteorológicos se obtienen de Open-Meteo API</li>
+                    <li>- El staff introduce datos de ocupación/revenue diarios</li>
                   </ul>
                 </div>
                 <div className="rounded-lg bg-green-50 p-4">
                   <p className="font-medium text-green-700 text-xs mb-2">2. Procesamiento IA</p>
                   <ul className="space-y-1 text-xs">
-                    <li>- Analisis de sentimiento en conversaciones</li>
-                    <li>- Deteccion de intencion del mensaje</li>
-                    <li>- Generacion de respuestas automaticas</li>
-                    <li>- Prediccion de demanda basada en meteorologia</li>
+                    <li>- Análisis de sentimiento en conversaciones</li>
+                    <li>- Detección de intención del mensaje</li>
+                    <li>- Generación de respuestas automáticas</li>
+                    <li>- Predicción de demanda basada en meteorología</li>
                   </ul>
                 </div>
                 <div className="rounded-lg bg-purple-50 p-4">
                   <p className="font-medium text-purple-700 text-xs mb-2">3. Acciones y Campañas</p>
                   <ul className="space-y-1 text-xs">
                     <li>- Campañas segmentadas por WhatsApp</li>
-                    <li>- A/B Testing automatico</li>
+                    <li>- A/B Testing automático</li>
                     <li>- Templates aprobados por Meta</li>
-                    <li>- Alertas meteorologicas a jugadores</li>
+                    <li>- Alertas meteorológicas a jugadores</li>
                   </ul>
                 </div>
                 <div className="rounded-lg bg-orange-50 p-4">
-                  <p className="font-medium text-orange-700 text-xs mb-2">4. Analisis y Mejora</p>
+                  <p className="font-medium text-orange-700 text-xs mb-2">4. Análisis y Mejora</p>
                   <ul className="space-y-1 text-xs">
                     <li>- Dashboard con KPIs en tiempo real</li>
-                    <li>- Precision de predicciones vs realidad</li>
+                    <li>- Precisión de predicciones vs realidad</li>
                     <li>- Caddie AI para consultas inteligentes</li>
-                    <li>- Sugerencias de comunicacion personalizadas</li>
+                    <li>- Sugerencias de comunicación personalizadas</li>
                   </ul>
                 </div>
               </div>
@@ -285,15 +285,15 @@ export default function GuidePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground space-y-3">
-              <p>El sistema utiliza autenticacion JWT con 3 niveles de acceso:</p>
+              <p>El sistema utiliza autenticación JWT con 3 niveles de acceso:</p>
               <div className="grid gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border p-3">
                   <Badge className="bg-red-100 text-red-700 mb-2">ADMIN</Badge>
-                  <p className="text-xs">Acceso total. Configuracion del sistema, gestion de usuarios, API keys, automatizaciones.</p>
+                  <p className="text-xs">Acceso total. Configuración del sistema, gestión de usuarios, API keys, automatizaciones.</p>
                 </div>
                 <div className="rounded-lg border p-3">
                   <Badge className="bg-yellow-100 text-yellow-700 mb-2">MANAGER</Badge>
-                  <p className="text-xs">Gestion de campañas, torneos, jugadores. Sin acceso a configuracion del sistema.</p>
+                  <p className="text-xs">Gestión de campañas, torneos, jugadores. Sin acceso a configuración del sistema.</p>
                 </div>
                 <div className="rounded-lg border p-3">
                   <Badge className="bg-blue-100 text-blue-700 mb-2">AGENT</Badge>
@@ -316,7 +316,7 @@ export default function GuidePage() {
             color="bg-slate-600"
             features={[
               "4 KPIs principales: jugadores, conversaciones, campañas, VIP",
-              "Widget meteorologico con prevision 3 dias",
+              "Widget meteorológico con previsión 3 días",
               "Actividad reciente de WhatsApp con indicador de sentimiento",
               "Acciones rápidas para tareas frecuentes",
               "Caddie AI: chatbot con acceso a todos los datos del CRM",
@@ -343,7 +343,7 @@ export default function GuidePage() {
             route="/inbox"
             color="bg-green-600"
             features={[
-              "Conversaciones en tiempo real via WhatsApp Business Cloud API",
+              "Conversaciones en tiempo real vía WhatsApp Business Cloud API",
               "Chatbot IA con respuestas automáticas",
               "Análisis de sentimiento (POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED)",
               "Detección de intención del mensaje",
@@ -389,7 +389,7 @@ export default function GuidePage() {
               "Mapa de calor con Golf Score (0-100) basado en clima",
               "Predicción de demanda: 40% clima + 35% calendario + 25% histórico",
               "Rango configurable: 1-4 semanas, pasado/futuro/ambos",
-              "Datos históricos via Open-Meteo Archive API",
+              "Datos históricos vía Open-Meteo Archive API",
               "Input diario de ocupación real vs predicha",
               "Tracking de precisión con badges de acierto",
             ]}
@@ -537,7 +537,7 @@ export default function GuidePage() {
                     <span className="text-base">💬</span>
                     <span className="font-medium text-foreground">WhatsApp Business Cloud API (Meta)</span>
                   </div>
-                  <p className="text-xs">Envio y recepcion de mensajes, templates, webhooks. Requiere: Phone Number ID, Business Account ID, Access Token.</p>
+                  <p className="text-xs">Envío y recepción de mensajes, templates, webhooks. Requiere: Phone Number ID, Business Account ID, Access Token.</p>
                   <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded mt-1 inline-block">POST graph.facebook.com/v21.0/PHONE_ID/messages</code>
                 </div>
                 <div className="rounded-lg border p-3">
@@ -545,7 +545,7 @@ export default function GuidePage() {
                     <span className="text-base">🤖</span>
                     <span className="font-medium text-foreground">OpenAI API</span>
                   </div>
-                  <p className="text-xs">GPT-4o-mini para: generacion de templates, sugerencias de comunicacion, chatbot Caddie AI, analisis de sentimiento.</p>
+                  <p className="text-xs">GPT-4o-mini para: generación de templates, sugerencias de comunicación, chatbot Caddie AI, análisis de sentimiento.</p>
                   <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded mt-1 inline-block">POST api.openai.com/v1/chat/completions</code>
                 </div>
                 <div className="rounded-lg border p-3">
@@ -553,7 +553,7 @@ export default function GuidePage() {
                     <span className="text-base">🌤️</span>
                     <span className="font-medium text-foreground">Open-Meteo API</span>
                   </div>
-                  <p className="text-xs">Prevision meteorologica (16 dias) y archivo historico. Sin API key requerida. Datos: temperatura, viento, precipitacion, codigo meteo.</p>
+                  <p className="text-xs">Previsión meteorológica (16 días) y archivo histórico. Sin API key requerida. Datos: temperatura, viento, precipitación, código meteo.</p>
                   <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded mt-1 inline-block">GET api.open-meteo.com/v1/forecast</code>
                 </div>
               </div>
@@ -568,7 +568,7 @@ export default function GuidePage() {
           <Card>
             <CardHeader>
               <CardTitle>Estructura del Proyecto</CardTitle>
-              <CardDescription>Organizacion de directorios siguiendo las convenciones de Next.js 14 App Router</CardDescription>
+              <CardDescription>Organización de directorios siguiendo las convenciones de Next.js 14 App Router</CardDescription>
             </CardHeader>
             <CardContent>
               <pre className="text-xs bg-muted p-4 rounded-lg overflow-x-auto leading-relaxed">
@@ -576,18 +576,18 @@ export default function GuidePage() {
 ├── app/
 │   ├── (dashboard)/          # Layout con sidebar (rutas protegidas)
 │   │   ├── dashboard/        # Panel principal + Caddie AI
-│   │   ├── players/          # Gestion de jugadores
+│   │   ├── players/          # Gestión de jugadores
 │   │   ├── inbox/            # Bandeja WhatsApp
 │   │   ├── campaigns/        # Campañas de marketing
-│   │   ├── tournaments/      # Gestion de torneos
-│   │   ├── weather/          # Meteorologia y ocupacion
+│   │   ├── tournaments/      # Gestión de torneos
+│   │   ├── weather/          # Meteorología y ocupación
 │   │   │   ├── page.tsx      # Mapa de calor
-│   │   │   ├── analytics/    # Analytics meteorologicos
-│   │   │   └── daily-input/  # Input diario ocupacion
+│   │   │   ├── analytics/    # Analytics meteorológicos
+│   │   │   └── daily-input/  # Input diario ocupación
 │   │   ├── templates/        # Templates WhatsApp
 │   │   ├── ai/               # IA Insights
-│   │   ├── settings/         # Configuracion
-│   │   ├── guide/            # Esta guia
+│   │   ├── settings/         # Configuración
+│   │   ├── guide/            # Esta guía
 │   │   └── layout.tsx        # Layout compartido
 │   ├── api/
 │   │   ├── auth/             # NextAuth endpoints
@@ -601,7 +601,7 @@ export default function GuidePage() {
 │   │   ├── tournaments/      # CRUD torneos
 │   │   ├── weather/          # Forecast, analytics, records
 │   │   └── webhook/          # WhatsApp webhook receiver
-│   ├── login/                # Pagina de login (publica)
+│   ├── login/                # Página de login (pública)
 │   └── layout.tsx            # Root layout
 ├── components/
 │   ├── chat/                 # Chatbot Caddie AI
@@ -612,7 +612,7 @@ export default function GuidePage() {
 │   ├── prisma.ts             # Singleton Prisma client
 │   ├── utils.ts              # Utilidades (cn, etc.)
 │   └── services/
-│       ├── weather.ts        # Logica meteorologica + predicciones
+│       ├── weather.ts        # Lógica meteorológica + predicciones
 │       └── chat-context.ts   # Contexto DB para Caddie AI
 └── middleware.ts              # Auth middleware (protege rutas)`}
               </pre>
@@ -649,11 +649,11 @@ export default function GuidePage() {
                   <span>→</span>
                   <Badge variant="outline">A/B Split (opcional)</Badge>
                   <span>→</span>
-                  <Badge variant="outline">Enviar via Cloud API</Badge>
+                  <Badge variant="outline">Enviar vía Cloud API</Badge>
                   <span>→</span>
                   <Badge variant="outline">Track delivery/read</Badge>
                   <span>→</span>
-                  <Badge variant="outline">Analisis resultados</Badge>
+                  <Badge variant="outline">Análisis resultados</Badge>
                 </div>
               </div>
               <div className="rounded-lg bg-muted p-4">
@@ -681,7 +681,7 @@ export default function GuidePage() {
                 <Lock className="h-5 w-5 text-red-500" />
                 Variables de Entorno
               </CardTitle>
-              <CardDescription>Configuracion necesaria en .env</CardDescription>
+              <CardDescription>Configuración necesaria en .env</CardDescription>
             </CardHeader>
             <CardContent>
               <pre className="text-xs bg-muted p-4 rounded-lg overflow-x-auto leading-relaxed">
@@ -689,7 +689,7 @@ export default function GuidePage() {
 DATABASE_URL="postgresql://...?pgbouncer=true"
 DIRECT_URL="postgresql://..."
 
-# Autenticacion
+# Autenticación
 AUTH_SECRET="tu-secreto-seguro"
 NEXTAUTH_URL="http://localhost:3000"
 
@@ -718,24 +718,24 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-green-500" />
-                Gestion de Jugadores
+                Gestión de Jugadores
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Accordion title="Mantener perfiles actualizados" defaultOpen>
                 <ul className="space-y-1.5 mt-2">
-                  <li>- Actualiza el <strong>handicap</strong> tras cada torneo o revision oficial</li>
+                  <li>- Actualiza el <strong>handicap</strong> tras cada torneo o revisión oficial</li>
                   <li>- Registra las <strong>visitas</strong> y <strong>consumos</strong> para tener un historial preciso</li>
-                  <li>- Anade <strong>tags</strong> manuales que complementen los automaticos de la IA</li>
-                  <li>- Revisa el <strong>engagement level</strong> regularmente — es clave para segmentacion</li>
+                  <li>- Añade <strong>tags</strong> manuales que complementen los automáticos de la IA</li>
+                  <li>- Revisa el <strong>engagement level</strong> regularmente — es clave para segmentación</li>
                 </ul>
               </Accordion>
-              <Accordion title="Engagement y retencion">
+              <Accordion title="Engagement y retención">
                 <ul className="space-y-1.5 mt-2">
                   <li>- Contacta jugadores <strong>NEW</strong> en su primera semana para dar la bienvenida</li>
-                  <li>- Si un jugador no visita en +30 dias, enviale un incentivo personalizado</li>
+                  <li>- Si un jugador no visita en +30 días, envíale un incentivo personalizado</li>
                   <li>- Los jugadores <strong>VIP</strong> merecen comunicaciones exclusivas y trato preferente</li>
-                  <li>- Usa las <strong>sugerencias de IA</strong> (boton en perfil del jugador) para ideas de comunicacion</li>
+                  <li>- Usa las <strong>sugerencias de IA</strong> (botón en perfil del jugador) para ideas de comunicación</li>
                   <li>- Revisa semanalmente los jugadores con <strong>sentimiento NEGATIVE o FRUSTRATED</strong></li>
                 </ul>
               </Accordion>
@@ -746,36 +746,36 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-green-500" />
-                WhatsApp y Comunicacion
+                WhatsApp y Comunicación
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Accordion title="Ventana de 24 horas de WhatsApp" defaultOpen>
                 <div className="mt-2 space-y-1.5">
-                  <p>Meta permite respuestas libres solo dentro de las <strong>24 horas</strong> tras el ultimo mensaje del cliente. Despues, debes usar <strong>templates aprobados</strong>.</p>
+                  <p>Meta permite respuestas libres solo dentro de las <strong>24 horas</strong> tras el último mensaje del cliente. Después, debes usar <strong>templates aprobados</strong>.</p>
                   <ul className="space-y-1">
-                    <li>- Responde rapido a mensajes entrantes para aprovechar la ventana</li>
+                    <li>- Responde rápido a mensajes entrantes para aprovechar la ventana</li>
                     <li>- Ten templates preparados para reactivar conversaciones</li>
-                    <li>- El chatbot IA respeta automaticamente esta ventana</li>
+                    <li>- El chatbot IA respeta automáticamente esta ventana</li>
                   </ul>
                 </div>
               </Accordion>
               <Accordion title="Templates efectivos">
                 <ul className="space-y-1.5 mt-2">
                   <li>- Usa <strong>variables</strong> ({"{{1}}"}, {"{{2}}"}) para personalizar: nombre, fecha, oferta</li>
-                  <li>- Manten el tono de marca configurado en Ajustes → Voz de Marca</li>
+                  <li>- Mantén el tono de marca configurado en Ajustes → Voz de Marca</li>
                   <li>- Templates cortos (2-3 frases) tienen mejor tasa de lectura</li>
                   <li>- Incluye un <strong>CTA claro</strong>: &quot;Reserva ahora&quot;, &quot;Responde SI&quot;</li>
-                  <li>- Usa el generador IA para crear y mejorar templates rapidamente</li>
+                  <li>- Usa el generador IA para crear y mejorar templates rápidamente</li>
                 </ul>
               </Accordion>
               <Accordion title="Campañas efectivas">
                 <ul className="space-y-1.5 mt-2">
-                  <li>- <strong>Segmenta</strong> siempre: no envies lo mismo a todos</li>
-                  <li>- Usa <strong>A/B testing</strong> para descubrir que funciona mejor</li>
-                  <li>- Programa envios en <strong>horas optimas</strong> (manana 9-11h, tarde 16-18h)</li>
+                  <li>- <strong>Segmenta</strong> siempre: no envíes lo mismo a todos</li>
+                  <li>- Usa <strong>A/B testing</strong> para descubrir qué funciona mejor</li>
+                  <li>- Programa envíos en <strong>horas óptimas</strong> (mañana 9-11h, tarde 16-18h)</li>
                   <li>- No superes 2-3 campañas por semana para evitar fatiga</li>
-                  <li>- Analiza metricas: si open rate baja del 30%, revisa el contenido</li>
+                  <li>- Analiza métricas: si open rate baja del 30%, revisa el contenido</li>
                 </ul>
               </Accordion>
             </CardContent>
@@ -785,30 +785,30 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CloudSun className="h-5 w-5 text-cyan-500" />
-                Meteorologia y Predicciones
+                Meteorología y Predicciones
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Accordion title="Mejorar la precision de predicciones" defaultOpen>
+              <Accordion title="Mejorar la precisión de predicciones" defaultOpen>
                 <ul className="space-y-1.5 mt-2">
-                  <li>- <strong>Introduce datos diarios</strong> de ocupacion real (Meteorologia → Input Diario)</li>
-                  <li>- Cuantos mas datos reales, mejor sera la precision de las predicciones</li>
-                  <li>- El sistema necesita ~30 dias de datos para ser fiable</li>
-                  <li>- Marca los <strong>dias cerrados</strong> y su razon para excluirlos del analisis</li>
-                  <li>- Usa el <strong>boton de snapshot</strong> para capturar la prediccion del dia</li>
+                  <li>- <strong>Introduce datos diarios</strong> de ocupación real (Meteorología → Input Diario)</li>
+                  <li>- Cuantos más datos reales, mejor será la precisión de las predicciones</li>
+                  <li>- El sistema necesita ~30 días de datos para ser fiable</li>
+                  <li>- Marca los <strong>días cerrados</strong> y su razón para excluirlos del análisis</li>
+                  <li>- Usa el <strong>botón de snapshot</strong> para capturar la predicción del día</li>
                 </ul>
               </Accordion>
               <Accordion title="Golf Score y demanda">
                 <div className="mt-2 space-y-1.5">
-                  <p>El <strong>Golf Score</strong> (0-100) evalua las condiciones para jugar basandose en:</p>
+                  <p>El <strong>Golf Score</strong> (0-100) evalúa las condiciones para jugar basándose en:</p>
                   <ul className="space-y-1">
-                    <li>- Temperatura: optima 18-25°C</li>
+                    <li>- Temperatura: óptima 18-25°C</li>
                     <li>- Viento: penaliza a partir de 20 km/h</li>
-                    <li>- Precipitacion: penaliza desde 1mm</li>
-                    <li>- Codigo meteorologico: cielo despejado vs tormenta</li>
-                    <li>- Horas de luz: mas horas = mejor score</li>
+                    <li>- Precipitación: penaliza desde 1mm</li>
+                    <li>- Código meteorológico: cielo despejado vs tormenta</li>
+                    <li>- Horas de luz: más horas = mejor score</li>
                   </ul>
-                  <p className="mt-2">La <strong>prediccion de demanda</strong> combina: 40% clima + 35% calendario (dia semana, festivos, temporada) + 25% datos historicos.</p>
+                  <p className="mt-2">La <strong>predicción de demanda</strong> combina: 40% clima + 35% calendario (día semana, festivos, temporada) + 25% datos históricos.</p>
                 </div>
               </Accordion>
             </CardContent>
@@ -867,58 +867,58 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                     <li>En API Setup, obtiene tu <strong>Phone Number ID</strong> y <strong>Access Token</strong></li>
                     <li>Configura el webhook con tu URL: <code className="text-[10px] bg-muted px-1 rounded">https://tu-app.vercel.app/api/webhook/whatsapp</code></li>
                     <li>Usa el verify token: <code className="text-[10px] bg-muted px-1 rounded">caddie24-webhook-2024</code></li>
-                    <li>Suscribete a: messages, message_deliveries, message_reads</li>
-                    <li>Pega las credenciales en <strong>Configuracion → WhatsApp</strong></li>
+                    <li>Suscríbete a: messages, message_deliveries, message_reads</li>
+                    <li>Pega las credenciales en <strong>Configuración → WhatsApp</strong></li>
                   </ol>
                 </div>
               </Accordion>
               <Accordion title="¿Qué necesito para que funcione Caddie AI?">
                 <div className="mt-2 space-y-1.5">
-                  <p>Solo necesitas una <strong>OPENAI_API_KEY</strong> valida en las variables de entorno. El chatbot usa GPT-4o-mini que es rapido y economico (~$0.15/1M tokens input).</p>
-                  <p>El chatbot consulta la base de datos en cada pregunta, asi que siempre tiene datos actualizados.</p>
+                  <p>Solo necesitas una <strong>OPENAI_API_KEY</strong> válida en las variables de entorno. El chatbot usa GPT-4o-mini que es rápido y económico (~$0.15/1M tokens input).</p>
+                  <p>El chatbot consulta la base de datos en cada pregunta, así que siempre tiene datos actualizados.</p>
                 </div>
               </Accordion>
               <Accordion title="¿Cómo funciona el sistema de engagement?">
                 <div className="mt-2 space-y-1.5">
-                  <p>Cada jugador tiene un nivel de engagement que indica su vinculacion con el club:</p>
+                  <p>Cada jugador tiene un nivel de engagement que indica su vinculación con el club:</p>
                   <ul className="space-y-1">
-                    <li><strong>NEW</strong> — Recien registrado, aun sin historial significativo</li>
+                    <li><strong>NEW</strong> — Recién registrado, aún sin historial significativo</li>
                     <li><strong>LOW</strong> — Poca actividad o respuesta</li>
                     <li><strong>MEDIUM</strong> — Actividad regular, responde a campañas</li>
                     <li><strong>HIGH</strong> — Muy activo, visitas frecuentes, buen gasto</li>
-                    <li><strong>VIP</strong> — Maxima lealtad, alto gasto, embajador del club</li>
+                    <li><strong>VIP</strong> — Máxima lealtad, alto gasto, embajador del club</li>
                   </ul>
-                  <p>Puedes cambiar el nivel manualmente o dejar que el sistema lo ajuste basandose en visitas, gasto y comunicaciones.</p>
+                  <p>Puedes cambiar el nivel manualmente o dejar que el sistema lo ajuste basándose en visitas, gasto y comunicaciones.</p>
                 </div>
               </Accordion>
               <Accordion title="¿Puedo usar el sistema en otros idiomas?">
                 <div className="mt-2 space-y-1.5">
-                  <p>El sistema soporta 4 idiomas para jugadores: <strong>Espanol (ES), Ingles (EN), Aleman (DE), Frances (FR)</strong>.</p>
-                  <p>Los templates de WhatsApp pueden crearse en cualquier idioma. La IA puede generar y traducir contenido automaticamente.</p>
-                  <p>La interfaz de administracion esta actualmente en espanol.</p>
+                  <p>El sistema soporta 4 idiomas para jugadores: <strong>Español (ES), Inglés (EN), Alemán (DE), Francés (FR)</strong>.</p>
+                  <p>Los templates de WhatsApp pueden crearse en cualquier idioma. La IA puede generar y traducir contenido automáticamente.</p>
+                  <p>La interfaz de administración está actualmente en español.</p>
                 </div>
               </Accordion>
               <Accordion title="¿Qué pasa si el campo cierra por mal tiempo?">
                 <div className="mt-2 space-y-1.5">
-                  <p>El modulo de meteorologia permite:</p>
+                  <p>El módulo de meteorología permite:</p>
                   <ul className="space-y-1">
                     <li>- Configurar <strong>umbrales de cierre</strong> (lluvia &gt;10mm, viento &gt;50km/h)</li>
-                    <li>- Marcar dias como <strong>cerrados</strong> con motivo</li>
+                    <li>- Marcar días como <strong>cerrados</strong> con motivo</li>
                     <li>- Configurar <strong>automatizaciones</strong> para avisar a jugadores con reserva</li>
-                    <li>- Los dias cerrados se excluyen del calculo de precision</li>
+                    <li>- Los días cerrados se excluyen del cálculo de precisión</li>
                   </ul>
                 </div>
               </Accordion>
               <Accordion title="¿Cómo se despliega en producción?">
                 <div className="mt-2 space-y-1.5">
-                  <p>Caddie 24 esta optimizado para <strong>Vercel</strong>:</p>
+                  <p>Caddie 24 está optimizado para <strong>Vercel</strong>:</p>
                   <ol className="space-y-1 list-decimal list-inside">
                     <li>Conecta tu repo de GitHub a Vercel</li>
                     <li>Configura las variables de entorno (.env)</li>
-                    <li>Ejecuta la migracion de Prisma contra tu Supabase</li>
-                    <li>Cada push a <code className="text-[10px] bg-muted px-1 rounded">main</code> despliega automaticamente</li>
+                    <li>Ejecuta la migración de Prisma contra tu Supabase</li>
+                    <li>Cada push a <code className="text-[10px] bg-muted px-1 rounded">main</code> despliega automáticamente</li>
                   </ol>
-                  <p className="mt-1.5">Para la base de datos, usamos <strong>Supabase</strong> con PostgreSQL y connection pooling via PgBouncer.</p>
+                  <p className="mt-1.5">Para la base de datos, usamos <strong>Supabase</strong> con PostgreSQL y connection pooling vía PgBouncer.</p>
                 </div>
               </Accordion>
               <Accordion title="¿Cuál es el coste de funcionamiento?">
@@ -927,7 +927,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
                     <li><strong>Vercel</strong>: Plan gratuito suficiente para empezar (100GB bandwidth)</li>
                     <li><strong>Supabase</strong>: Plan gratuito con 500MB DB y 1GB transfer</li>
                     <li><strong>OpenAI</strong>: ~$0.15/1M tokens input con GPT-4o-mini (muy bajo coste)</li>
-                    <li><strong>WhatsApp Cloud API</strong>: 1,000 conversaciones gratis/mes. Despues ~$0.05-0.08/conversacion</li>
+                    <li><strong>WhatsApp Cloud API</strong>: 1,000 conversaciones gratis/mes. Después ~$0.05-0.08/conversación</li>
                     <li><strong>Open-Meteo</strong>: Gratuito para uso no comercial</li>
                   </ul>
                   <p className="mt-1.5">Para un club medio (~200 jugadores), el coste mensual estimado es de <strong>$5-20/mes</strong>.</p>
@@ -935,12 +935,12 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
               </Accordion>
               <Accordion title="¿Se pueden exportar los datos?">
                 <div className="mt-2 space-y-1.5">
-                  <p>Si, los datos estan en PostgreSQL y pueden exportarse:</p>
+                  <p>Sí, los datos están en PostgreSQL y pueden exportarse:</p>
                   <ul className="space-y-1">
                     <li>- <strong>Prisma Studio</strong> (<code className="text-[10px] bg-muted px-1 rounded">npm run db:studio</code>): interfaz visual para explorar y exportar datos</li>
-                    <li>- <strong>SQL directo</strong>: acceso via Supabase dashboard</li>
+                    <li>- <strong>SQL directo</strong>: acceso vía Supabase dashboard</li>
                     <li>- <strong>API REST</strong>: todos los endpoints devuelven JSON</li>
-                    <li>- <strong>Caddie AI</strong>: puedes pedir resumenes y analisis en lenguaje natural</li>
+                    <li>- <strong>Caddie AI</strong>: puedes pedir resúmenes y análisis en lenguaje natural</li>
                   </ul>
                 </div>
               </Accordion>
@@ -955,7 +955,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              <p>Para soporte tecnico, consulta el repositorio del proyecto o contacta al equipo de desarrollo.</p>
+              <p>Para soporte técnico, consulta el repositorio del proyecto o contacta al equipo de desarrollo.</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 <div className="rounded border p-3">
                   <p className="font-medium text-foreground text-xs">Caddie AI</p>

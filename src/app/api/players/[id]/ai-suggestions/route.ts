@@ -92,7 +92,7 @@ export async function POST(
       horarioPreferido: p.preferredPlayTime || "desconocido",
       diasPreferidos: p.playDayPreference || "desconocido",
       estiloJuego: p.playStylePreference || "desconocido",
-      cumpleanos: p.birthday ? new Date(p.birthday).toLocaleDateString("es-ES") : null,
+      cumpleaños: p.birthday ? new Date(p.birthday).toLocaleDateString("es-ES") : null,
       tags: p.tags?.map((t: any) => t.tag).join(", ") || "ninguno",
       categoriaConsumo: p.consumptions?.length > 0
         ? Array.from(new Set(p.consumptions.map((c: any) => c.category))).join(", ")
@@ -111,7 +111,7 @@ export async function POST(
       messages: [
         {
           role: "system",
-          content: `Eres un experto en CRM y marketing para campos de golf de lujo. Analiza el perfil de un jugador y genera sugerencias de comunicacion personalizadas.
+          content: `Eres un experto en CRM y marketing para campos de golf de lujo. Analiza el perfil de un jugador y genera sugerencias de comunicación personalizadas.
 
 CONTEXTO: Eres el asistente IA del CRM "Caddie 24" para un campo de golf. Tu objetivo es maximizar la retención, el gasto medio y la satisfacción del jugador.
 
@@ -127,32 +127,32 @@ RESPONDE EN JSON con exactamente esta estructura (sin markdown, sin backticks, s
       "prioridad": "alta|media|baja",
       "asunto": "título corto de la acción",
       "mensaje": "texto sugerido del mensaje (WhatsApp-friendly, con emojis si es whatsapp)",
-      "momento": "cuando enviar (ej: 'manana a las 10h', 'viernes por la tarde', 'inmediatamente')",
-      "razon": "por que esta comunicacion es relevante"
+      "momento": "cuando enviar (ej: 'mañana a las 10h', 'viernes por la tarde', 'inmediatamente')",
+      "razon": "por qué esta comunicación es relevante"
     }
   ]
 }
 
-Genera entre 3 y 5 sugerencias de comunicacion. Cada una debe ser:
+Genera entre 3 y 5 sugerencias de comunicación. Cada una debe ser:
 - Personalizada al perfil del jugador
 - Accionable e inmediata
 - Con un mensaje listo para copiar y enviar
 - Contextualizada al momento (si no viene hace tiempo, si es VIP, si gasta mucho en restaurante, etc.)
 
-TIPOS DE SUGERENCIAS SEGUN PERFIL:
-- Si no viene hace >30 dias: reactivacion con oferta
-- Si es VIP/HIGH: invitacion exclusiva, trato preferente
-- Si gasta mucho en restaurante: evento gastronomico
-- Si handicap mejora: felicitacion + torneo
-- Si cumpleanos proximo: felicitacion personalizada
+TIPOS DE SUGERENCIAS SEGÚN PERFIL:
+- Si no viene hace >30 días: reactivación con oferta
+- Si es VIP/HIGH: invitación exclusiva, trato preferente
+- Si gasta mucho en restaurante: evento gastronómico
+- Si handicap mejora: felicitación + torneo
+- Si cumpleaños próximo: felicitación personalizada
 - Si es nuevo: bienvenida + oferta primera vez
-- Si engagement bajo: encuesta de satisfaccion
+- Si engagement bajo: encuesta de satisfacción
 - Si juega en grupo: ofertas grupales
 - Si juega fines de semana: promos de entre semana para diversificar`
         },
         {
           role: "user",
-          content: `Analiza este jugador y genera sugerencias de comunicacion:\n\n${JSON.stringify(playerProfile, null, 2)}`
+          content: `Analiza este jugador y genera sugerencias de comunicación:\n\n${JSON.stringify(playerProfile, null, 2)}`
         },
       ],
       max_tokens: 1200,
@@ -183,7 +183,7 @@ TIPOS DE SUGERENCIAS SEGUN PERFIL:
   } catch (error: any) {
     if (error?.status === 401) {
       return NextResponse.json(
-        { error: "API key de OpenAI invalida" },
+        { error: "API key de OpenAI inválida" },
         { status: 401 }
       );
     }
