@@ -154,10 +154,10 @@ export default function GuidePage() {
 
   const tabs = [
     { id: "overview", label: "Vista General", icon: BookOpen },
-    { id: "modules", label: "Modulos", icon: LayoutDashboard },
-    { id: "tech", label: "Tecnologias", icon: Cpu },
+    { id: "modules", label: "Módulos", icon: LayoutDashboard },
+    { id: "tech", label: "Tecnologías", icon: Cpu },
     { id: "architecture", label: "Arquitectura", icon: Workflow },
-    { id: "bestpractices", label: "Buenas Practicas", icon: Target },
+    { id: "bestpractices", label: "Buenas Prácticas", icon: Target },
     { id: "faq", label: "FAQ", icon: HelpCircle },
   ];
 
@@ -824,7 +824,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
             <CardContent className="space-y-2">
               <Accordion title="Preguntas efectivas al chatbot" defaultOpen>
                 <div className="mt-2 space-y-2">
-                  <p>Caddie AI tiene acceso a todos los datos del CRM en tiempo real. Ejemplos de preguntas utiles:</p>
+                  <p>Caddie AI tiene acceso a todos los datos del CRM en tiempo real. Ejemplos de preguntas útiles:</p>
                   <div className="grid gap-1.5 sm:grid-cols-2">
                     {[
                       "¿Qué jugadores están en riesgo de irse?",
@@ -959,7 +959,7 @@ NEXT_PUBLIC_APP_URL="https://tu-dominio.vercel.app"`}
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 <div className="rounded border p-3">
                   <p className="font-medium text-foreground text-xs">Caddie AI</p>
-                  <p className="text-[11px] mt-1">Usa el chatbot integrado para consultas rapidas sobre datos del sistema.</p>
+                  <p className="text-[11px] mt-1">Usa el chatbot integrado para consultas rápidas sobre datos del sistema.</p>
                 </div>
                 <div className="rounded border p-3">
                   <p className="font-medium text-foreground text-xs">Prisma Studio</p>
