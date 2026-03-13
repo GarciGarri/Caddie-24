@@ -9,6 +9,7 @@ export default auth((req) => {
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/webhook/whatsapp") ||
     pathname.startsWith("/api/cron/") ||
+    pathname === "/api/contact" ||
     pathname === "/login" ||
     pathname.startsWith("/presentacion") ||
     pathname === "/sw.js";

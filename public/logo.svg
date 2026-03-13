@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Green (convex - curved upward so ball rolls to hole) -->
+  <ellipse cx="60" cy="82" rx="48" ry="14" fill="#22c55e"/>
+  <ellipse cx="60" cy="80" rx="48" ry="14" fill="#4ade80"/>
+  <!-- Convex surface highlight (curved upward) -->
+  <path d="M12 80 Q60 66 108 80" stroke="#16a34a" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <!-- Hole -->
+  <ellipse cx="62" cy="78" rx="6" ry="2.5" fill="#15803d"/>
+  <ellipse cx="62" cy="77.5" rx="4" ry="1.8" fill="#0f5132"/>
+  <!-- Flag pole -->
+  <line x1="62" y1="78" x2="62" y2="32" stroke="#78716c" stroke-width="2" stroke-linecap="round"/>
+  <!-- Flag -->
+  <path d="M62 32 L82 42 L62 50Z" fill="#ef4444"/>
+  <path d="M62 32 L82 42 L62 50Z" fill="url(#flagGrad)"/>
+  <!-- Ball -->
+  <circle cx="38" cy="74" r="5" fill="white" stroke="#e5e7eb" stroke-width="0.8"/>
+  <circle cx="36.5" cy="72.5" r="1.2" fill="#f3f4f6" opacity="0.8"/>
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="flagGrad" x1="62" y1="32" x2="82" y2="50">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+  </defs>
+</svg>

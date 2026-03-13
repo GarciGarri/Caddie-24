@@ -23,6 +23,10 @@ import {
   Clock,
   CheckCircle2,
   ArrowRight,
+  Facebook,
+  Instagram,
+  Mail,
+  Loader2,
 } from "lucide-react";
 import {
   Card,
@@ -32,6 +36,9 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 // ─── Slide Data ──────────────────────────────────────────────
 
@@ -39,12 +46,36 @@ const slides = [
   { id: "hero", label: "Inicio" },
   { id: "dashboard", label: "Dashboard" },
   { id: "players", label: "Jugadores" },
-  { id: "inbox", label: "WhatsApp" },
+  { id: "multichannel", label: "Multicanal" },
   { id: "campaigns", label: "Campañas" },
   { id: "tournaments", label: "Torneos" },
   { id: "weather", label: "Meteorología" },
-  { id: "cta", label: "Empieza" },
+  { id: "cta", label: "Contacto" },
 ];
+
+// ─── Channel icon helper ────────────────────────────────────
+
+function ChannelIcon({ channel, className }: { channel: string; className?: string }) {
+  switch (channel) {
+    case "whatsapp":
+      return <MessageSquare className={className} />;
+    case "facebook":
+      return <Facebook className={className} />;
+    case "instagram":
+      return <Instagram className={className} />;
+    case "email":
+      return <Mail className={className} />;
+    default:
+      return <MessageSquare className={className} />;
+  }
+}
+
+const channelColors: Record<string, string> = {
+  whatsapp: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  facebook: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  instagram: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  email: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+};
 
 // ─── Main Component ─────────────────────────────────────────
 
@@ -100,10 +131,10 @@ export default function PresentacionPage() {
         />
       </div>
 
-      {/* Top nav */}
-      <nav className="fixed top-1 left-0 right-0 z-40 flex items-center justify-between px-4 sm:px-8 py-3">
+      {/* Top nav — solid background */}
+      <nav className="fixed top-1 left-0 right-0 z-40 flex items-center justify-between px-4 sm:px-8 py-3 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-bold text-lg">
-          <span className="text-2xl">⛳</span> Caddie 24
+          <Image src="/logo.svg" alt="Caddie 24" width={32} height={32} /> Caddie 24
         </div>
         <Link href="/login">
           <Button variant="outline" size="sm" className="text-xs">
@@ -113,7 +144,7 @@ export default function PresentacionPage() {
       </nav>
 
       {/* Slide content */}
-      <div className="flex-1 flex items-center justify-center pt-14 pb-16 px-4 sm:px-8">
+      <div className="flex-1 flex items-center justify-center pt-16 pb-16 px-4 sm:px-8">
         <div
           key={current}
           className={`w-full max-w-6xl mx-auto animate-slide-${direction}`}
@@ -121,7 +152,7 @@ export default function PresentacionPage() {
           {current === 0 && <HeroSlide onNext={next} />}
           {current === 1 && <DashboardSlide />}
           {current === 2 && <PlayersSlide />}
-          {current === 3 && <InboxSlide />}
+          {current === 3 && <MultichannelSlide />}
           {current === 4 && <CampaignsSlide />}
           {current === 5 && <TournamentsSlide />}
           {current === 6 && <WeatherSlide />}
@@ -252,7 +283,7 @@ function HeroSlide({ onNext }: { onNext: () => void }) {
   return (
     <div className="text-center space-y-8 max-w-3xl mx-auto">
       <div className="relative inline-block">
-        <div className="text-8xl sm:text-9xl mb-4">⛳</div>
+        <Image src="/logo.svg" alt="Caddie 24" width={140} height={140} className="mb-4" />
         <div className="absolute -top-4 -right-8 w-20 h-20 bg-green-200/40 dark:bg-green-800/20 rounded-full blur-xl" />
         <div className="absolute -bottom-4 -left-8 w-16 h-16 bg-emerald-200/40 dark:bg-emerald-800/20 rounded-full blur-xl" />
       </div>
@@ -263,15 +294,31 @@ function HeroSlide({ onNext }: { onNext: () => void }) {
         </span>
       </h1>
       <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
-        El CRM de marketing y comunicación para campos de golf con{" "}
+        El CRM multicanal para campos de golf con{" "}
         <span className="font-semibold text-green-600 dark:text-green-400">
-          WhatsApp
+          IA
         </span>{" "}
-        +{" "}
-        <span className="font-semibold text-green-600 dark:text-green-400">
-          Inteligencia Artificial
-        </span>
+        integrada
       </p>
+      {/* Channel icons */}
+      <div className="flex items-center justify-center gap-3 pt-2">
+        {[
+          { icon: MessageSquare, label: "WhatsApp", color: "text-green-600" },
+          { icon: Facebook, label: "Facebook", color: "text-blue-600" },
+          { icon: Instagram, label: "Instagram", color: "text-pink-600" },
+          { icon: Mail, label: "Email", color: "text-amber-600" },
+        ].map((ch) => (
+          <div
+            key={ch.label}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700"
+          >
+            <ch.icon className={`h-4 w-4 ${ch.color}`} />
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+              {ch.label}
+            </span>
+          </div>
+        ))}
+      </div>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
         <Button
           size="lg"
@@ -338,9 +385,9 @@ function DashboardSlide() {
           </CardHeader>
           <CardContent className="px-3 pb-3 space-y-2">
             {[
-              { name: "Carlos M.", msg: "Quiero reservar para el sábado", color: "bg-blue-500" },
-              { name: "Ana López", msg: "¿Hay disponibilidad mañana?", color: "bg-blue-500" },
-              { name: "Caddie IA", msg: "Sí, hay huecos a las 9:30...", color: "bg-green-500", ai: true },
+              { name: "Carlos M.", msg: "Quiero reservar para el sábado", color: "bg-blue-500", channel: "whatsapp" },
+              { name: "Ana López", msg: "¿Hay torneos este mes?", color: "bg-pink-500", channel: "instagram" },
+              { name: "Caddie IA", msg: "Sí, hay huecos a las 9:30...", color: "bg-green-500", ai: true, channel: "whatsapp" },
             ].map((a, i) => (
               <div key={i} className="flex items-start gap-2">
                 <div className={`mt-1.5 h-1.5 w-1.5 rounded-full ${a.color}`} />
@@ -367,22 +414,22 @@ function DashboardSlide() {
 
 function PlayersSlide() {
   const players = [
-    { name: "Carlos Martínez", handicap: 12, level: "VIP", levelColor: "bg-purple-100 text-purple-700", tags: ["Mañanas", "Pro Shop"] },
-    { name: "Ana López García", handicap: 18, level: "HIGH", levelColor: "bg-green-100 text-green-700", tags: ["Tardes", "Torneos"] },
-    { name: "Miguel Fernández", handicap: 24, level: "MEDIUM", levelColor: "bg-blue-100 text-blue-700", tags: ["Fin de semana"] },
-    { name: "Laura Sánchez", handicap: 8, level: "VIP", levelColor: "bg-purple-100 text-purple-700", tags: ["Competidora", "Pro Shop"] },
+    { name: "Carlos Martínez", handicap: 12, level: "VIP", levelColor: "bg-purple-100 text-purple-700", tags: ["Mañanas", "Pro Shop"], prefChannel: "whatsapp" },
+    { name: "Ana López García", handicap: 18, level: "HIGH", levelColor: "bg-green-100 text-green-700", tags: ["Tardes", "Torneos"], prefChannel: "instagram" },
+    { name: "Miguel Fernández", handicap: 24, level: "MEDIUM", levelColor: "bg-blue-100 text-blue-700", tags: ["Fin de semana"], prefChannel: "email" },
+    { name: "Laura Sánchez", handicap: 8, level: "VIP", levelColor: "bg-purple-100 text-purple-700", tags: ["Competidora"], prefChannel: "facebook" },
   ];
 
   return (
     <SlideLayout
       tag="CRM de Jugadores"
       title="Gestión de Jugadores"
-      description="Perfiles completos con historial, handicap, nivel de engagement y etiquetas inteligentes generadas por IA."
+      description="Perfiles completos con historial, handicap, nivel de engagement, etiquetas IA y canal de comunicación preferido."
       bullets={[
         { icon: Users, text: "Perfiles con handicap, preferencias y consumo" },
         { icon: Bot, text: "Etiquetas automáticas generadas por IA" },
         { icon: TrendingUp, text: "Niveles de engagement: NEW → VIP" },
-        { icon: Target, text: "Segmentación avanzada para campañas" },
+        { icon: Target, text: "Canal preferido por jugador: WhatsApp, Instagram, Facebook o Email" },
       ]}
     >
       <div className="w-full max-w-sm space-y-2">
@@ -403,7 +450,11 @@ function PlayersSlide() {
                   <span className="text-[10px] text-muted-foreground">
                     HCP {p.handicap}
                   </span>
-                  {p.tags.map((t) => (
+                  <span className={`inline-flex items-center gap-0.5 text-[8px] px-1.5 py-0.5 rounded-full ${channelColors[p.prefChannel]}`}>
+                    <ChannelIcon channel={p.prefChannel} className="h-2.5 w-2.5" />
+                    {p.prefChannel === "whatsapp" ? "WhatsApp" : p.prefChannel === "facebook" ? "Facebook" : p.prefChannel === "instagram" ? "Instagram" : "Email"}
+                  </span>
+                  {p.tags.slice(0, 1).map((t) => (
                     <Badge key={t} variant="secondary" className="text-[8px] py-0 px-1">
                       {t}
                     </Badge>
@@ -418,77 +469,73 @@ function PlayersSlide() {
   );
 }
 
-// ─── Slide 4: Inbox ─────────────────────────────────────────
+// ─── Slide 4: Multichannel ──────────────────────────────────
 
-function InboxSlide() {
-  const messages = [
-    { from: "Carlos M.", text: "Hola, quiero reservar green fee para el sábado 4 personas", time: "10:32", dir: "in" as const },
-    { from: "Caddie IA", text: "¡Hola Carlos! Tenemos disponibilidad el sábado a las 9:00, 9:30 y 10:30. ¿Qué horario te viene mejor? 🏌️", time: "10:32", dir: "out" as const, ai: true },
-    { from: "Carlos M.", text: "Las 9:30 perfecto, gracias!", time: "10:35", dir: "in" as const },
-    { from: "Caddie IA", text: "Perfecto, reservado para 4 personas el sábado a las 9:30. Os esperamos. ¡Buen juego! ⛳", time: "10:35", dir: "out" as const, ai: true },
+function MultichannelSlide() {
+  const channels = [
+    {
+      name: "WhatsApp",
+      icon: MessageSquare,
+      color: "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20",
+      iconColor: "text-green-600",
+      desc: "API Business oficial con templates aprobados por Meta",
+      stats: "68% tasa de lectura",
+    },
+    {
+      name: "Facebook Messenger",
+      icon: Facebook,
+      color: "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20",
+      iconColor: "text-blue-600",
+      desc: "Mensajes directos y respuestas automáticas en tu página",
+      stats: "45% de jugadores activos",
+    },
+    {
+      name: "Instagram DM",
+      icon: Instagram,
+      color: "border-pink-200 bg-pink-50 dark:border-pink-800 dark:bg-pink-900/20",
+      iconColor: "text-pink-600",
+      desc: "Responde a DMs, stories y comentarios desde el CRM",
+      stats: "Ideal para jugadores jóvenes",
+    },
+    {
+      name: "Email",
+      icon: Mail,
+      color: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20",
+      iconColor: "text-amber-600",
+      desc: "Newsletters, confirmaciones y comunicaciones formales",
+      stats: "Facturas y documentos",
+    },
   ];
 
   return (
     <SlideLayout
-      tag="WhatsApp + IA"
-      title="Bandeja de Entrada Inteligente"
-      description="Todas las conversaciones de WhatsApp en un solo lugar. La IA responde automáticamente, analiza el sentimiento y sugiere borradores."
+      tag="Comunicación Multicanal"
+      title="Todos los Canales en Uno"
+      description="Comunícate con cada jugador por su canal preferido. WhatsApp, Facebook, Instagram o Email: una sola bandeja, respuestas con IA en todos."
       bullets={[
-        { icon: MessageSquare, text: "Conversaciones centralizadas de WhatsApp Business" },
-        { icon: Bot, text: "Respuestas automáticas con IA que conoce tu club" },
-        { icon: Shield, text: "Análisis de sentimiento en cada conversación" },
-        { icon: Clock, text: "Horarios de silencio y reglas de prioridad" },
+        { icon: MessageSquare, text: "Bandeja unificada para todos los canales" },
+        { icon: Bot, text: "IA que responde en el canal adecuado automáticamente" },
+        { icon: Target, text: "Cada jugador elige cómo quiere que le contactes" },
+        { icon: BarChart3, text: "Métricas de engagement por canal" },
       ]}
     >
-      <div className="w-full max-w-sm">
-        <Card className="shadow-sm overflow-hidden">
-          {/* Chat header */}
-          <div className="bg-green-600 text-white px-4 py-2.5 flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
-              CM
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium">Carlos Martínez</div>
-              <div className="text-[10px] text-green-100 flex items-center gap-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-300" />
-                Sentimiento: Positivo
+      <div className="w-full max-w-sm space-y-2.5">
+        {channels.map((ch) => (
+          <Card key={ch.name} className={`shadow-sm border ${ch.color}`}>
+            <CardContent className="flex items-center gap-3 p-3">
+              <div className="shrink-0">
+                <ch.icon className={`h-6 w-6 ${ch.iconColor}`} />
               </div>
-            </div>
-            <Badge className="bg-green-500 text-white text-[8px] border-0">
-              VIP
-            </Badge>
-          </div>
-          {/* Messages */}
-          <CardContent className="p-3 space-y-2.5 bg-gray-50 dark:bg-gray-900/50">
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`flex ${m.dir === "out" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-lg px-3 py-2 text-[11px] ${
-                    m.dir === "out"
-                      ? "bg-green-100 dark:bg-green-900/40 text-green-900 dark:text-green-100"
-                      : "bg-white dark:bg-gray-800 shadow-sm"
-                  }`}
-                >
-                  {m.ai && (
-                    <div className="flex items-center gap-1 mb-0.5">
-                      <Bot className="h-3 w-3 text-green-600" />
-                      <span className="text-[9px] font-medium text-green-600 dark:text-green-400">
-                        Caddie IA
-                      </span>
-                    </div>
-                  )}
-                  {m.text}
-                  <div className="text-[9px] text-gray-400 mt-1 text-right">
-                    {m.time}
-                  </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold">{ch.name}</div>
+                <div className="text-[10px] text-muted-foreground">{ch.desc}</div>
+                <div className="text-[9px] font-medium text-green-600 dark:text-green-400 mt-0.5">
+                  {ch.stats}
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </SlideLayout>
   );
@@ -499,14 +546,14 @@ function InboxSlide() {
 function CampaignsSlide() {
   return (
     <SlideLayout
-      tag="Marketing"
+      tag="Marketing Multicanal"
       title="Campañas de Marketing"
-      description="Crea campañas segmentadas por WhatsApp con templates aprobados por Meta, A/B testing y métricas detalladas de entrega."
+      description="Crea campañas segmentadas enviadas por el canal preferido de cada jugador: WhatsApp, Facebook, Instagram o Email. Con A/B testing y métricas detalladas."
       bullets={[
-        { icon: Target, text: "Segmentación por handicap, engagement, preferencias" },
-        { icon: Send, text: "Templates aprobados por Meta WhatsApp Business" },
-        { icon: BarChart3, text: "Métricas: enviados, entregados, leídos, respondidos" },
-        { icon: Zap, text: "A/B testing para optimizar tus mensajes" },
+        { icon: Target, text: "Segmentación por handicap, engagement, canal preferido" },
+        { icon: Send, text: "Envío automático al canal que cada jugador prefiere" },
+        { icon: BarChart3, text: "Métricas por canal: enviados, leídos, respondidos" },
+        { icon: Zap, text: "A/B testing multicanal para optimizar resultados" },
       ]}
     >
       <div className="w-full max-w-sm space-y-3">
@@ -522,6 +569,21 @@ function CampaignsSlide() {
               <Badge className="bg-green-100 text-green-700 text-[10px]">
                 Completada
               </Badge>
+            </div>
+            {/* Channel breakdown */}
+            <div className="flex items-center gap-2">
+              {[
+                { ch: "whatsapp", count: 87, color: "bg-green-500" },
+                { ch: "email", count: 32, color: "bg-amber-500" },
+                { ch: "instagram", count: 15, color: "bg-pink-500" },
+                { ch: "facebook", count: 8, color: "bg-blue-500" },
+              ].map((c) => (
+                <div key={c.ch} className="flex items-center gap-1">
+                  <div className={`h-2 w-2 rounded-full ${c.color}`} />
+                  <span className="text-[9px] text-muted-foreground">{c.count}</span>
+                </div>
+              ))}
+              <span className="text-[9px] text-muted-foreground ml-auto">142 total</span>
             </div>
             {/* Metrics */}
             <div className="grid grid-cols-4 gap-2">
@@ -564,7 +626,12 @@ function CampaignsSlide() {
             </div>
             <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
               <Clock className="h-3 w-3" />
-              Envío: Viernes 14:00 · 87 destinatarios
+              Viernes 14:00 · 87 destinatarios ·
+              <span className="inline-flex items-center gap-1">
+                <MessageSquare className="h-2.5 w-2.5 text-green-500" />
+                <Instagram className="h-2.5 w-2.5 text-pink-500" />
+                <Mail className="h-2.5 w-2.5 text-amber-500" />
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -587,12 +654,12 @@ function TournamentsSlide() {
     <SlideLayout
       tag="Competición"
       title="Gestión de Torneos"
-      description="Organiza torneos con inscripciones online, categorías por handicap, leaderboard en vivo y publicación automática de resultados."
+      description="Organiza torneos con inscripciones online, categorías por handicap, leaderboard en vivo y publicación automática de resultados por el canal preferido."
       bullets={[
         { icon: Trophy, text: "Formatos: Stableford, Medal, Scramble, Match Play" },
         { icon: Users, text: "Inscripciones con lista de espera y pagos" },
         { icon: Star, text: "Leaderboard en tiempo real por categorías" },
-        { icon: Send, text: "Notificaciones automáticas a participantes" },
+        { icon: Send, text: "Resultados enviados por WhatsApp, Email o redes sociales" },
       ]}
     >
       <div className="w-full max-w-sm">
@@ -662,12 +729,12 @@ function WeatherSlide() {
     <SlideLayout
       tag="Clima"
       title="Meteorología Integrada"
-      description="Previsión a 14 días con score de jugabilidad golf, predicción de demanda, cierres automáticos por lluvia/viento y alertas inteligentes."
+      description="Previsión a 14 días con score de jugabilidad golf, predicción de demanda, cierres automáticos y alertas enviadas al canal preferido de cada jugador."
       bullets={[
         { icon: CloudSun, text: "Previsión a 14 días con score golf 0-100" },
         { icon: Zap, text: "Alertas automáticas de cierre por condiciones adversas" },
         { icon: BarChart3, text: "Predicción de demanda basada en clima" },
-        { icon: Bot, text: "Automatizaciones: enviar promos si buen tiempo" },
+        { icon: Bot, text: "Promos automáticas por WhatsApp, Email o redes si buen tiempo" },
       ]}
     >
       <div className="w-full max-w-sm space-y-3">
@@ -726,56 +793,182 @@ function WeatherSlide() {
   );
 }
 
-// ─── Slide 8: CTA ───────────────────────────────────────────
+// ─── Slide 8: CTA with Contact Form ─────────────────────────
 
 function CtaSlide() {
-  return (
-    <div className="text-center space-y-8 max-w-3xl mx-auto">
-      <div className="text-6xl">🏌️</div>
-      <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 dark:text-white">
-        ¿Listo para transformar{" "}
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">
-          tu club
-        </span>
-        ?
-      </h2>
-      <p className="text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
-        Caddie 24 automatiza la comunicación, potencia el marketing y mejora la
-        experiencia de tus jugadores con inteligencia artificial.
-      </p>
+  const [formData, setFormData] = useState({
+    name: "",
+    club: "",
+    email: "",
+    phone: "",
+  });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
-      {/* Benefits summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto pt-4">
-        {[
-          { icon: Clock, label: "Ahorro de tiempo", value: "70%" },
-          { icon: TrendingUp, label: "Más retención", value: "+35%" },
-          { icon: MessageSquare, label: "Respuesta media", value: "<2min" },
-          { icon: CheckCircle2, label: "Tasa de lectura", value: "68%" },
-        ].map((b) => (
-          <div key={b.label} className="text-center">
-            <b.icon className="h-6 w-6 text-green-500 mx-auto mb-1" />
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              {b.value}
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+
+    try {
+      await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      setSent(true);
+    } catch {
+      // Fallback: open mailto
+      const subject = encodeURIComponent(`Solicitud demo Caddie 24 - ${formData.club}`);
+      const body = encodeURIComponent(
+        `Nombre: ${formData.name}\nClub: ${formData.club}\nEmail: ${formData.email}\nTeléfono: ${formData.phone}`
+      );
+      window.open(`mailto:omkagency@gmail.com?subject=${subject}&body=${body}`);
+      setSent(true);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-5xl mx-auto">
+      {/* Left side — value prop */}
+      <div className="space-y-6 text-center lg:text-left">
+        <div className="text-5xl">🏌️</div>
+        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+          ¿Listo para transformar{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">
+            tu club
+          </span>
+          ?
+        </h2>
+        <p className="text-base text-gray-600 dark:text-gray-300">
+          Caddie 24 automatiza la comunicación multicanal, potencia el marketing
+          y mejora la experiencia de tus jugadores con inteligencia artificial.
+        </p>
+        <div className="grid grid-cols-2 gap-4 pt-2">
+          {[
+            { icon: Clock, label: "Ahorro de tiempo", value: "70%" },
+            { icon: TrendingUp, label: "Más retención", value: "+35%" },
+            { icon: MessageSquare, label: "Respuesta media", value: "<2min" },
+            { icon: CheckCircle2, label: "Tasa de lectura", value: "68%" },
+          ].map((b) => (
+            <div key={b.label} className="text-center lg:text-left">
+              <div className="flex items-center gap-2 justify-center lg:justify-start">
+                <b.icon className="h-4 w-4 text-green-500" />
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  {b.value}
+                </span>
+              </div>
+              <div className="text-[10px] text-muted-foreground">{b.label}</div>
             </div>
-            <div className="text-[10px] text-muted-foreground">{b.label}</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
-        <Link href="/login">
-          <Button
-            size="lg"
-            className="gap-2 bg-green-600 hover:bg-green-700 text-white px-8"
-          >
-            Iniciar Sesión <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
-        <a href="mailto:info@caddie24.com">
-          <Button variant="outline" size="lg" className="gap-2">
-            Solicitar Demo <Send className="h-4 w-4" />
-          </Button>
-        </a>
+      {/* Right side — Contact form */}
+      <div>
+        <Card className="shadow-lg border-green-100 dark:border-green-900/40">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Solicita una Demo</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Te contactamos sin compromiso
+            </p>
+          </CardHeader>
+          <CardContent>
+            {sent ? (
+              <div className="text-center py-6 space-y-3">
+                <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+                <div className="text-lg font-semibold">¡Recibido!</div>
+                <p className="text-sm text-muted-foreground">
+                  Nos pondremos en contacto contigo pronto.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contact-name" className="text-sm">
+                    Nombre
+                  </Label>
+                  <Input
+                    id="contact-name"
+                    placeholder="Tu nombre"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    required
+                    disabled={sending}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-club" className="text-sm">
+                    Club de Golf
+                  </Label>
+                  <Input
+                    id="contact-club"
+                    placeholder="Nombre de tu club"
+                    value={formData.club}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, club: e.target.value }))
+                    }
+                    required
+                    disabled={sending}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-email" className="text-sm">
+                    Email
+                  </Label>
+                  <Input
+                    id="contact-email"
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, email: e.target.value }))
+                    }
+                    required
+                    disabled={sending}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-phone" className="text-sm">
+                    Teléfono <span className="text-muted-foreground">(opcional)</span>
+                  </Label>
+                  <Input
+                    id="contact-phone"
+                    type="tel"
+                    placeholder="+34 600 000 000"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                    }
+                    disabled={sending}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
+                  disabled={sending}
+                >
+                  {sending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      Solicitar Demo <Send className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+                <p className="text-[10px] text-center text-muted-foreground">
+                  Sin compromiso. Te contactamos en menos de 24h.
+                </p>
+              </form>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
