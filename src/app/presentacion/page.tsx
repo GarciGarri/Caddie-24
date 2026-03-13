@@ -783,22 +783,22 @@ function CtaSlide() {
               <div>
                 <Label htmlFor="n" className="text-xs text-white/50">Nombre</Label>
                 <Input id="n" placeholder="Tu nombre" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required disabled={sending}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10" />
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10 text-base" />
               </div>
               <div>
                 <Label htmlFor="c" className="text-xs text-white/50">Club de Golf</Label>
                 <Input id="c" placeholder="Nombre de tu club" value={form.club} onChange={(e) => setForm((p) => ({ ...p, club: e.target.value }))} required disabled={sending}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10" />
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10 text-base" />
               </div>
               <div>
                 <Label htmlFor="e" className="text-xs text-white/50">Email</Label>
                 <Input id="e" type="email" placeholder="tu@email.com" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} required disabled={sending}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10" />
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10 text-base" />
               </div>
               <div>
                 <Label htmlFor="p" className="text-xs text-white/50">Teléfono <span className="text-white/20">(opcional)</span></Label>
                 <Input id="p" type="tel" placeholder="+34 600 000 000" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} disabled={sending}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10" />
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10 text-base" />
               </div>
               <Button type="submit" disabled={sending} className="w-full gap-2 bg-green-500 hover:bg-green-400 text-black font-bold h-11 rounded-xl text-sm">
                 {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando...</> : <>Solicitar Demo <Send className="h-4 w-4" /></>}
