@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,253 +28,179 @@ import {
   Instagram,
   Mail,
   Loader2,
+  Sparkles,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
 
 // ─── Slide Data ──────────────────────────────────────────────
 
 const slides = [
-  { id: "hero", label: "Inicio" },
-  { id: "dashboard", label: "Dashboard" },
-  { id: "players", label: "Jugadores" },
-  { id: "multichannel", label: "Multicanal" },
-  { id: "campaigns", label: "Campañas" },
-  { id: "tournaments", label: "Torneos" },
-  { id: "weather", label: "Meteorología" },
-  { id: "cta", label: "Contacto" },
+  { id: "hero" },
+  { id: "pain" },
+  { id: "multichannel" },
+  { id: "ai" },
+  { id: "campaigns" },
+  { id: "tournaments" },
+  { id: "weather" },
+  { id: "results" },
+  { id: "cta" },
 ];
-
-// ─── Channel icon helper ────────────────────────────────────
-
-function ChannelIcon({ channel, className }: { channel: string; className?: string }) {
-  switch (channel) {
-    case "whatsapp":
-      return <MessageSquare className={className} />;
-    case "facebook":
-      return <Facebook className={className} />;
-    case "instagram":
-      return <Instagram className={className} />;
-    case "email":
-      return <Mail className={className} />;
-    default:
-      return <MessageSquare className={className} />;
-  }
-}
-
-const channelColors: Record<string, string> = {
-  whatsapp: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  facebook: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  instagram: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
-  email: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-};
 
 // ─── Main Component ─────────────────────────────────────────
 
 export default function PresentacionPage() {
   const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState<"next" | "prev">("next");
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [dir, setDir] = useState<"next" | "prev">("next");
+  const [lock, setLock] = useState(false);
 
-  const goTo = useCallback(
-    (index: number) => {
-      if (isAnimating || index === current) return;
-      setDirection(index > current ? "next" : "prev");
-      setIsAnimating(true);
-      setCurrent(index);
-      setTimeout(() => setIsAnimating(false), 500);
+  const go = useCallback(
+    (i: number) => {
+      if (lock || i === current || i < 0 || i >= slides.length) return;
+      setDir(i > current ? "next" : "prev");
+      setLock(true);
+      setCurrent(i);
+      setTimeout(() => setLock(false), 400);
     },
-    [current, isAnimating]
+    [current, lock]
   );
 
-  const next = useCallback(() => {
-    if (current < slides.length - 1) goTo(current + 1);
-  }, [current, goTo]);
+  const next = useCallback(() => go(current + 1), [current, go]);
+  const prev = useCallback(() => go(current - 1), [current, go]);
 
-  const prev = useCallback(() => {
-    if (current > 0) goTo(current - 1);
-  }, [current, goTo]);
-
-  // Keyboard navigation
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === " ") {
-        e.preventDefault();
-        next();
-      }
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        prev();
-      }
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [next, prev]);
 
-  const progress = ((current + 1) / slides.length) * 100;
+  // Touch swipe
+  useEffect(() => {
+    let startX = 0;
+    const onStart = (e: TouchEvent) => { startX = e.touches[0].clientX; };
+    const onEnd = (e: TouchEvent) => {
+      const diff = startX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) diff > 0 ? next() : prev();
+    };
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchend", onEnd, { passive: true });
+    return () => { window.removeEventListener("touchstart", onStart); window.removeEventListener("touchend", onEnd); };
+  }, [next, prev]);
+
+  const pct = ((current + 1) / slides.length) * 100;
+
+  const S = [
+    <HeroSlide key="hero" onNext={next} />,
+    <PainSlide key="pain" />,
+    <MultichannelSlide key="multi" />,
+    <AiSlide key="ai" />,
+    <CampaignsSlide key="camp" />,
+    <TournamentsSlide key="tourn" />,
+    <WeatherSlide key="weather" />,
+    <ResultsSlide key="results" />,
+    <CtaSlide key="cta" />,
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex flex-col overflow-hidden">
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-green-100 dark:bg-gray-800">
-        <div
-          className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500 ease-out"
-          style={{ width: `${progress}%` }}
-        />
+    <div className="fixed inset-0 bg-[#0a0f0d] text-white overflow-hidden select-none">
+      {/* Progress */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-[3px] bg-white/10">
+        <div className="h-full bg-gradient-to-r from-green-400 to-emerald-400 transition-all duration-500" style={{ width: `${pct}%` }} />
       </div>
 
-      {/* Top nav — solid background */}
-      <nav className="fixed top-1 left-0 right-0 z-40 flex items-center justify-between px-4 sm:px-8 py-3 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-bold text-lg">
-          <Image src="/logo.svg" alt="Caddie 24" width={32} height={32} /> Caddie 24
+      {/* Nav */}
+      <nav className="fixed top-[3px] left-0 right-0 z-40 flex items-center justify-between px-4 sm:px-6 py-3 bg-[#0a0f0d]/80 backdrop-blur-md">
+        <div className="flex items-center gap-2 font-bold text-base">
+          <Image src="/logo.svg" alt="" width={28} height={28} />
+          <span className="text-white">Caddie <span className="text-green-400">24</span></span>
         </div>
         <Link href="/login">
-          <Button variant="outline" size="sm" className="text-xs">
-            Iniciar Sesión
+          <Button size="sm" className="text-xs h-8 bg-white/10 hover:bg-white/20 text-white border-0 backdrop-blur">
+            Acceder
           </Button>
         </Link>
       </nav>
 
-      {/* Slide content */}
-      <div className="flex-1 flex items-center justify-center pt-16 pb-16 px-4 sm:px-8">
-        <div
-          key={current}
-          className={`w-full max-w-6xl mx-auto animate-slide-${direction}`}
-        >
-          {current === 0 && <HeroSlide onNext={next} />}
-          {current === 1 && <DashboardSlide />}
-          {current === 2 && <PlayersSlide />}
-          {current === 3 && <MultichannelSlide />}
-          {current === 4 && <CampaignsSlide />}
-          {current === 5 && <TournamentsSlide />}
-          {current === 6 && <WeatherSlide />}
-          {current === 7 && <CtaSlide />}
+      {/* Slide */}
+      <div className="h-full flex items-center justify-center pt-12 pb-14 px-5 sm:px-8">
+        <div key={current} className={`w-full max-w-5xl mx-auto anim-${dir}`}>
+          {S[current]}
         </div>
       </div>
 
-      {/* Navigation arrows */}
+      {/* Arrows — hidden on mobile, visible on desktop */}
       {current > 0 && (
-        <button
-          onClick={prev}
-          className="fixed left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-lg backdrop-blur hover:bg-white dark:hover:bg-gray-700 transition-colors"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700 dark:text-gray-200" />
+        <button onClick={prev} className="hidden sm:flex fixed left-3 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label="Anterior">
+          <ChevronLeft className="h-5 w-5" />
         </button>
       )}
       {current < slides.length - 1 && (
-        <button
-          onClick={next}
-          className="fixed right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-lg backdrop-blur hover:bg-white dark:hover:bg-gray-700 transition-colors"
-          aria-label="Siguiente"
-        >
-          <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700 dark:text-gray-200" />
+        <button onClick={next} className="hidden sm:flex fixed right-3 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label="Siguiente">
+          <ChevronRight className="h-5 w-5" />
         </button>
       )}
 
       {/* Dots */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-        {slides.map((s, i) => (
+      <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5">
+        {slides.map((_, i) => (
           <button
-            key={s.id}
-            onClick={() => goTo(i)}
-            className={`transition-all duration-300 rounded-full ${
-              i === current
-                ? "w-6 h-2.5 bg-green-500"
-                : "w-2.5 h-2.5 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400"
+            key={i}
+            onClick={() => go(i)}
+            className={`rounded-full transition-all duration-300 ${
+              i === current ? "w-6 h-2 bg-green-400" : "w-2 h-2 bg-white/25 hover:bg-white/40"
             }`}
-            aria-label={s.label}
-            title={s.label}
           />
         ))}
       </div>
 
-      {/* CSS animations */}
       <style jsx global>{`
-        @keyframes slideNext {
-          from {
-            opacity: 0;
-            transform: translateX(60px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        @keyframes slidePrev {
-          from {
-            opacity: 0;
-            transform: translateX(-60px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        .animate-slide-next {
-          animation: slideNext 0.45s ease-out;
-        }
-        .animate-slide-prev {
-          animation: slidePrev 0.45s ease-out;
-        }
+        @keyframes aN { from { opacity:0; transform:translateX(40px) } to { opacity:1; transform:translateX(0) } }
+        @keyframes aP { from { opacity:0; transform:translateX(-40px) } to { opacity:1; transform:translateX(0) } }
+        .anim-next { animation: aN .4s ease-out }
+        .anim-prev { animation: aP .4s ease-out }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+        .fade-up { animation: fadeUp .6s ease-out both }
+        .fade-up-d1 { animation: fadeUp .6s .1s ease-out both }
+        .fade-up-d2 { animation: fadeUp .6s .2s ease-out both }
+        .fade-up-d3 { animation: fadeUp .6s .3s ease-out both }
+        .fade-up-d4 { animation: fadeUp .6s .4s ease-out both }
+        @keyframes pulse-soft { 0%,100% { opacity:.6 } 50% { opacity:1 } }
+        .pulse-soft { animation: pulse-soft 3s ease-in-out infinite }
       `}</style>
     </div>
   );
 }
 
-// ─── Shared Layout ──────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────
 
-function SlideLayout({
-  tag,
-  title,
-  description,
-  bullets,
-  children,
-}: {
-  tag: string;
-  title: string;
-  description: string;
-  bullets: { icon: React.ElementType; text: string }[];
-  children: React.ReactNode;
-}) {
+function GlowCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-      {/* Text side */}
-      <div className="space-y-5">
-        <Badge variant="secondary" className="text-xs font-medium px-3 py-1">
-          {tag}
-        </Badge>
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-          {title}
-        </h2>
-        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-          {description}
-        </p>
-        <ul className="space-y-3 pt-2">
-          {bullets.map((b, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <div className="mt-0.5 p-1.5 rounded-lg bg-green-100 dark:bg-green-900/40">
-                <b.icon className="h-4 w-4 text-green-600 dark:text-green-400" />
-              </div>
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {b.text}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      {/* Mockup side */}
-      <div className="flex justify-center">{children}</div>
+    <div className={`rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 sm:p-5 ${className}`}>
+      {children}
     </div>
+  );
+}
+
+function StatBig({ value, label, icon: Icon }: { value: string; label: string; icon: React.ElementType }) {
+  return (
+    <div className="text-center">
+      <Icon className="h-5 w-5 text-green-400 mx-auto mb-1" />
+      <div className="text-2xl sm:text-3xl font-black">{value}</div>
+      <div className="text-[10px] sm:text-xs text-white/50">{label}</div>
+    </div>
+  );
+}
+
+function Pill({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium px-2.5 py-1 rounded-full ${className}`}>
+      {children}
+    </span>
   );
 }
 
@@ -281,263 +208,224 @@ function SlideLayout({
 
 function HeroSlide({ onNext }: { onNext: () => void }) {
   return (
-    <div className="text-center space-y-8 max-w-3xl mx-auto">
-      <div className="relative inline-block">
-        <Image src="/logo.svg" alt="Caddie 24" width={140} height={140} className="mb-4" />
-        <div className="absolute -top-4 -right-8 w-20 h-20 bg-green-200/40 dark:bg-green-800/20 rounded-full blur-xl" />
-        <div className="absolute -bottom-4 -left-8 w-16 h-16 bg-emerald-200/40 dark:bg-emerald-800/20 rounded-full blur-xl" />
+    <div className="flex flex-col items-center text-center gap-6 sm:gap-8">
+      {/* Glow background */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="fade-up relative">
+        <Image src="/logo.svg" alt="Caddie 24" width={100} height={100} className="sm:w-[130px] sm:h-[130px]" />
       </div>
-      <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 dark:text-white">
-        Caddie{" "}
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">
-          24
+
+      <h1 className="fade-up-d1 text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[1.1]">
+        Tu club de golf,
+        <br />
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-300 to-green-400">
+          siempre conectado
         </span>
       </h1>
-      <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
-        El CRM multicanal para campos de golf con{" "}
-        <span className="font-semibold text-green-600 dark:text-green-400">
-          IA
-        </span>{" "}
-        integrada
+
+      <p className="fade-up-d2 text-base sm:text-lg text-white/60 max-w-lg leading-relaxed">
+        CRM multicanal con inteligencia artificial. WhatsApp, Instagram, Facebook y Email en una sola plataforma.
       </p>
-      {/* Channel icons */}
-      <div className="flex items-center justify-center gap-3 pt-2">
+
+      {/* Channel pills */}
+      <div className="fade-up-d3 flex flex-wrap justify-center gap-2">
         {[
-          { icon: MessageSquare, label: "WhatsApp", color: "text-green-600" },
-          { icon: Facebook, label: "Facebook", color: "text-blue-600" },
-          { icon: Instagram, label: "Instagram", color: "text-pink-600" },
-          { icon: Mail, label: "Email", color: "text-amber-600" },
+          { icon: MessageSquare, label: "WhatsApp", c: "bg-green-500/20 text-green-300" },
+          { icon: Instagram, label: "Instagram", c: "bg-pink-500/20 text-pink-300" },
+          { icon: Facebook, label: "Facebook", c: "bg-blue-500/20 text-blue-300" },
+          { icon: Mail, label: "Email", c: "bg-amber-500/20 text-amber-300" },
         ].map((ch) => (
-          <div
-            key={ch.label}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700"
-          >
-            <ch.icon className={`h-4 w-4 ${ch.color}`} />
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-              {ch.label}
-            </span>
-          </div>
+          <Pill key={ch.label} className={ch.c}>
+            <ch.icon className="h-3 w-3" /> {ch.label}
+          </Pill>
         ))}
       </div>
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-        <Button
-          size="lg"
-          onClick={onNext}
-          className="gap-2 bg-green-600 hover:bg-green-700 text-white px-8"
-        >
-          Comenzar Tour <ArrowRight className="h-4 w-4" />
+
+      <div className="fade-up-d4 flex flex-col sm:flex-row gap-3 pt-2">
+        <Button size="lg" onClick={onNext} className="gap-2 bg-green-500 hover:bg-green-400 text-black font-bold px-8 rounded-full h-12 text-base">
+          Ver cómo funciona <ArrowRight className="h-4 w-4" />
         </Button>
         <Link href="/login">
-          <Button variant="outline" size="lg">
+          <Button variant="outline" size="lg" className="rounded-full h-12 border-white/20 text-white hover:bg-white/10 bg-transparent">
             Iniciar Sesión
           </Button>
         </Link>
       </div>
-      <p className="text-xs text-gray-400 dark:text-gray-500 pt-4">
-        Usa las flechas ← → o haz clic para navegar
+
+      <p className="text-[10px] text-white/30 pt-2">
+        Desliza o usa ← → para navegar
       </p>
     </div>
   );
 }
 
-// ─── Slide 2: Dashboard ─────────────────────────────────────
+// ─── Slide 2: Pain Points ───────────────────────────────────
 
-function DashboardSlide() {
-  const kpis = [
-    { label: "Total Jugadores", value: "187", sub: "+12 este mes", icon: Users },
-    { label: "Conversaciones", value: "14", sub: "3 sin leer", icon: MessageSquare },
-    { label: "Campañas", value: "6", sub: "2 activas", icon: Megaphone },
-    { label: "Jugadores VIP", value: "23", sub: "Engagement máximo", icon: TrendingUp },
+function PainSlide() {
+  const pains = [
+    { emoji: "📱", title: "Mensajes sin responder", desc: "Jugadores que escriben por WhatsApp, Instagram, email... y nadie contesta a tiempo." },
+    { emoji: "📊", title: "Datos dispersos", desc: "Excels, libretas, sistemas distintos. Sin visión unificada de tus jugadores." },
+    { emoji: "🌧️", title: "Cancelaciones inesperadas", desc: "Sin alertas meteorológicas ni comunicación proactiva cuando cambia el tiempo." },
+    { emoji: "📢", title: "Marketing manual", desc: "Horas creando mensajes uno a uno. Sin segmentación, sin métricas, sin IA." },
   ];
 
   return (
-    <SlideLayout
-      tag="Panel Central"
-      title="Dashboard Inteligente"
-      description="Visualiza el estado de tu club de un vistazo. KPIs en tiempo real, actividad reciente y previsión meteorológica integrada."
-      bullets={[
-        { icon: BarChart3, text: "Métricas clave actualizadas en tiempo real" },
-        { icon: Zap, text: "Acciones rápidas para gestión diaria" },
-        { icon: CloudSun, text: "Pronóstico con score de jugabilidad integrado" },
-      ]}
-    >
-      <div className="w-full max-w-md space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          {kpis.map((k) => (
-            <Card key={k.label} className="shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
-                <span className="text-[10px] text-muted-foreground font-medium">
-                  {k.label}
-                </span>
-                <k.icon className="h-3.5 w-3.5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <div className="text-2xl font-bold">{k.value}</div>
-                <p className="text-[10px] text-muted-foreground">{k.sub}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        {/* Mini activity mockup */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2 pt-3 px-3">
-            <CardTitle className="text-xs">Actividad Reciente</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 space-y-2">
-            {[
-              { name: "Carlos M.", msg: "Quiero reservar para el sábado", color: "bg-blue-500", channel: "whatsapp" },
-              { name: "Ana López", msg: "¿Hay torneos este mes?", color: "bg-pink-500", channel: "instagram" },
-              { name: "Caddie IA", msg: "Sí, hay huecos a las 9:30...", color: "bg-green-500", ai: true, channel: "whatsapp" },
-            ].map((a, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <div className={`mt-1.5 h-1.5 w-1.5 rounded-full ${a.color}`} />
-                <div>
-                  <span className="text-[11px]">
-                    <span className="font-medium">{a.name}</span>: {a.msg}
-                    {a.ai && (
-                      <Badge variant="secondary" className="ml-1 text-[8px] py-0 px-1">
-                        IA
-                      </Badge>
-                    )}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-    </SlideLayout>
-  );
-}
-
-// ─── Slide 3: Players ───────────────────────────────────────
-
-function PlayersSlide() {
-  const players = [
-    { name: "Carlos Martínez", handicap: 12, level: "VIP", levelColor: "bg-purple-100 text-purple-700", tags: ["Mañanas", "Pro Shop"], prefChannel: "whatsapp" },
-    { name: "Ana López García", handicap: 18, level: "HIGH", levelColor: "bg-green-100 text-green-700", tags: ["Tardes", "Torneos"], prefChannel: "instagram" },
-    { name: "Miguel Fernández", handicap: 24, level: "MEDIUM", levelColor: "bg-blue-100 text-blue-700", tags: ["Fin de semana"], prefChannel: "email" },
-    { name: "Laura Sánchez", handicap: 8, level: "VIP", levelColor: "bg-purple-100 text-purple-700", tags: ["Competidora"], prefChannel: "facebook" },
-  ];
-
-  return (
-    <SlideLayout
-      tag="CRM de Jugadores"
-      title="Gestión de Jugadores"
-      description="Perfiles completos con historial, handicap, nivel de engagement, etiquetas IA y canal de comunicación preferido."
-      bullets={[
-        { icon: Users, text: "Perfiles con handicap, preferencias y consumo" },
-        { icon: Bot, text: "Etiquetas automáticas generadas por IA" },
-        { icon: TrendingUp, text: "Niveles de engagement: NEW → VIP" },
-        { icon: Target, text: "Canal preferido por jugador: WhatsApp, Instagram, Facebook o Email" },
-      ]}
-    >
-      <div className="w-full max-w-sm space-y-2">
-        {players.map((p) => (
-          <Card key={p.name} className="shadow-sm">
-            <CardContent className="flex items-center gap-3 p-3">
-              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                {p.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium truncate">{p.name}</span>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${p.levelColor}`}>
-                    {p.level}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] text-muted-foreground">
-                    HCP {p.handicap}
-                  </span>
-                  <span className={`inline-flex items-center gap-0.5 text-[8px] px-1.5 py-0.5 rounded-full ${channelColors[p.prefChannel]}`}>
-                    <ChannelIcon channel={p.prefChannel} className="h-2.5 w-2.5" />
-                    {p.prefChannel === "whatsapp" ? "WhatsApp" : p.prefChannel === "facebook" ? "Facebook" : p.prefChannel === "instagram" ? "Instagram" : "Email"}
-                  </span>
-                  {p.tags.slice(0, 1).map((t) => (
-                    <Badge key={t} variant="secondary" className="text-[8px] py-0 px-1">
-                      {t}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="flex flex-col items-center text-center gap-6">
+      <Pill className="bg-red-500/20 text-red-300 fade-up">
+        <Zap className="h-3 w-3" /> El problema
+      </Pill>
+      <h2 className="fade-up-d1 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        ¿Te suena<br className="sm:hidden" /> familiar?
+      </h2>
+      <div className="fade-up-d2 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl pt-2">
+        {pains.map((p) => (
+          <GlowCard key={p.title} className="text-left hover:border-red-500/30 transition-colors">
+            <div className="text-2xl mb-2">{p.emoji}</div>
+            <div className="font-bold text-sm sm:text-base mb-1">{p.title}</div>
+            <div className="text-xs sm:text-sm text-white/50 leading-relaxed">{p.desc}</div>
+          </GlowCard>
         ))}
       </div>
-    </SlideLayout>
+      <p className="fade-up-d3 text-sm text-white/40 pt-2">
+        Caddie 24 resuelve todo esto con una sola herramienta.
+      </p>
+    </div>
   );
 }
 
-// ─── Slide 4: Multichannel ──────────────────────────────────
+// ─── Slide 3: Multichannel ──────────────────────────────────
 
 function MultichannelSlide() {
   const channels = [
-    {
-      name: "WhatsApp",
-      icon: MessageSquare,
-      color: "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20",
-      iconColor: "text-green-600",
-      desc: "API Business oficial con templates aprobados por Meta",
-      stats: "68% tasa de lectura",
-    },
-    {
-      name: "Facebook Messenger",
-      icon: Facebook,
-      color: "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20",
-      iconColor: "text-blue-600",
-      desc: "Mensajes directos y respuestas automáticas en tu página",
-      stats: "45% de jugadores activos",
-    },
-    {
-      name: "Instagram DM",
-      icon: Instagram,
-      color: "border-pink-200 bg-pink-50 dark:border-pink-800 dark:bg-pink-900/20",
-      iconColor: "text-pink-600",
-      desc: "Responde a DMs, stories y comentarios desde el CRM",
-      stats: "Ideal para jugadores jóvenes",
-    },
-    {
-      name: "Email",
-      icon: Mail,
-      color: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20",
-      iconColor: "text-amber-600",
-      desc: "Newsletters, confirmaciones y comunicaciones formales",
-      stats: "Facturas y documentos",
-    },
+    { icon: MessageSquare, name: "WhatsApp", color: "from-green-500 to-green-600", stat: "68% lectura", desc: "API Business oficial" },
+    { icon: Instagram, name: "Instagram", color: "from-pink-500 to-purple-600", stat: "Jugadores jóvenes", desc: "DMs y comentarios" },
+    { icon: Facebook, name: "Facebook", color: "from-blue-500 to-blue-600", stat: "45% activos", desc: "Messenger directo" },
+    { icon: Mail, name: "Email", color: "from-amber-500 to-orange-500", stat: "Docs y facturas", desc: "Newsletters y confirmaciones" },
   ];
 
   return (
-    <SlideLayout
-      tag="Comunicación Multicanal"
-      title="Todos los Canales en Uno"
-      description="Comunícate con cada jugador por su canal preferido. WhatsApp, Facebook, Instagram o Email: una sola bandeja, respuestas con IA en todos."
-      bullets={[
-        { icon: MessageSquare, text: "Bandeja unificada para todos los canales" },
-        { icon: Bot, text: "IA que responde en el canal adecuado automáticamente" },
-        { icon: Target, text: "Cada jugador elige cómo quiere que le contactes" },
-        { icon: BarChart3, text: "Métricas de engagement por canal" },
-      ]}
-    >
-      <div className="w-full max-w-sm space-y-2.5">
+    <div className="flex flex-col items-center text-center gap-6">
+      <Pill className="bg-green-500/20 text-green-300 fade-up">
+        <MessageSquare className="h-3 w-3" /> Comunicación
+      </Pill>
+      <h2 className="fade-up-d1 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        Todos los canales,<br />
+        <span className="text-green-400">una sola bandeja</span>
+      </h2>
+      <p className="fade-up-d2 text-sm sm:text-base text-white/50 max-w-md">
+        Cada jugador elige cómo quiere que le contactes. La IA responde en todos.
+      </p>
+
+      <div className="fade-up-d3 grid grid-cols-2 gap-3 w-full max-w-md pt-2">
         {channels.map((ch) => (
-          <Card key={ch.name} className={`shadow-sm border ${ch.color}`}>
-            <CardContent className="flex items-center gap-3 p-3">
-              <div className="shrink-0">
-                <ch.icon className={`h-6 w-6 ${ch.iconColor}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold">{ch.name}</div>
-                <div className="text-[10px] text-muted-foreground">{ch.desc}</div>
-                <div className="text-[9px] font-medium text-green-600 dark:text-green-400 mt-0.5">
-                  {ch.stats}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <GlowCard key={ch.name} className="text-left hover:border-white/20 transition-colors">
+            <div className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${ch.color} mb-3`}>
+              <ch.icon className="h-5 w-5 text-white" />
+            </div>
+            <div className="font-bold text-sm">{ch.name}</div>
+            <div className="text-[10px] text-white/40 mt-0.5">{ch.desc}</div>
+            <div className="text-[10px] font-medium text-green-400 mt-1">{ch.stat}</div>
+          </GlowCard>
         ))}
       </div>
-    </SlideLayout>
+
+      {/* Unified inbox mockup */}
+      <GlowCard className="fade-up-d4 w-full max-w-md">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-2 w-2 rounded-full bg-green-400 pulse-soft" />
+          <span className="text-xs font-medium text-white/70">Bandeja unificada — 3 nuevos</span>
+        </div>
+        {[
+          { ch: MessageSquare, chColor: "text-green-400", name: "Carlos M.", msg: "Quiero reservar para el sábado", time: "10:32" },
+          { ch: Instagram, chColor: "text-pink-400", name: "Ana López", msg: "¿Hay torneos este mes?", time: "10:28" },
+          { ch: Mail, chColor: "text-amber-400", name: "Miguel F.", msg: "Envíame la factura del mes", time: "09:45" },
+        ].map((m, i) => (
+          <div key={i} className="flex items-center gap-3 py-2 border-t border-white/5">
+            <m.ch className={`h-4 w-4 ${m.chColor} shrink-0`} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium truncate">{m.name}</span>
+                <span className="text-[9px] text-white/30 shrink-0">{m.time}</span>
+              </div>
+              <span className="text-[11px] text-white/40 truncate block">{m.msg}</span>
+            </div>
+          </div>
+        ))}
+      </GlowCard>
+    </div>
+  );
+}
+
+// ─── Slide 4: AI ────────────────────────────────────────────
+
+function AiSlide() {
+  return (
+    <div className="flex flex-col items-center text-center gap-6">
+      <Pill className="bg-purple-500/20 text-purple-300 fade-up">
+        <Sparkles className="h-3 w-3" /> Inteligencia Artificial
+      </Pill>
+      <h2 className="fade-up-d1 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        Tu caddie virtual<br />
+        <span className="text-purple-400">trabaja 24/7</span>
+      </h2>
+      <p className="fade-up-d2 text-sm sm:text-base text-white/50 max-w-md">
+        La IA conoce tu club, tus jugadores, tus horarios y tarifas. Responde como lo haría tu mejor empleado.
+      </p>
+
+      {/* Chat mockup */}
+      <div className="fade-up-d3 w-full max-w-sm">
+        <GlowCard className="!p-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">CM</div>
+            <div className="flex-1">
+              <div className="text-sm font-medium">Carlos Martínez</div>
+              <div className="text-[10px] text-green-200 flex items-center gap-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-green-300" />
+                WhatsApp · Sentimiento: Positivo
+              </div>
+            </div>
+            <Badge className="bg-white/20 text-white text-[8px] border-0">VIP</Badge>
+          </div>
+          <div className="p-3 space-y-2.5 bg-[#0d1411]">
+            {[
+              { text: "Hola, quiero reservar green fee para 4 el sábado", dir: "in" },
+              { text: "¡Hola Carlos! Tenemos huecos a las 9:00, 9:30 y 10:30. ¿Cuál te viene mejor? 🏌️", dir: "out", ai: true },
+              { text: "Las 9:30 perfecto!", dir: "in" },
+              { text: "Reservado para 4 personas, sábado 9:30. Os esperamos. ¡Buen juego! ⛳", dir: "out", ai: true },
+            ].map((m, i) => (
+              <div key={i} className={`flex ${m.dir === "out" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-[11px] sm:text-xs ${
+                  m.dir === "out" ? "bg-green-600/30 text-green-100 rounded-br-sm" : "bg-white/10 rounded-bl-sm"
+                }`}>
+                  {m.ai && (
+                    <div className="flex items-center gap-1 mb-0.5 text-[9px] text-green-400 font-medium">
+                      <Bot className="h-3 w-3" /> Caddie IA
+                    </div>
+                  )}
+                  {m.text}
+                </div>
+              </div>
+            ))}
+          </div>
+        </GlowCard>
+      </div>
+
+      {/* AI capabilities */}
+      <div className="fade-up-d4 grid grid-cols-2 gap-2 w-full max-w-sm">
+        {[
+          { icon: Bot, text: "Respuestas automáticas" },
+          { icon: Shield, text: "Análisis de sentimiento" },
+          { icon: Target, text: "Etiquetas inteligentes" },
+          { icon: Clock, text: "Horarios de silencio" },
+        ].map((f) => (
+          <div key={f.text} className="flex items-center gap-2 text-[11px] text-white/50">
+            <f.icon className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+            {f.text}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -545,174 +433,124 @@ function MultichannelSlide() {
 
 function CampaignsSlide() {
   return (
-    <SlideLayout
-      tag="Marketing Multicanal"
-      title="Campañas de Marketing"
-      description="Crea campañas segmentadas enviadas por el canal preferido de cada jugador: WhatsApp, Facebook, Instagram o Email. Con A/B testing y métricas detalladas."
-      bullets={[
-        { icon: Target, text: "Segmentación por handicap, engagement, canal preferido" },
-        { icon: Send, text: "Envío automático al canal que cada jugador prefiere" },
-        { icon: BarChart3, text: "Métricas por canal: enviados, leídos, respondidos" },
-        { icon: Zap, text: "A/B testing multicanal para optimizar resultados" },
-      ]}
-    >
-      <div className="w-full max-w-sm space-y-3">
-        <Card className="shadow-sm">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-semibold">Torneo de Primavera</div>
-                <div className="text-[10px] text-muted-foreground">
-                  Jugadores con HCP &lt; 20
-                </div>
-              </div>
-              <Badge className="bg-green-100 text-green-700 text-[10px]">
-                Completada
-              </Badge>
+    <div className="flex flex-col items-center text-center gap-6">
+      <Pill className="bg-blue-500/20 text-blue-300 fade-up">
+        <Megaphone className="h-3 w-3" /> Marketing
+      </Pill>
+      <h2 className="fade-up-d1 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        Campañas que<br />
+        <span className="text-blue-400">llegan de verdad</span>
+      </h2>
+      <p className="fade-up-d2 text-sm sm:text-base text-white/50 max-w-md">
+        Segmenta, personaliza y envía por el canal preferido de cada jugador. Con métricas en tiempo real.
+      </p>
+
+      {/* Campaign mockup */}
+      <GlowCard className="fade-up-d3 w-full max-w-md text-left">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="font-bold text-sm">Torneo de Primavera 2025</div>
+            <div className="text-[10px] text-white/40">HCP &lt; 20 · Canal preferido</div>
+          </div>
+          <Pill className="bg-green-500/20 text-green-300">Completada</Pill>
+        </div>
+
+        {/* Channel breakdown bar */}
+        <div className="flex h-2 rounded-full overflow-hidden mb-3">
+          <div className="bg-green-500 w-[61%]" title="WhatsApp 61%" />
+          <div className="bg-amber-500 w-[23%]" title="Email 23%" />
+          <div className="bg-pink-500 w-[10%]" title="Instagram 10%" />
+          <div className="bg-blue-500 w-[6%]" title="Facebook 6%" />
+        </div>
+        <div className="flex items-center gap-3 text-[9px] text-white/40 mb-4">
+          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-green-500" />WhatsApp 87</span>
+          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Email 32</span>
+          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-pink-500" />Instagram 15</span>
+          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-blue-500" />Facebook 8</span>
+        </div>
+
+        {/* Metrics */}
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { v: "142", l: "Enviados" },
+            { v: "138", l: "Entregados" },
+            { v: "94", l: "Leídos" },
+            { v: "23", l: "Respondidos" },
+          ].map((m) => (
+            <div key={m.l} className="text-center">
+              <div className="text-xl sm:text-2xl font-black text-green-400">{m.v}</div>
+              <div className="text-[8px] sm:text-[9px] text-white/40">{m.l}</div>
             </div>
-            {/* Channel breakdown */}
-            <div className="flex items-center gap-2">
-              {[
-                { ch: "whatsapp", count: 87, color: "bg-green-500" },
-                { ch: "email", count: 32, color: "bg-amber-500" },
-                { ch: "instagram", count: 15, color: "bg-pink-500" },
-                { ch: "facebook", count: 8, color: "bg-blue-500" },
-              ].map((c) => (
-                <div key={c.ch} className="flex items-center gap-1">
-                  <div className={`h-2 w-2 rounded-full ${c.color}`} />
-                  <span className="text-[9px] text-muted-foreground">{c.count}</span>
-                </div>
-              ))}
-              <span className="text-[9px] text-muted-foreground ml-auto">142 total</span>
-            </div>
-            {/* Metrics */}
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: "Enviados", value: "142" },
-                { label: "Entregados", value: "138" },
-                { label: "Leídos", value: "94" },
-                { label: "Respondidos", value: "23" },
-              ].map((m) => (
-                <div key={m.label} className="text-center">
-                  <div className="text-lg font-bold text-green-600">{m.value}</div>
-                  <div className="text-[8px] text-muted-foreground">{m.label}</div>
-                </div>
-              ))}
-            </div>
-            {/* Progress bar */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-[9px] text-muted-foreground">
-                <span>Tasa de lectura</span>
-                <span>68%</span>
-              </div>
-              <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 rounded-full" style={{ width: "68%" }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-semibold">Oferta Fin de Semana</div>
-                <div className="text-[10px] text-muted-foreground">
-                  Green fees con descuento -20%
-                </div>
-              </div>
-              <Badge className="bg-blue-100 text-blue-700 text-[10px]">
-                Programada
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              Viernes 14:00 · 87 destinatarios ·
-              <span className="inline-flex items-center gap-1">
-                <MessageSquare className="h-2.5 w-2.5 text-green-500" />
-                <Instagram className="h-2.5 w-2.5 text-pink-500" />
-                <Mail className="h-2.5 w-2.5 text-amber-500" />
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
+
+        <div className="mt-3 flex justify-between items-center text-[9px] text-white/40">
+          <span>Tasa de lectura</span>
+          <span className="font-bold text-green-400">68%</span>
+        </div>
+        <div className="h-1 bg-white/10 rounded-full overflow-hidden mt-1">
+          <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full" style={{ width: "68%" }} />
+        </div>
+      </GlowCard>
+
+      <div className="fade-up-d4 flex flex-wrap justify-center gap-2">
+        {["A/B Testing", "Programación", "Templates Meta", "Segmentación IA"].map((t) => (
+          <Pill key={t} className="bg-white/5 text-white/50"><Zap className="h-2.5 w-2.5 text-blue-400" /> {t}</Pill>
+        ))}
       </div>
-    </SlideLayout>
+    </div>
   );
 }
 
 // ─── Slide 6: Tournaments ───────────────────────────────────
 
 function TournamentsSlide() {
-  const leaderboard = [
-    { pos: 1, name: "Laura Sánchez", hcp: 8, score: 72, stb: 38 },
-    { pos: 2, name: "Carlos Martínez", hcp: 12, score: 76, stb: 36 },
-    { pos: 3, name: "Miguel Fernández", hcp: 24, score: 89, stb: 35 },
-    { pos: 4, name: "Ana López", hcp: 18, score: 84, stb: 33 },
+  const lb = [
+    { pos: "🥇", name: "Laura Sánchez", hcp: 8, stb: 38 },
+    { pos: "🥈", name: "Carlos Martínez", hcp: 12, stb: 36 },
+    { pos: "🥉", name: "Miguel Fernández", hcp: 24, stb: 35 },
+    { pos: "4", name: "Ana López", hcp: 18, stb: 33 },
   ];
 
   return (
-    <SlideLayout
-      tag="Competición"
-      title="Gestión de Torneos"
-      description="Organiza torneos con inscripciones online, categorías por handicap, leaderboard en vivo y publicación automática de resultados por el canal preferido."
-      bullets={[
-        { icon: Trophy, text: "Formatos: Stableford, Medal, Scramble, Match Play" },
-        { icon: Users, text: "Inscripciones con lista de espera y pagos" },
-        { icon: Star, text: "Leaderboard en tiempo real por categorías" },
-        { icon: Send, text: "Resultados enviados por WhatsApp, Email o redes sociales" },
-      ]}
-    >
-      <div className="w-full max-w-sm">
-        <Card className="shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              <div>
-                <div className="text-sm font-semibold">Torneo de Primavera</div>
-                <div className="text-[10px] text-green-100">
-                  Stableford · 42 inscritos · 15 mar 2025
-                </div>
-              </div>
-            </div>
+    <div className="flex flex-col items-center text-center gap-6">
+      <Pill className="bg-yellow-500/20 text-yellow-300 fade-up">
+        <Trophy className="h-3 w-3" /> Competición
+      </Pill>
+      <h2 className="fade-up-d1 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        Torneos<br />
+        <span className="text-yellow-400">profesionales</span>
+      </h2>
+      <p className="fade-up-d2 text-sm sm:text-base text-white/50 max-w-md">
+        Inscripciones online, leaderboard en vivo, categorías y resultados enviados al canal de cada jugador.
+      </p>
+
+      <GlowCard className="fade-up-d3 w-full max-w-sm !p-0 overflow-hidden">
+        <div className="bg-gradient-to-r from-yellow-600/30 to-amber-600/30 px-4 py-3 flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-yellow-400" />
+          <div>
+            <div className="text-sm font-bold">Torneo de Primavera</div>
+            <div className="text-[10px] text-white/50">Stableford · 42 inscritos</div>
           </div>
-          <CardContent className="p-0">
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="border-b text-muted-foreground">
-                  <th className="text-left px-3 py-2 font-medium">#</th>
-                  <th className="text-left py-2 font-medium">Jugador</th>
-                  <th className="text-center py-2 font-medium">HCP</th>
-                  <th className="text-center py-2 font-medium">Score</th>
-                  <th className="text-center px-3 py-2 font-medium">Stb</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.map((p) => (
-                  <tr
-                    key={p.pos}
-                    className={`border-b last:border-0 ${
-                      p.pos === 1 ? "bg-yellow-50 dark:bg-yellow-900/10" : ""
-                    }`}
-                  >
-                    <td className="px-3 py-2.5 font-bold">
-                      {p.pos === 1 ? "🥇" : p.pos === 2 ? "🥈" : p.pos === 3 ? "🥉" : p.pos}
-                    </td>
-                    <td className="py-2.5 font-medium">{p.name}</td>
-                    <td className="text-center py-2.5 text-muted-foreground">
-                      {p.hcp}
-                    </td>
-                    <td className="text-center py-2.5">{p.score}</td>
-                    <td className="text-center px-3 py-2.5 font-bold text-green-600">
-                      {p.stb}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        </div>
+        <div className="divide-y divide-white/5">
+          {lb.map((p, i) => (
+            <div key={i} className={`flex items-center px-4 py-2.5 ${i === 0 ? "bg-yellow-500/5" : ""}`}>
+              <span className="w-8 text-sm font-bold">{p.pos}</span>
+              <span className="flex-1 text-xs font-medium">{p.name}</span>
+              <span className="text-[10px] text-white/30 w-12 text-center">HCP {p.hcp}</span>
+              <span className="text-sm font-black text-green-400 w-10 text-right">{p.stb}</span>
+            </div>
+          ))}
+        </div>
+      </GlowCard>
+
+      <div className="fade-up-d4 flex flex-wrap justify-center gap-2">
+        {["Stableford", "Medal", "Scramble", "Match Play", "Best Ball"].map((f) => (
+          <Pill key={f} className="bg-white/5 text-white/40">{f}</Pill>
+        ))}
       </div>
-    </SlideLayout>
+    </div>
   );
 }
 
@@ -720,109 +558,121 @@ function TournamentsSlide() {
 
 function WeatherSlide() {
   const days = [
-    { day: "Hoy", emoji: "☀️", max: 22, min: 12, wind: 15, rain: 0, score: 92, demand: "Alta" },
-    { day: "Mañana", emoji: "⛅", max: 19, min: 11, wind: 22, rain: 2, score: 74, demand: "Media" },
-    { day: "Miércoles", emoji: "🌧️", max: 14, min: 8, wind: 35, rain: 18, score: 28, demand: "Baja" },
+    { day: "Hoy", emoji: "☀️", max: 22, min: 12, wind: 15, rain: 0, score: 92, demand: "Alta", dc: "text-green-400" },
+    { day: "Mañana", emoji: "⛅", max: 19, min: 11, wind: 22, rain: 2, score: 74, demand: "Media", dc: "text-yellow-400" },
+    { day: "Miércoles", emoji: "🌧️", max: 14, min: 8, wind: 35, rain: 18, score: 28, demand: "Baja", dc: "text-red-400" },
   ];
 
   return (
-    <SlideLayout
-      tag="Clima"
-      title="Meteorología Integrada"
-      description="Previsión a 14 días con score de jugabilidad golf, predicción de demanda, cierres automáticos y alertas enviadas al canal preferido de cada jugador."
-      bullets={[
-        { icon: CloudSun, text: "Previsión a 14 días con score golf 0-100" },
-        { icon: Zap, text: "Alertas automáticas de cierre por condiciones adversas" },
-        { icon: BarChart3, text: "Predicción de demanda basada en clima" },
-        { icon: Bot, text: "Promos automáticas por WhatsApp, Email o redes si buen tiempo" },
-      ]}
-    >
-      <div className="w-full max-w-sm space-y-3">
+    <div className="flex flex-col items-center text-center gap-6">
+      <Pill className="bg-cyan-500/20 text-cyan-300 fade-up">
+        <CloudSun className="h-3 w-3" /> Meteorología
+      </Pill>
+      <h2 className="fade-up-d1 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        El tiempo, tu<br />
+        <span className="text-cyan-400">mejor aliado</span>
+      </h2>
+      <p className="fade-up-d2 text-sm sm:text-base text-white/50 max-w-md">
+        Previsión a 14 días con score golf, alertas de cierre y promos automáticas cuando hace buen tiempo.
+      </p>
+
+      <div className="fade-up-d3 flex flex-col sm:flex-row gap-3 w-full max-w-md">
         {days.map((d) => (
-          <Card key={d.day} className="shadow-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{d.day}</span>
-                <span className="text-xl">{d.emoji}</span>
+          <GlowCard key={d.day} className="flex-1 text-left">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold">{d.day}</span>
+              <span className="text-xl">{d.emoji}</span>
+            </div>
+            <div className="text-xl font-black mt-1">{d.max}°<span className="text-sm text-white/30">/{d.min}°</span></div>
+            <div className="flex items-center gap-2 text-[9px] text-white/30 mt-1">
+              <Wind className="h-3 w-3" />{d.wind}km/h
+              <Droplets className="h-3 w-3" />{d.rain}mm
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center gap-1">
+                <div className={`h-1.5 w-1.5 rounded-full ${d.score >= 80 ? "bg-green-400" : d.score >= 50 ? "bg-yellow-400" : "bg-red-400"}`} />
+                <span className="text-[10px] font-bold">Score {d.score}</span>
               </div>
-              <div className="text-lg font-bold mt-1">
-                {d.max}° / {d.min}°
-              </div>
-              <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-1">
-                <span className="flex items-center gap-1">
-                  <Wind className="h-3 w-3" />
-                  {d.wind}km/h
-                </span>
-                <span className="flex items-center gap-1">
-                  <Droplets className="h-3 w-3" />
-                  {d.rain}mm
-                </span>
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className={`h-2 w-2 rounded-full ${
-                      d.score >= 80
-                        ? "bg-green-500"
-                        : d.score >= 50
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
-                    }`}
-                  />
-                  <span className="text-[10px] font-medium">
-                    Score {d.score}
-                  </span>
-                </div>
-                <span
-                  className={`text-[9px] px-1.5 py-0.5 rounded-full ${
-                    d.demand === "Alta"
-                      ? "bg-green-100 text-green-700"
-                      : d.demand === "Media"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  Demanda {d.demand}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+              <span className={`text-[9px] font-medium ${d.dc}`}>{d.demand}</span>
+            </div>
+          </GlowCard>
         ))}
       </div>
-    </SlideLayout>
+
+      <GlowCard className="fade-up-d4 w-full max-w-md !bg-cyan-500/5 !border-cyan-500/20 text-left">
+        <div className="flex items-center gap-2 text-xs">
+          <Zap className="h-4 w-4 text-cyan-400" />
+          <span className="font-medium text-cyan-300">Automatización activa:</span>
+          <span className="text-white/50">Si score &gt; 80 → enviar promo fin de semana</span>
+        </div>
+      </GlowCard>
+    </div>
   );
 }
 
-// ─── Slide 8: CTA with Contact Form ─────────────────────────
+// ─── Slide 8: Results / Social Proof ────────────────────────
+
+function ResultsSlide() {
+  return (
+    <div className="flex flex-col items-center text-center gap-6">
+      <Pill className="bg-green-500/20 text-green-300 fade-up">
+        <BarChart3 className="h-3 w-3" /> Resultados
+      </Pill>
+      <h2 className="fade-up-d1 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        Números que<br />
+        <span className="text-green-400">hablan solos</span>
+      </h2>
+
+      <div className="fade-up-d2 grid grid-cols-2 sm:grid-cols-4 gap-4 w-full max-w-lg pt-2">
+        <StatBig value="70%" label="Ahorro de tiempo" icon={Clock} />
+        <StatBig value="+35%" label="Retención jugadores" icon={TrendingUp} />
+        <StatBig value="<2min" label="Tiempo de respuesta" icon={Zap} />
+        <StatBig value="68%" label="Tasa de lectura" icon={CheckCircle2} />
+      </div>
+
+      {/* Feature summary */}
+      <div className="fade-up-d3 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg pt-4">
+        {[
+          { icon: Users, title: "CRM Completo", desc: "Perfiles, handicap, engagement, historial y etiquetas IA", color: "text-green-400" },
+          { icon: MessageSquare, title: "4 Canales + IA", desc: "WhatsApp, Instagram, Facebook, Email con respuestas automáticas", color: "text-blue-400" },
+          { icon: CloudSun, title: "Clima + Torneos", desc: "Previsión 14 días, score golf, leaderboards y alertas", color: "text-cyan-400" },
+        ].map((f) => (
+          <GlowCard key={f.title} className="text-left">
+            <f.icon className={`h-5 w-5 ${f.color} mb-2`} />
+            <div className="text-xs font-bold mb-1">{f.title}</div>
+            <div className="text-[10px] text-white/40 leading-relaxed">{f.desc}</div>
+          </GlowCard>
+        ))}
+      </div>
+
+      <p className="fade-up-d4 text-xs text-white/30 pt-2 max-w-sm">
+        Todo integrado en una única plataforma diseñada específicamente para campos de golf.
+      </p>
+    </div>
+  );
+}
+
+// ─── Slide 9: CTA ───────────────────────────────────────────
 
 function CtaSlide() {
-  const [formData, setFormData] = useState({
-    name: "",
-    club: "",
-    email: "",
-    phone: "",
-  });
+  const [form, setForm] = useState({ name: "", club: "", email: "", phone: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-
     try {
       await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(form),
       });
       setSent(true);
     } catch {
-      // Fallback: open mailto
-      const subject = encodeURIComponent(`Solicitud demo Caddie 24 - ${formData.club}`);
-      const body = encodeURIComponent(
-        `Nombre: ${formData.name}\nClub: ${formData.club}\nEmail: ${formData.email}\nTeléfono: ${formData.phone}`
-      );
-      window.open(`mailto:omkagency@gmail.com?subject=${subject}&body=${body}`);
+      const s = encodeURIComponent(`Demo Caddie 24 - ${form.club}`);
+      const b = encodeURIComponent(`Nombre: ${form.name}\nClub: ${form.club}\nEmail: ${form.email}\nTeléfono: ${form.phone}`);
+      window.open(`mailto:omkagency@gmail.com?subject=${s}&body=${b}`);
       setSent(true);
     } finally {
       setSending(false);
@@ -830,145 +680,58 @@ function CtaSlide() {
   };
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-5xl mx-auto">
-      {/* Left side — value prop */}
-      <div className="space-y-6 text-center lg:text-left">
-        <div className="text-5xl">🏌️</div>
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-          ¿Listo para transformar{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">
-            tu club
-          </span>
-          ?
-        </h2>
-        <p className="text-base text-gray-600 dark:text-gray-300">
-          Caddie 24 automatiza la comunicación multicanal, potencia el marketing
-          y mejora la experiencia de tus jugadores con inteligencia artificial.
-        </p>
-        <div className="grid grid-cols-2 gap-4 pt-2">
-          {[
-            { icon: Clock, label: "Ahorro de tiempo", value: "70%" },
-            { icon: TrendingUp, label: "Más retención", value: "+35%" },
-            { icon: MessageSquare, label: "Respuesta media", value: "<2min" },
-            { icon: CheckCircle2, label: "Tasa de lectura", value: "68%" },
-          ].map((b) => (
-            <div key={b.label} className="text-center lg:text-left">
-              <div className="flex items-center gap-2 justify-center lg:justify-start">
-                <b.icon className="h-4 w-4 text-green-500" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  {b.value}
-                </span>
-              </div>
-              <div className="text-[10px] text-muted-foreground">{b.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="flex flex-col items-center text-center gap-6">
+      {/* Glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-green-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Right side — Contact form */}
-      <div>
-        <Card className="shadow-lg border-green-100 dark:border-green-900/40">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Solicita una Demo</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Te contactamos sin compromiso
-            </p>
-          </CardHeader>
-          <CardContent>
-            {sent ? (
-              <div className="text-center py-6 space-y-3">
-                <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
-                <div className="text-lg font-semibold">¡Recibido!</div>
-                <p className="text-sm text-muted-foreground">
-                  Nos pondremos en contacto contigo pronto.
-                </p>
+      <h2 className="fade-up text-3xl sm:text-4xl lg:text-5xl font-black leading-tight relative">
+        ¿Listo para dar el<br />
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">primer golpe</span>?
+      </h2>
+
+      <p className="fade-up-d1 text-sm text-white/50 max-w-sm">
+        Solicita una demo personalizada. Sin compromiso, te contactamos en menos de 24h.
+      </p>
+
+      <div className="fade-up-d2 w-full max-w-sm relative">
+        <GlowCard className="!border-green-500/20">
+          {sent ? (
+            <div className="text-center py-6 space-y-3">
+              <CheckCircle2 className="h-12 w-12 text-green-400 mx-auto" />
+              <div className="text-lg font-bold">¡Recibido!</div>
+              <p className="text-sm text-white/50">Nos pondremos en contacto contigo pronto.</p>
+            </div>
+          ) : (
+            <form onSubmit={submit} className="space-y-3 text-left">
+              <div>
+                <Label htmlFor="n" className="text-xs text-white/50">Nombre</Label>
+                <Input id="n" placeholder="Tu nombre" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required disabled={sending}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10" />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="contact-name" className="text-sm">
-                    Nombre
-                  </Label>
-                  <Input
-                    id="contact-name"
-                    placeholder="Tu nombre"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, name: e.target.value }))
-                    }
-                    required
-                    disabled={sending}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-club" className="text-sm">
-                    Club de Golf
-                  </Label>
-                  <Input
-                    id="contact-club"
-                    placeholder="Nombre de tu club"
-                    value={formData.club}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, club: e.target.value }))
-                    }
-                    required
-                    disabled={sending}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-email" className="text-sm">
-                    Email
-                  </Label>
-                  <Input
-                    id="contact-email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, email: e.target.value }))
-                    }
-                    required
-                    disabled={sending}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-phone" className="text-sm">
-                    Teléfono <span className="text-muted-foreground">(opcional)</span>
-                  </Label>
-                  <Input
-                    id="contact-phone"
-                    type="tel"
-                    placeholder="+34 600 000 000"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                    }
-                    disabled={sending}
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
-                  disabled={sending}
-                >
-                  {sending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      Solicitar Demo <Send className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-                <p className="text-[10px] text-center text-muted-foreground">
-                  Sin compromiso. Te contactamos en menos de 24h.
-                </p>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+              <div>
+                <Label htmlFor="c" className="text-xs text-white/50">Club de Golf</Label>
+                <Input id="c" placeholder="Nombre de tu club" value={form.club} onChange={(e) => setForm((p) => ({ ...p, club: e.target.value }))} required disabled={sending}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10" />
+              </div>
+              <div>
+                <Label htmlFor="e" className="text-xs text-white/50">Email</Label>
+                <Input id="e" type="email" placeholder="tu@email.com" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} required disabled={sending}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10" />
+              </div>
+              <div>
+                <Label htmlFor="p" className="text-xs text-white/50">Teléfono <span className="text-white/20">(opcional)</span></Label>
+                <Input id="p" type="tel" placeholder="+34 600 000 000" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} disabled={sending}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-green-500/50 h-10" />
+              </div>
+              <Button type="submit" disabled={sending} className="w-full gap-2 bg-green-500 hover:bg-green-400 text-black font-bold h-11 rounded-xl text-sm">
+                {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando...</> : <>Solicitar Demo <Send className="h-4 w-4" /></>}
+              </Button>
+              <p className="text-[9px] text-white/25 text-center pt-1">
+                Sin compromiso. Tus datos están seguros.
+              </p>
+            </form>
+          )}
+        </GlowCard>
       </div>
     </div>
   );
