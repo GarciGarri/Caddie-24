@@ -29,6 +29,7 @@ import {
   Mail,
   Loader2,
   Sparkles,
+  Filter,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ const slides = [
   { id: "multichannel" },
   { id: "ai" },
   { id: "campaigns" },
+  { id: "funnel" },
   { id: "tournaments" },
   { id: "weather" },
   { id: "results" },
@@ -101,6 +103,7 @@ export default function PresentacionPage() {
     <MultichannelSlide key="multi" />,
     <AiSlide key="ai" />,
     <CampaignsSlide key="camp" />,
+    <FunnelSlide key="funnel" />,
     <TournamentsSlide key="tourn" />,
     <WeatherSlide key="weather" />,
     <ResultsSlide key="results" />,
@@ -505,7 +508,76 @@ function CampaignsSlide() {
   );
 }
 
-// ─── Slide 6: Tournaments ───────────────────────────────────
+// ─── Slide 6: Funnel de Ventas ──────────────────────────────
+
+function FunnelSlide() {
+  const stages = [
+    { label: "Leads captados", value: 248, pct: 100, color: "bg-blue-500" },
+    { label: "Contactados por IA", value: 210, pct: 85, color: "bg-purple-500" },
+    { label: "Interesados", value: 142, pct: 57, color: "bg-amber-500" },
+    { label: "Demo agendada", value: 87, pct: 35, color: "bg-green-500" },
+    { label: "Nuevos socios", value: 52, pct: 21, color: "bg-emerald-400" },
+  ];
+
+  return (
+    <div className="flex flex-col items-center text-center gap-6">
+      <Pill className="bg-orange-500/20 text-orange-300 fade-up">
+        <Filter className="h-3 w-3" /> Funnel de Ventas
+      </Pill>
+      <h2 className="fade-up-d1 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        De lead a socio,<br />
+        <span className="text-orange-400">con inteligencia</span>
+      </h2>
+      <p className="fade-up-d2 text-sm sm:text-base text-white/50 max-w-md">
+        Administra los leads con IA y haz que tu publicidad funcione. Cada contacto se clasifica, se nutre y se convierte automáticamente.
+      </p>
+
+      {/* Funnel visual */}
+      <div className="fade-up-d3 w-full max-w-md space-y-2">
+        {stages.map((s, i) => (
+          <div key={s.label} className="flex items-center gap-3">
+            <div className="w-full" style={{ paddingLeft: `${i * 6}%`, paddingRight: `${i * 6}%` }}>
+              <div className={`${s.color} rounded-lg py-2 px-3 flex items-center justify-between`} style={{ opacity: 1 - i * 0.12 }}>
+                <span className="text-[11px] sm:text-xs font-medium text-white">{s.label}</span>
+                <span className="text-xs sm:text-sm font-black text-white">{s.value}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Source breakdown */}
+      <GlowCard className="fade-up-d4 w-full max-w-md text-left">
+        <div className="text-[10px] text-white/40 mb-2 font-medium">Origen de leads</div>
+        <div className="space-y-2">
+          {[
+            { src: "Instagram Ads", count: 98, pct: 40, icon: Instagram, color: "bg-pink-500" },
+            { src: "Facebook Ads", count: 72, pct: 29, icon: Facebook, color: "bg-blue-500" },
+            { src: "Web / SEO", count: 45, pct: 18, icon: Target, color: "bg-green-500" },
+            { src: "Referidos", count: 33, pct: 13, icon: Users, color: "bg-amber-500" },
+          ].map((s) => (
+            <div key={s.src} className="flex items-center gap-2">
+              <s.icon className="h-3.5 w-3.5 text-white/40 shrink-0" />
+              <span className="text-[11px] text-white/60 w-24 shrink-0">{s.src}</span>
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className={`h-full ${s.color} rounded-full`} style={{ width: `${s.pct}%` }} />
+              </div>
+              <span className="text-[10px] font-bold text-white/70 w-8 text-right">{s.count}</span>
+            </div>
+          ))}
+        </div>
+      </GlowCard>
+
+      <div className="fade-up-d4 flex flex-wrap justify-center gap-2">
+        {["Lead scoring IA", "Nurturing automático", "Atribución multicanal", "ROI en tiempo real"].map((t) => (
+          <Pill key={t} className="bg-white/5 text-white/50"><Zap className="h-2.5 w-2.5 text-orange-400" /> {t}</Pill>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Slide 7: Tournaments ───────────────────────────────────
 
 function TournamentsSlide() {
   const lb = [
