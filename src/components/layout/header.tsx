@@ -1,6 +1,7 @@
 "use client";
 
-import { Menu, Search } from "lucide-react";
+import Link from "next/link";
+import { Menu, Search, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -34,6 +35,11 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2 sm:gap-3">
+        <Link href="/presentacion" target="_blank">
+          <Button variant="ghost" size="icon" className="h-9 w-9" title="Modo Presentación">
+            <Presentation className="h-4 w-4" />
+          </Button>
+        </Link>
         <NotificationBell />
         <Avatar className="h-8 w-8 cursor-pointer">
           <AvatarFallback className="bg-primary text-primary-foreground text-xs">
