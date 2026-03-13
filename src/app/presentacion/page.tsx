@@ -79,13 +79,14 @@ export default function PresentacionPage() {
     return () => window.removeEventListener("keydown", h);
   }, [next, prev]);
 
-  // Touch swipe
+  // Touch swipe (only if horizontal movement > vertical)
   useEffect(() => {
-    let startX = 0;
-    const onStart = (e: TouchEvent) => { startX = e.touches[0].clientX; };
+    let startX = 0, startY = 0;
+    const onStart = (e: TouchEvent) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; };
     const onEnd = (e: TouchEvent) => {
-      const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 50) diff > 0 ? next() : prev();
+      const dx = startX - e.changedTouches[0].clientX;
+      const dy = startY - e.changedTouches[0].clientY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) dx > 0 ? next() : prev();
     };
     window.addEventListener("touchstart", onStart, { passive: true });
     window.addEventListener("touchend", onEnd, { passive: true });
@@ -107,7 +108,7 @@ export default function PresentacionPage() {
   ];
 
   return (
-    <div className="fixed inset-0 bg-[#0a0f0d] text-white overflow-hidden select-none">
+    <div className="fixed inset-0 bg-[#0a0f0d] text-white overflow-hidden select-none" style={{ touchAction: "pan-y" }}>
       {/* Progress */}
       <div className="fixed top-0 left-0 right-0 z-50 h-[3px] bg-white/10">
         <div className="h-full bg-gradient-to-r from-green-400 to-emerald-400 transition-all duration-500" style={{ width: `${pct}%` }} />
@@ -127,9 +128,11 @@ export default function PresentacionPage() {
       </nav>
 
       {/* Slide */}
-      <div className="h-full flex items-center justify-center pt-12 pb-14 px-5 sm:px-8">
-        <div key={current} className={`w-full max-w-5xl mx-auto anim-${dir}`}>
-          {S[current]}
+      <div className="h-full overflow-y-auto pt-14 pb-16 px-5 sm:px-8">
+        <div className="min-h-full flex items-center justify-center">
+          <div key={current} className={`w-full max-w-5xl mx-auto anim-${dir}`}>
+            {S[current]}
+          </div>
         </div>
       </div>
 
