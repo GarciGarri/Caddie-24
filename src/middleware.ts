@@ -10,6 +10,7 @@ export default auth((req) => {
     pathname.startsWith("/api/webhook/whatsapp") ||
     pathname.startsWith("/api/cron/") ||
     pathname === "/login" ||
+    pathname.startsWith("/presentacion") ||
     pathname === "/sw.js";
 
   if (isPublicRoute) return;
