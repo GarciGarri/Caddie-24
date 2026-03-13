@@ -12,19 +12,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Send via Web3Forms (free, no signup required for basic use)
-    // Fallback: log the contact request
-    const targetEmail = "omkagency@gmail.com";
+    const accessKey = process.env.WEB3FORMS_KEY;
 
-    try {
+    if (accessKey) {
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_key: process.env.WEB3FORMS_KEY || "",
+          access_key: accessKey,
           subject: `Nueva solicitud de demo - ${club}`,
           from_name: "Caddie 24",
-          to: targetEmail,
           name,
           club,
           email,
@@ -33,11 +30,16 @@ export async function POST(req: Request) {
         }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (data.success) {
         return NextResponse.json({ success: true });
       }
-    } catch {
-      // Web3Forms not configured — continue to fallback
+
+      // Log error for debugging in Vercel logs
+      console.error("Web3Forms error:", data);
+    } else {
+      console.warn("WEB3FORMS_KEY not configured");
     }
 
     // Fallback: log to console (visible in Vercel logs)
@@ -49,7 +51,8 @@ export async function POST(req: Request) {
     console.log("================================");
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    console.error("Contact API error:", err);
     return NextResponse.json(
       { error: "Error al procesar la solicitud" },
       { status: 500 }
