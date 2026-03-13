@@ -735,17 +735,24 @@ function CtaSlide() {
   const [form, setForm] = useState({ name: "", club: "", email: "", phone: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
+    setError("");
     try {
-      await fetch("/api/contact", {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      setSent(true);
+      const data = await res.json();
+      if (data.success) {
+        setSent(true);
+      } else {
+        setError(data.debug || "Error desconocido");
+      }
     } catch {
       const s = encodeURIComponent(`Demo Caddie 24 - ${form.club}`);
       const b = encodeURIComponent(`Nombre: ${form.name}\nClub: ${form.club}\nEmail: ${form.email}\nTeléfono: ${form.phone}`);
@@ -803,6 +810,11 @@ function CtaSlide() {
               <Button type="submit" disabled={sending} className="w-full gap-2 bg-green-500 hover:bg-green-400 text-black font-bold h-11 rounded-xl text-sm">
                 {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando...</> : <>Solicitar Demo <Send className="h-4 w-4" /></>}
               </Button>
+              {error && (
+                <p className="text-[10px] text-red-400 text-center bg-red-500/10 rounded-lg p-2 break-all">
+                  Debug: {error}
+                </p>
+              )}
               <p className="text-[9px] text-white/25 text-center pt-1">
                 Sin compromiso. Tus datos están seguros.
               </p>
