@@ -41,14 +41,23 @@ export async function POST(req: Request) {
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
-    console.log("Web3Forms response:", JSON.stringify(data));
+    const text = await response.text();
+    console.log("Web3Forms raw response:", response.status, text.slice(0, 500));
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return NextResponse.json({
+        success: false,
+        debug: `Web3Forms returned status ${response.status} with non-JSON response: ${text.slice(0, 200)}`,
+      });
+    }
 
     if (data.success) {
       return NextResponse.json({ success: true });
     }
 
-    // Return the actual error so we can debug
     return NextResponse.json({
       success: false,
       debug: data.message || JSON.stringify(data),
