@@ -12,7 +12,8 @@ export default auth((req) => {
     pathname === "/api/contact" ||
     pathname === "/login" ||
     pathname.startsWith("/presentacion") ||
-    pathname === "/sw.js";
+    pathname === "/sw.js" ||
+    pathname === "/logo.svg";
 
   if (isPublicRoute) return;
 
