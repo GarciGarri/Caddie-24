@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Users,
   Plus,
@@ -18,6 +18,10 @@ import {
   Trash2,
   Eye,
   Pencil,
+  Download,
+  Upload,
+  FileText,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,8 +105,9 @@ function formatPhone(phone: string): string {
   return phone;
 }
 
-export default function PlayersPage() {
+function PlayersPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -111,6 +116,15 @@ export default function PlayersPage() {
   const [engagementFilter, setEngagementFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
+
+  // Sync search/filter from URL (e.g. header global search navigates here)
+  useEffect(() => {
+    const q = searchParams.get("search");
+    if (q !== null) setSearch(q);
+    const eng = searchParams.get("engagement");
+    if (eng !== null) setEngagementFilter(eng);
+  }, [searchParams]);
 
   // Debounce search
   useEffect(() => {
@@ -183,13 +197,38 @@ export default function PlayersPage() {
             Gestiona los perfiles de tus jugadores
           </p>
         </div>
-        <Link href="/players/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Jugador
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <a href="/api/players/export" download>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </a>
           </Button>
-        </Link>
+          <Button
+            variant={showImport ? "default" : "outline"}
+            onClick={() => setShowImport((v) => !v)}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Importar
+          </Button>
+          <Link href="/players/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Jugador
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {/* CSV import panel */}
+      {showImport && (
+        <ImportPlayersPanel
+          onClose={() => setShowImport(false)}
+          onImported={() => {
+            fetchPlayers();
+          }}
+        />
+      )}
 
       {/* Stats row */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -483,5 +522,304 @@ export default function PlayersPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// --- CSV import ---
+
+const HEADER_ALIASES: Record<string, string> = {
+  firstname: "firstName",
+  nombre: "firstName",
+  "first name": "firstName",
+  lastname: "lastName",
+  apellido: "lastName",
+  apellidos: "lastName",
+  "last name": "lastName",
+  phone: "phone",
+  telefono: "phone",
+  "teléfono": "phone",
+  movil: "phone",
+  "móvil": "phone",
+  tel: "phone",
+  email: "email",
+  correo: "email",
+  "e-mail": "email",
+  handicap: "handicap",
+  "hándicap": "handicap",
+  hcp: "handicap",
+  language: "language",
+  idioma: "language",
+  birthday: "birthday",
+  nacimiento: "birthday",
+  "fecha nacimiento": "birthday",
+  "fecha de nacimiento": "birthday",
+  notes: "notes",
+  notas: "notes",
+};
+
+const VALID_LANGUAGES = ["ES", "EN", "DE", "FR"];
+
+function parseCsv(text: string): Record<string, string>[] {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  const firstLine = text.split(/\r?\n/, 1)[0] || "";
+  const delimiter =
+    (firstLine.match(/;/g)?.length || 0) > (firstLine.match(/,/g)?.length || 0)
+      ? ";"
+      : ",";
+
+  const rows: string[][] = [];
+  let cur = "";
+  let row: string[] = [];
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cur += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === delimiter) {
+      row.push(cur);
+      cur = "";
+    } else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      row.push(cur);
+      cur = "";
+      if (row.some((c) => c.trim() !== "")) rows.push(row);
+      row = [];
+    } else {
+      cur += ch;
+    }
+  }
+  if (cur !== "" || row.length > 0) {
+    row.push(cur);
+    if (row.some((c) => c.trim() !== "")) rows.push(row);
+  }
+
+  if (rows.length < 2) return [];
+
+  const header = rows[0].map(
+    (h) => HEADER_ALIASES[h.trim().toLowerCase()] || h.trim()
+  );
+
+  return rows.slice(1).map((cols) => {
+    const obj: Record<string, string> = {};
+    header.forEach((key, idx) => {
+      if (key) obj[key] = (cols[idx] || "").trim();
+    });
+    return obj;
+  });
+}
+
+interface ImportResult {
+  created: number;
+  skipped: number;
+  errors: Array<{ row: number; error: string }>;
+  total: number;
+}
+
+function ImportPlayersPanel({
+  onClose,
+  onImported,
+}: {
+  onClose: () => void;
+  onImported: () => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [rows, setRows] = useState<Record<string, string>[]>([]);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState<ImportResult | null>(null);
+
+  const templateCsv =
+    "data:text/csv;charset=utf-8," +
+    encodeURIComponent(
+      "firstName,lastName,phone,email,handicap,language,birthday,notes\r\n" +
+        "Carlos,García,+34612345678,carlos@email.com,12.4,ES,1985-03-15,Socio desde 2020\r\n" +
+        "Mary,Smith,+447911123456,mary@email.com,18,EN,,\r\n"
+    );
+
+  const handleFile = async (file: File) => {
+    setResult(null);
+    setParseError(null);
+    setFileName(file.name);
+    try {
+      const text = await file.text();
+      const parsed = parseCsv(text);
+      if (parsed.length === 0) {
+        setParseError(
+          "No se encontraron filas. El CSV debe tener una cabecera (firstName, lastName, phone...) y al menos una fila."
+        );
+        setRows([]);
+        return;
+      }
+      const missing = ["firstName", "lastName", "phone"].filter(
+        (key) => !(key in parsed[0])
+      );
+      if (missing.length > 0) {
+        setParseError(
+          `Faltan columnas obligatorias: ${missing.join(", ")}. Descarga la plantilla para ver el formato.`
+        );
+        setRows([]);
+        return;
+      }
+      setRows(parsed);
+    } catch {
+      setParseError("No se pudo leer el archivo");
+      setRows([]);
+    }
+  };
+
+  const handleImport = async () => {
+    setImporting(true);
+    try {
+      // Normalize values that Spanish spreadsheets commonly mangle
+      const cleanRows = rows.map((r) => {
+        const out: Record<string, string> = { ...r };
+        if (out.handicap) out.handicap = out.handicap.replace(",", ".");
+        if (out.language) {
+          const lang = out.language.toUpperCase().slice(0, 2);
+          out.language = VALID_LANGUAGES.includes(lang) ? lang : "";
+        }
+        Object.keys(out).forEach((k) => {
+          if (out[k] === "") delete out[k];
+        });
+        return out;
+      });
+
+      const res = await fetch("/api/players/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows: cleanRows }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al importar");
+        return;
+      }
+      setResult(data);
+      if (data.created > 0) {
+        toast.success(`${data.created} jugadores importados`);
+        onImported();
+      } else {
+        toast.info("No se importó ningún jugador nuevo");
+      }
+    } catch {
+      toast.error("Error al importar");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-6 space-y-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Importar jugadores desde CSV
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Columnas obligatorias: <code>firstName</code>, <code>lastName</code>,{" "}
+              <code>phone</code>. Opcionales: email, handicap, language (ES/EN/DE/FR),
+              birthday, notes. Acepta separador coma o punto y coma. Los teléfonos
+              españoles de 9 dígitos reciben +34 automáticamente; los jugadores cuyo
+              teléfono ya existe se omiten.
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFile(file);
+              e.target.value = "";
+            }}
+          />
+          <Button variant="outline" onClick={() => fileRef.current?.click()}>
+            <FileText className="h-4 w-4 mr-2" />
+            Seleccionar archivo CSV
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <a href={templateCsv} download="plantilla-jugadores.csv">
+              <Download className="h-4 w-4 mr-2" />
+              Descargar plantilla
+            </a>
+          </Button>
+          {fileName && (
+            <span className="text-sm text-muted-foreground">
+              {fileName} {rows.length > 0 && `— ${rows.length} filas detectadas`}
+            </span>
+          )}
+        </div>
+
+        {parseError && (
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            {parseError}
+          </div>
+        )}
+
+        {rows.length > 0 && !result && (
+          <Button onClick={handleImport} disabled={importing}>
+            {importing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Importar {rows.length} jugadores
+          </Button>
+        )}
+
+        {result && (
+          <div className="rounded-md border p-4 space-y-2 text-sm">
+            <p>
+              <strong className="text-green-600">{result.created}</strong> creados ·{" "}
+              <strong>{result.skipped}</strong> omitidos (ya existían) ·{" "}
+              <strong className={result.errors.length > 0 ? "text-destructive" : ""}>
+                {result.errors.length}
+              </strong>{" "}
+              con errores
+            </p>
+            {result.errors.length > 0 && (
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {result.errors.map((err, i) => (
+                  <p key={i} className="text-xs text-destructive">
+                    Fila {err.row}: {err.error}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function PlayersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <PlayersPageInner />
+    </Suspense>
   );
 }
