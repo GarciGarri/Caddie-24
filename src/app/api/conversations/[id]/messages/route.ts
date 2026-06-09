@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendTextMessage, sendTemplateMessage, sendMediaMessage } from "@/lib/services/whatsapp";
 import type { TemplateComponent } from "@/lib/services/whatsapp";
+import { sendToConversation } from "@/lib/services/channels";
 import { isDemoMode, getDemoConversationMessages } from "@/lib/services/demo-data";
 
 export async function GET(
@@ -84,8 +85,34 @@ export async function POST(
     return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
   }
 
+  const userId = (session as any)?.user?.id;
+
+  // Non-WhatsApp channels: plain text via the channel dispatcher
+  const channel = conversation.channel || "whatsapp";
+  if (channel !== "whatsapp") {
+    if (!content?.trim()) {
+      return NextResponse.json({ error: "El mensaje no puede estar vacío" }, { status: 400 });
+    }
+    try {
+      const { messageId } = await sendToConversation(
+        params.id,
+        content,
+        userId || "agent"
+      );
+      await prisma.conversation.update({
+        where: { id: params.id },
+        data: { unreadCount: 0 },
+      });
+      const message = await prisma.message.findUnique({ where: { id: messageId } });
+      return NextResponse.json(message, { status: 201 });
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : "Error al enviar";
+      return NextResponse.json({ error: errMsg }, { status: 502 });
+    }
+  }
+
   const playerPhone = conversation.player.phone;
-  if (!playerPhone) {
+  if (!playerPhone || playerPhone.includes(":")) {
     return NextResponse.json({ error: "El jugador no tiene teléfono registrado" }, { status: 400 });
   }
 
@@ -123,7 +150,6 @@ export async function POST(
   }
 
   // Create message record
-  const userId = (session as any)?.user?.id;
   const message = await prisma.message.create({
     data: {
       conversationId: params.id,
