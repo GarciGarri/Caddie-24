@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sendCampaign } from "@/lib/services/campaign-sender";
 
-// POST /api/campaigns/[id]/send — Execute campaign send (simulated)
+// POST /api/campaigns/[id]/send — Execute campaign send via WhatsApp
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -19,7 +19,7 @@ export async function POST(
     const result = await sendCampaign(params.id);
     return NextResponse.json({
       success: true,
-      message: `Campaña enviada a ${result.sent} destinatarios (simulado)`,
+      message: `Campaña enviada a ${result.sent} destinatarios`,
       ...result,
     });
   } catch (error: any) {

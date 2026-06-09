@@ -5,6 +5,7 @@ import {
   mapLanguageCode,
 } from "@/lib/services/whatsapp";
 import type { TemplateComponent } from "@/lib/services/whatsapp";
+import { OPT_OUT_TAG } from "@/lib/services/consent";
 
 /**
  * Build Prisma where clause from a campaign's segmentQuery
@@ -26,13 +27,16 @@ export function buildPlayerFilter(segment: SegmentQuery) {
     if (segment.handicapMax !== undefined) where.handicap.lte = segment.handicapMax;
   }
 
+  where.tags = {};
+
   if (segment.tags && segment.tags.length > 0) {
-    where.tags = {
-      some: {
-        tag: { in: segment.tags },
-      },
+    where.tags.some = {
+      tag: { in: segment.tags },
     };
   }
+
+  // RGPD: never include players who unsubscribed from communications
+  where.tags.none = { tag: OPT_OUT_TAG };
 
   if (segment.tournamentIds && segment.tournamentIds.length > 0) {
     where.tournamentRegistrations = {
@@ -236,6 +240,53 @@ export async function sendCampaign(campaignId: string) {
   );
 
   return { sent, failed, total: recipients.length };
+}
+
+/**
+ * Send every SCHEDULED campaign whose scheduledAt is due.
+ * Called from the daily cron and opportunistically when the campaign
+ * list is loaded, so scheduled sends go out even on plans without
+ * frequent cron executions.
+ */
+export async function processDueScheduledCampaigns(): Promise<{
+  processed: number;
+  results: Array<{ campaignId: string; name: string; sent: number; failed: number }>;
+}> {
+  const settings = await prisma.clubSettings.findUnique({
+    where: { id: "default" },
+    select: { demoMode: true },
+  });
+  if (settings?.demoMode) return { processed: 0, results: [] };
+
+  const due = await prisma.campaign.findMany({
+    where: {
+      status: "SCHEDULED",
+      scheduledAt: { lte: new Date() },
+    },
+    select: { id: true, name: true },
+    orderBy: { scheduledAt: "asc" },
+  });
+
+  const results: Array<{ campaignId: string; name: string; sent: number; failed: number }> = [];
+  for (const campaign of due) {
+    try {
+      const result = await sendCampaign(campaign.id);
+      results.push({
+        campaignId: campaign.id,
+        name: campaign.name,
+        sent: result.sent,
+        failed: result.failed,
+      });
+    } catch (error) {
+      console.error(
+        `[Campaign] Error sending scheduled campaign "${campaign.name}":`,
+        error
+      );
+      results.push({ campaignId: campaign.id, name: campaign.name, sent: 0, failed: 0 });
+    }
+  }
+
+  return { processed: due.length, results };
 }
 
 /**

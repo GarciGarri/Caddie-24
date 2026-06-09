@@ -74,6 +74,9 @@ const consumptionCategoryLabels: Record<string, string> = {
   OTHER: "Otro",
 };
 
+// Reserved tag used by the consent service (see src/lib/services/consent.ts)
+const OPT_OUT_TAG = "baja_comunicaciones";
+
 export default function PlayerDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -212,6 +215,11 @@ export default function PlayerDetailPage() {
                 {engagementLabels[player.engagementLevel] ||
                   player.engagementLevel}
               </span>
+              {player.tags?.some((t: any) => t.tag === OPT_OUT_TAG) && (
+                <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800">
+                  Baja comunicaciones
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -533,6 +541,7 @@ export default function PlayerDetailPage() {
                 </div>
               </CardContent>
             </Card>
+            <ConsentCard player={player} onChanged={fetchPlayer} />
           </div>
         </div>
       )}
@@ -548,6 +557,7 @@ export default function PlayerDetailPage() {
             <CardTitle className="text-lg">Historial de Visitas</CardTitle>
           </CardHeader>
           <CardContent>
+            <AddVisitForm playerId={id} onAdded={fetchPlayer} />
             {player.visits && player.visits.length > 0 ? (
               <div className="space-y-3">
                 {player.visits.map((visit: any) => (
@@ -607,6 +617,7 @@ export default function PlayerDetailPage() {
             </div>
           </CardHeader>
           <CardContent>
+            <AddConsumptionForm playerId={id} onAdded={fetchPlayer} />
             {player.consumptions && player.consumptions.length > 0 ? (
               <div className="space-y-3">
                 {player.consumptions.map((consumption: any) => (
@@ -1146,6 +1157,361 @@ function InfoRow({
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-sm font-medium">{value}</p>
       </div>
+    </div>
+  );
+}
+
+// --- Marketing consent (RGPD) card ---
+
+function ConsentCard({
+  player,
+  onChanged,
+}: {
+  player: any;
+  onChanged: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const optedOut = player.tags?.some((t: any) => t.tag === OPT_OUT_TAG);
+
+  const toggle = async () => {
+    const msg = optedOut
+      ? `¿Reactivar las comunicaciones comerciales para ${player.firstName}? Hazlo solo si el jugador lo ha pedido expresamente.`
+      : `¿Dar de baja a ${player.firstName} de las comunicaciones comerciales? Dejará de recibir campañas de WhatsApp.`;
+    if (!confirm(msg)) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/players/${player.id}/optout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ optOut: !optedOut }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || "Error al actualizar el consentimiento");
+        return;
+      }
+      toast.success(
+        optedOut
+          ? "Comunicaciones reactivadas"
+          : "Jugador dado de baja de comunicaciones"
+      );
+      onChanged();
+    } catch {
+      toast.error("Error al actualizar el consentimiento");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-2">
+        <p className="text-xs text-muted-foreground text-center">
+          Comunicaciones comerciales
+        </p>
+        <p
+          className={`text-sm font-medium text-center ${
+            optedOut ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {optedOut ? "De baja (no recibe campañas)" : "Activas"}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={toggle}
+          disabled={busy}
+        >
+          {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          {optedOut ? "Reactivar" : "Dar de baja"}
+        </Button>
+        <p className="text-[11px] text-muted-foreground text-center">
+          El jugador también puede darse de baja respondiendo BAJA por WhatsApp.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- Add Visit form ---
+
+function AddVisitForm({
+  playerId,
+  onAdded,
+}: {
+  playerId: string;
+  onAdded: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const today = new Date().toISOString().split("T")[0];
+  const [form, setForm] = useState({
+    date: today,
+    courseType: "18-holes",
+    duration: "",
+    notes: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/players/${playerId}/visits`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: form.date,
+          courseType: form.courseType,
+          duration: form.duration ? Number(form.duration) : undefined,
+          notes: form.notes,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al registrar la visita");
+        return;
+      }
+      toast.success("Visita registrada");
+      setForm({ date: today, courseType: "18-holes", duration: "", notes: "" });
+      setOpen(false);
+      onAdded();
+    } catch {
+      toast.error("Error al registrar la visita");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mb-4">
+      {!open ? (
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+          <MapPin className="h-4 w-4 mr-2" />
+          Registrar visita
+        </Button>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="border rounded-lg p-4 space-y-3 bg-muted/20"
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Fecha</Label>
+              <Input
+                type="date"
+                value={form.date}
+                max={today}
+                onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
+                required
+                disabled={saving}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Recorrido</Label>
+              <select
+                value={form.courseType}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, courseType: e.target.value }))
+                }
+                disabled={saving}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none"
+              >
+                <option value="18-holes">18 hoyos</option>
+                <option value="9-holes">9 hoyos</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Duración (min)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={1440}
+                placeholder="240"
+                value={form.duration}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, duration: e.target.value }))
+                }
+                disabled={saving}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Notas</Label>
+              <Input
+                placeholder="Opcional"
+                value={form.notes}
+                maxLength={500}
+                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                disabled={saving}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Guardar visita
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setOpen(false)}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+// --- Add Consumption form ---
+
+const CONSUMPTION_OPTIONS = [
+  { value: "GREEN_FEE", label: "Green Fee" },
+  { value: "SUBSCRIPTION", label: "Abono" },
+  { value: "CLASS", label: "Clase" },
+  { value: "RESTAURANT", label: "Restaurante" },
+  { value: "SHOP", label: "Tienda Pro" },
+  { value: "RENTAL", label: "Alquiler" },
+  { value: "EVENT", label: "Evento" },
+  { value: "OTHER", label: "Otro" },
+];
+
+function AddConsumptionForm({
+  playerId,
+  onAdded,
+}: {
+  playerId: string;
+  onAdded: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const today = new Date().toISOString().split("T")[0];
+  const [form, setForm] = useState({
+    date: today,
+    category: "GREEN_FEE",
+    description: "",
+    amount: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/players/${playerId}/consumptions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: form.date,
+          category: form.category,
+          description: form.description,
+          amount: Number(form.amount),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al registrar el consumo");
+        return;
+      }
+      toast.success("Consumo registrado");
+      setForm({ date: today, category: "GREEN_FEE", description: "", amount: "" });
+      setOpen(false);
+      onAdded();
+    } catch {
+      toast.error("Error al registrar el consumo");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mb-4">
+      {!open ? (
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+          <ShoppingBag className="h-4 w-4 mr-2" />
+          Registrar consumo
+        </Button>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="border rounded-lg p-4 space-y-3 bg-muted/20"
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Fecha</Label>
+              <Input
+                type="date"
+                value={form.date}
+                max={today}
+                onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
+                required
+                disabled={saving}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Categoría</Label>
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, category: e.target.value }))
+                }
+                disabled={saving}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none"
+              >
+                {CONSUMPTION_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Descripción</Label>
+              <Input
+                placeholder="Green fee 18 hoyos"
+                value={form.description}
+                maxLength={200}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, description: e.target.value }))
+                }
+                required
+                disabled={saving}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Importe (€)</Label>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="65.00"
+                value={form.amount}
+                onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+                required
+                disabled={saving}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Guardar consumo
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setOpen(false)}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

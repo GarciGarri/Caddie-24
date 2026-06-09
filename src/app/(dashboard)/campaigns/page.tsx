@@ -96,7 +96,12 @@ export default function CampaignsPage() {
   };
 
   const handleSendNow = async (id: string, name: string) => {
-    if (!confirm(`Enviar campaña "${name}" ahora? (simulado)`)) return;
+    if (
+      !confirm(
+        `¿Enviar la campaña "${name}" ahora? Se enviarán mensajes reales de WhatsApp a los destinatarios del segmento.`
+      )
+    )
+      return;
     setSendingId(id);
     try {
       const res = await fetch(`/api/campaigns/${id}/send`, { method: "POST" });

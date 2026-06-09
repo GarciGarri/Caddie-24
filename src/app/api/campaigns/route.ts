@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createCampaignSchema } from "@/lib/validations/campaign";
 import { isDemoMode, getDemoCampaignsData } from "@/lib/services/demo-data";
+import { processDueScheduledCampaigns } from "@/lib/services/campaign-sender";
 
 // GET /api/campaigns — List campaigns with filters
 export async function GET(request: NextRequest) {
@@ -26,6 +27,12 @@ export async function GET(request: NextRequest) {
         getDemoCampaignsData({ page, limit, status: status || undefined })
       );
     }
+
+    // Opportunistic dispatch: send any due scheduled campaign without
+    // blocking the listing (complements the daily cron).
+    processDueScheduledCampaigns().catch((err) =>
+      console.error("[Campaigns] Error processing scheduled campaigns:", err)
+    );
 
     const where: any = {};
     if (status) where.status = status;
@@ -70,6 +77,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = createCampaignSchema.parse(body);
 
+    // Optional scheduling: must be in the future
+    let scheduledAt: Date | null = null;
+    if (validated.scheduledAt) {
+      scheduledAt = new Date(validated.scheduledAt);
+      if (scheduledAt.getTime() <= Date.now()) {
+        return NextResponse.json(
+          { error: "La fecha de programación debe ser futura" },
+          { status: 400 }
+        );
+      }
+    }
+
     const campaign = await prisma.campaign.create({
       data: {
         name: validated.name,
@@ -77,7 +96,8 @@ export async function POST(request: NextRequest) {
         templateName: validated.templateName,
         segmentQuery: validated.segmentQuery,
         createdById: userId,
-        status: "DRAFT",
+        status: scheduledAt ? "SCHEDULED" : "DRAFT",
+        scheduledAt,
       },
       include: {
         createdBy: { select: { name: true } },
