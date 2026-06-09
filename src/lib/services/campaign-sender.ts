@@ -5,6 +5,8 @@ import {
   mapLanguageCode,
 } from "@/lib/services/whatsapp";
 import type { TemplateComponent } from "@/lib/services/whatsapp";
+import { sendTelegramMessage } from "@/lib/services/telegram";
+import { sendEmail } from "@/lib/services/email";
 import { OPT_OUT_TAG } from "@/lib/services/consent";
 
 /**
@@ -37,6 +39,10 @@ export function buildPlayerFilter(segment: SegmentQuery) {
 
   // RGPD: never include players who unsubscribed from communications
   where.tags.none = { tag: OPT_OUT_TAG };
+
+  if (segment.membersOnly) {
+    where.membership = { is: { status: "ACTIVE" } };
+  }
 
   if (segment.tournamentIds && segment.tournamentIds.length > 0) {
     where.tournamentRegistrations = {
@@ -95,9 +101,14 @@ function buildTemplateComponents(
   return [{ type: "body", parameters: params }];
 }
 
+/** Replace {{1}} / {{nombre}} placeholders with the player's first name. */
+function personalize(text: string, firstName: string): string {
+  return text.replace(/\{\{\s*(1|nombre|name)\s*\}\}/gi, firstName);
+}
+
 /**
- * Send campaign via WhatsApp Business API
- * Creates recipients, sends template messages, tracks status
+ * Send campaign through its channel (WhatsApp template, Telegram or Email).
+ * Creates recipients, sends messages, tracks status.
  */
 export async function sendCampaign(campaignId: string) {
   const campaign = await prisma.campaign.findUnique({
@@ -109,18 +120,30 @@ export async function sendCampaign(campaignId: string) {
     throw new Error("La campaña ya fue enviada o está en progreso");
   }
 
+  const channel = campaign.channel || "WHATSAPP";
+
   // 1. Set status to SENDING
   await prisma.campaign.update({
     where: { id: campaignId },
     data: { status: "SENDING", sentAt: new Date() },
   });
 
-  // 2. Find matching players
+  // 2. Find matching players, requiring the channel-specific identity
   const segment = campaign.segmentQuery as SegmentQuery;
   const where = buildPlayerFilter(segment);
+  if (channel === "TELEGRAM") where.telegramChatId = { not: null };
+  if (channel === "EMAIL") where.email = { not: null };
+
   const players = await prisma.player.findMany({
     where,
-    select: { id: true, firstName: true, lastName: true, phone: true },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      email: true,
+      telegramChatId: true,
+    },
   });
 
   if (players.length === 0) {
@@ -136,20 +159,23 @@ export async function sendCampaign(campaignId: string) {
     return { sent: 0, failed: 0, total: 0 };
   }
 
-  // 3. Fetch template
-  const template = await prisma.whatsAppTemplate.findUnique({
-    where: { name: campaign.templateName },
-  });
-
-  if (!template) {
-    await prisma.campaign.update({
-      where: { id: campaignId },
-      data: { status: "DRAFT" },
+  // 3. WhatsApp needs its approved template
+  let template: { name: string; language: any; components: any } | null = null;
+  let languageCode = "es";
+  if (channel === "WHATSAPP") {
+    template = await prisma.whatsAppTemplate.findUnique({
+      where: { name: campaign.templateName },
     });
-    throw new Error(`Template "${campaign.templateName}" no encontrado`);
-  }
 
-  const languageCode = mapLanguageCode(template.language);
+    if (!template) {
+      await prisma.campaign.update({
+        where: { id: campaignId },
+        data: { status: "DRAFT" },
+      });
+      throw new Error(`Template "${campaign.templateName}" no encontrado`);
+    }
+    languageCode = mapLanguageCode(template.language);
+  }
 
   // 4. Create recipients (all PENDING initially)
   await prisma.campaignRecipient.createMany({
@@ -161,11 +187,20 @@ export async function sendCampaign(campaignId: string) {
     skipDuplicates: true,
   });
 
-  // 5. Send template messages
+  // 5. Send per recipient
   const recipients = await prisma.campaignRecipient.findMany({
     where: { campaignId },
     include: {
-      player: { select: { id: true, phone: true, firstName: true, lastName: true } },
+      player: {
+        select: {
+          id: true,
+          phone: true,
+          email: true,
+          telegramChatId: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
     },
   });
 
@@ -173,41 +208,55 @@ export async function sendCampaign(campaignId: string) {
   let failed = 0;
 
   for (const r of recipients) {
-    if (!r.player.phone) {
-      await prisma.campaignRecipient.update({
-        where: { id: r.id },
-        data: { status: "FAILED", failureReason: "Sin número de teléfono" },
-      });
-      failed++;
-      continue;
-    }
-
     try {
-      const components = buildTemplateComponents(
-        template as any,
-        { firstName: r.player.firstName, lastName: r.player.lastName || undefined }
-      );
-
-      const result = await sendTemplateMessage(
-        r.player.phone,
-        template.name,
-        languageCode,
-        components
-      );
+      if (channel === "WHATSAPP") {
+        if (!r.player.phone || r.player.phone.includes(":")) {
+          throw new Error("Sin número de teléfono");
+        }
+        const components = buildTemplateComponents(template as any, {
+          firstName: r.player.firstName,
+          lastName: r.player.lastName || undefined,
+        });
+        const result = await sendTemplateMessage(
+          r.player.phone,
+          template!.name,
+          languageCode,
+          components
+        );
+        await createCampaignMessageRecord(
+          r.player.id,
+          result.whatsappMessageId,
+          (template as any).components?.body?.text ||
+            `[Template: ${template!.name}]`,
+          template!.name,
+          "whatsapp"
+        );
+      } else if (channel === "TELEGRAM") {
+        if (!r.player.telegramChatId) throw new Error("Sin Telegram vinculado");
+        const body = personalize(campaign.messageBody || "", r.player.firstName);
+        const result = await sendTelegramMessage(r.player.telegramChatId, body);
+        await createCampaignMessageRecord(
+          r.player.id,
+          `tg:${r.player.telegramChatId}:${result.externalId}`,
+          body,
+          null,
+          "telegram"
+        );
+      } else {
+        // EMAIL
+        if (!r.player.email) throw new Error("Sin email");
+        const body = personalize(campaign.messageBody || "", r.player.firstName);
+        const subject = personalize(
+          campaign.emailSubject || campaign.name,
+          r.player.firstName
+        );
+        await sendEmail(r.player.email, subject, body);
+      }
 
       await prisma.campaignRecipient.update({
         where: { id: r.id },
         data: { status: "SENT", sentAt: new Date() },
       });
-
-      // Create message record in conversation so it shows in inbox
-      await createCampaignMessageRecord(
-        r.player.id,
-        result.whatsappMessageId,
-        template,
-        campaignId
-      );
-
       sent++;
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : "Error desconocido";
@@ -235,7 +284,7 @@ export async function sendCampaign(campaignId: string) {
   });
 
   console.log(
-    `[Campaign] "${campaign.name}" sent to ${recipients.length} recipients — ` +
+    `[Campaign] "${campaign.name}" (${channel}) sent to ${recipients.length} recipients — ` +
       `${sent} sent, ${failed} failed`
   );
 
@@ -291,19 +340,21 @@ export async function processDueScheduledCampaigns(): Promise<{
 
 /**
  * Create a Message record in the player's conversation for campaign messages
- * so they appear in the inbox.
+ * so they appear in the inbox (WhatsApp and Telegram channels).
  */
 async function createCampaignMessageRecord(
   playerId: string,
-  whatsappMessageId: string,
-  template: { name: string; components: any },
-  campaignId: string
+  externalMessageId: string,
+  content: string,
+  templateName: string | null,
+  channel: string
 ): Promise<void> {
   try {
-    // Find or create conversation
+    // Find or create conversation on the campaign's channel
     let conversation = await prisma.conversation.findFirst({
       where: {
         playerId,
+        channel,
         status: { in: ["OPEN", "PENDING"] },
       },
       orderBy: { lastMessageAt: "desc" },
@@ -314,24 +365,21 @@ async function createCampaignMessageRecord(
         data: {
           playerId,
           status: "OPEN",
-          channel: "whatsapp",
+          channel,
           lastMessageAt: new Date(),
           isAiBotActive: true,
         },
       });
     }
 
-    const content =
-      template.components?.body?.text || `[Template: ${template.name}]`;
-
     await prisma.message.create({
       data: {
         conversationId: conversation.id,
-        whatsappMessageId,
+        whatsappMessageId: externalMessageId,
         direction: "OUTBOUND",
-        type: "TEMPLATE",
+        type: templateName ? "TEMPLATE" : "TEXT",
         content,
-        templateName: template.name,
+        templateName,
         status: "SENT",
         sentBy: "campaign",
         timestamp: new Date(),

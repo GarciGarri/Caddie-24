@@ -73,6 +73,9 @@ export default function NewCampaignPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [channel, setChannel] = useState<"WHATSAPP" | "TELEGRAM" | "EMAIL">("WHATSAPP");
+  const [messageBody, setMessageBody] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
 
   // Tournaments
   const [tournaments, setTournaments] = useState<Array<{ id: string; name: string; date: string; status: string }>>([]);
@@ -84,6 +87,7 @@ export default function NewCampaignPage() {
   const [handicapMin, setHandicapMin] = useState("");
   const [handicapMax, setHandicapMax] = useState("");
   const [selectedTournaments, setSelectedTournaments] = useState<string[]>([]);
+  const [membersOnly, setMembersOnly] = useState(false);
 
   // Preview
   const [previewPlayers, setPreviewPlayers] = useState<PreviewPlayer[]>([]);
@@ -126,8 +130,19 @@ export default function NewCampaignPage() {
     if (handicapMin) segment.handicapMin = Number(handicapMin);
     if (handicapMax) segment.handicapMax = Number(handicapMax);
     if (selectedTournaments.length > 0) segment.tournamentIds = selectedTournaments;
+    if (membersOnly) segment.membersOnly = true;
     return segment;
   };
+
+  const buildPayload = () => ({
+    name,
+    description,
+    channel,
+    templateName: channel === "WHATSAPP" ? selectedTemplate : "",
+    messageBody: channel !== "WHATSAPP" ? messageBody : "",
+    emailSubject: channel === "EMAIL" ? emailSubject : "",
+    segmentQuery: buildSegment(),
+  });
 
   const fetchPreview = async () => {
     setLoadingPreview(true);
@@ -161,12 +176,7 @@ export default function NewCampaignPage() {
       const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          description,
-          templateName: selectedTemplate,
-          segmentQuery: buildSegment(),
-        }),
+        body: JSON.stringify(buildPayload()),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -189,12 +199,7 @@ export default function NewCampaignPage() {
       const createRes = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          description,
-          templateName: selectedTemplate,
-          segmentQuery: buildSegment(),
-        }),
+        body: JSON.stringify(buildPayload()),
       });
       const campaign = await createRes.json();
       if (!createRes.ok) {
@@ -234,10 +239,7 @@ export default function NewCampaignPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          description,
-          templateName: selectedTemplate,
-          segmentQuery: buildSegment(),
+          ...buildPayload(),
           scheduledAt: date.toISOString(),
         }),
       });
@@ -255,7 +257,11 @@ export default function NewCampaignPage() {
   };
 
   const selectedTemplateObj = templates.find((t) => t.name === selectedTemplate);
-  const canProceedStep1 = name.trim() && selectedTemplate;
+  const canProceedStep1 =
+    name.trim() &&
+    (channel === "WHATSAPP"
+      ? !!selectedTemplate
+      : !!messageBody.trim() && (channel !== "EMAIL" || !!emailSubject.trim()));
   const canProceedStep2 = true; // Segment can be empty (all players)
 
   return (
@@ -334,6 +340,66 @@ export default function NewCampaignPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label>Canal de envío</Label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: "WHATSAPP", label: "WhatsApp", color: "bg-green-100 text-green-700" },
+                  { value: "TELEGRAM", label: "Telegram", color: "bg-sky-100 text-sky-700" },
+                  { value: "EMAIL", label: "Email", color: "bg-gray-100 text-gray-700" },
+                ].map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                      channel === c.value
+                        ? c.color + " ring-2 ring-offset-1 ring-primary/30"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                    onClick={() => setChannel(c.value as any)}
+                  >
+                    {channel === c.value && <Check className="h-3 w-3 mr-1" />}
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {channel === "WHATSAPP"
+                  ? "Usa una plantilla aprobada por Meta (obligatorio fuera de la ventana de 24h)."
+                  : channel === "TELEGRAM"
+                    ? "Solo llegará a jugadores que hayan escrito al bot de Telegram del club."
+                    : "Solo llegará a jugadores con email registrado."}
+              </p>
+            </div>
+            {channel !== "WHATSAPP" && (
+              <>
+                {channel === "EMAIL" && (
+                  <div className="space-y-2">
+                    <Label>Asunto del email <span className="text-destructive">*</span></Label>
+                    <Input
+                      placeholder="Oferta especial de otoño en {{nombre}}..."
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                    />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label>Mensaje <span className="text-destructive">*</span></Label>
+                  <textarea
+                    placeholder={"Hola {{nombre}}, este fin de semana..."}
+                    value={messageBody}
+                    onChange={(e) => setMessageBody(e.target.value)}
+                    rows={5}
+                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Usa <code className="bg-muted px-1 rounded">{"{{nombre}}"}</code> para
+                    personalizar con el nombre del jugador.
+                  </p>
+                </div>
+              </>
+            )}
+            {channel === "WHATSAPP" && (
+            <div className="space-y-2">
               <Label>Template WhatsApp <span className="text-destructive">*</span></Label>
               {loadingTemplates ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -380,6 +446,7 @@ export default function NewCampaignPage() {
                 </div>
               )}
             </div>
+            )}
             <div className="flex justify-end">
               <Button
                 onClick={() => goToStep(2)}
@@ -445,6 +512,24 @@ export default function NewCampaignPage() {
                     {lang.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tipo de jugador</Label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    membersOnly
+                      ? "bg-purple-100 text-purple-700 ring-2 ring-offset-1 ring-primary/30"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                  onClick={() => setMembersOnly(!membersOnly)}
+                >
+                  {membersOnly && <Check className="h-3 w-3 mr-1" />}
+                  Solo socios con membresía activa
+                </button>
               </div>
             </div>
 
@@ -538,13 +623,24 @@ export default function NewCampaignPage() {
                   <p className="font-medium">{name}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Template</p>
-                  <p className="font-mono font-medium">{selectedTemplate}</p>
+                  <p className="text-muted-foreground">Canal</p>
+                  <p className="font-medium">
+                    {channel === "WHATSAPP"
+                      ? `WhatsApp · ${selectedTemplate}`
+                      : channel === "TELEGRAM"
+                        ? "Telegram"
+                        : `Email · ${emailSubject}`}
+                  </p>
                 </div>
               </div>
-              {selectedTemplateObj && (
+              {channel === "WHATSAPP" && selectedTemplateObj && (
                 <div className="p-3 rounded bg-muted text-sm">
                   {selectedTemplateObj.components?.body?.text}
+                </div>
+              )}
+              {channel !== "WHATSAPP" && messageBody && (
+                <div className="p-3 rounded bg-muted text-sm whitespace-pre-wrap">
+                  {messageBody}
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
@@ -569,7 +665,10 @@ export default function NewCampaignPage() {
                     {selectedTournaments.length} torneo{selectedTournaments.length > 1 ? "s" : ""}
                   </Badge>
                 )}
-                {engagementLevels.length === 0 && languages.length === 0 && !handicapMin && !handicapMax && selectedTournaments.length === 0 && (
+                {membersOnly && (
+                  <Badge variant="secondary">Solo socios</Badge>
+                )}
+                {engagementLevels.length === 0 && languages.length === 0 && !handicapMin && !handicapMax && selectedTournaments.length === 0 && !membersOnly && (
                   <Badge variant="secondary">Todos los jugadores</Badge>
                 )}
               </div>

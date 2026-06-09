@@ -93,7 +93,10 @@ export async function POST(request: NextRequest) {
       data: {
         name: validated.name,
         description: validated.description || null,
-        templateName: validated.templateName,
+        channel: validated.channel || "WHATSAPP",
+        templateName: validated.templateName || "",
+        messageBody: validated.messageBody || null,
+        emailSubject: validated.emailSubject || null,
         segmentQuery: validated.segmentQuery,
         createdById: userId,
         status: scheduledAt ? "SCHEDULED" : "DRAFT",
