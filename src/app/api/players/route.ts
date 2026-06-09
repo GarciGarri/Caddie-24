@@ -41,8 +41,15 @@ export async function GET(request: NextRequest) {
       : "asc";
     const engagement = searchParams.get("engagement");
     const language = searchParams.get("language");
+    const membersParam = searchParams.get("members"); // "1" socios, "0" visitantes
 
     const where: any = { isActive: true };
+
+    if (membersParam === "1") {
+      where.membership = { is: { status: "ACTIVE" } };
+    } else if (membersParam === "0") {
+      where.membership = null;
+    }
 
     // Search by name, phone, or email
     if (search) {
@@ -69,6 +76,7 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           tags: true,
+          membership: { select: { type: true, status: true, renewalDate: true } },
           _count: {
             select: {
               visits: true,
@@ -142,6 +150,8 @@ export async function POST(request: NextRequest) {
     if (validated.birthday && validated.birthday !== "")
       data.birthday = new Date(validated.birthday);
     if (validated.notes && validated.notes !== "") data.notes = validated.notes;
+    if (validated.federationLicense && validated.federationLicense !== "")
+      data.federationLicense = validated.federationLicense;
 
     const player = await prisma.player.create({
       data,

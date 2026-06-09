@@ -22,6 +22,7 @@ export default function NewPlayerPage() {
     phone: "",
     email: "",
     handicap: "",
+    federationLicense: "",
     birthday: "",
     preferredLanguage: "ES",
     notes: "",
@@ -229,6 +230,16 @@ export default function NewPlayerPage() {
                   <option value="FR">Français</option>
                 </select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="federationLicense">Licencia federativa (RFEG)</Label>
+              <Input
+                id="federationLicense"
+                placeholder="Ej. AM0012345"
+                value={form.federationLicense}
+                onChange={(e) => updateField("federationLicense", e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">

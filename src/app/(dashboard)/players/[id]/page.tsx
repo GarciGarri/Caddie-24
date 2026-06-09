@@ -77,6 +77,17 @@ const consumptionCategoryLabels: Record<string, string> = {
 // Reserved tag used by the consent service (see src/lib/services/consent.ts)
 const OPT_OUT_TAG = "baja_comunicaciones";
 
+const MEMBERSHIP_TYPE_LABELS: Record<string, string> = {
+  INDIVIDUAL: "Individual",
+  FAMILIAR: "Familiar",
+  JOVEN: "Joven",
+  SENIOR: "Senior",
+  SEMANA: "De semana",
+  CORPORATIVO: "Corporativo",
+  HONORIFICO: "Honorífico",
+  OTRO: "Otro",
+};
+
 export default function PlayerDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -115,6 +126,7 @@ export default function PlayerDetailPage() {
         phone: data.phone,
         email: data.email || "",
         handicap: data.handicap ?? "",
+        federationLicense: data.federationLicense || "",
         birthday: data.birthday
           ? new Date(data.birthday).toISOString().split("T")[0]
           : "",
@@ -215,6 +227,11 @@ export default function PlayerDetailPage() {
                 {engagementLabels[player.engagementLevel] ||
                   player.engagementLevel}
               </span>
+              {player.membership?.status === "ACTIVE" && (
+                <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">
+                  Socio {MEMBERSHIP_TYPE_LABELS[player.membership.type] || ""}
+                </span>
+              )}
               {player.tags?.some((t: any) => t.tag === OPT_OUT_TAG) && (
                 <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800">
                   Baja comunicaciones
@@ -257,13 +274,16 @@ export default function PlayerDetailPage() {
                 </Button>
               </div>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setEditing(true)}
-              >
-                <Edit2 className="h-4 w-4 mr-1" /> Editar
-              </Button>
+              <div className="flex gap-2">
+                <PortalLinkButton playerId={id} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditing(true)}
+                >
+                  <Edit2 className="h-4 w-4 mr-1" /> Editar
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -410,6 +430,19 @@ export default function PlayerDetailPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
+                    <Label>Licencia federativa (RFEG)</Label>
+                    <Input
+                      placeholder="Ej. AM0012345"
+                      value={editForm.federationLicense}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          federationLicense: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label>Notas</Label>
                     <textarea
                       value={editForm.notes}
@@ -435,6 +468,11 @@ export default function PlayerDetailPage() {
                       icon={<Trophy className="h-4 w-4" />}
                       label="Hándicap"
                       value={player.handicap?.toString() || "Sin definir"}
+                    />
+                    <InfoRow
+                      icon={<Medal className="h-4 w-4" />}
+                      label="Licencia federativa"
+                      value={player.federationLicense || "Sin licencia"}
                     />
                     <InfoRow
                       icon={<Calendar className="h-4 w-4" />}
@@ -541,6 +579,7 @@ export default function PlayerDetailPage() {
                 </div>
               </CardContent>
             </Card>
+            <MembershipCard player={player} onChanged={fetchPlayer} />
             <ConsentCard player={player} onChanged={fetchPlayer} />
           </div>
         </div>
@@ -617,6 +656,7 @@ export default function PlayerDetailPage() {
             </div>
           </CardHeader>
           <CardContent>
+            <PacksSection player={player} onChanged={fetchPlayer} />
             <AddConsumptionForm playerId={id} onAdded={fetchPlayer} />
             {player.consumptions && player.consumptions.length > 0 ? (
               <div className="space-y-3">
@@ -1157,6 +1197,441 @@ function InfoRow({
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-sm font-medium">{value}</p>
       </div>
+    </div>
+  );
+}
+
+// --- Portal link button ---
+
+function PortalLinkButton({ playerId }: { playerId: string }) {
+  const [busy, setBusy] = useState(false);
+
+  const send = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/players/${playerId}/portal-link`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al generar el enlace");
+        return;
+      }
+      if (data.sent) {
+        toast.success(`Enlace del portal enviado por ${data.channel}`);
+      } else {
+        await navigator.clipboard.writeText(data.url).catch(() => {});
+        toast.info(
+          "El jugador no tiene canal de mensajería; enlace copiado al portapapeles"
+        );
+      }
+    } catch {
+      toast.error("Error al generar el enlace");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={send}
+      disabled={busy}
+      title="Genera y envía el enlace personal del portal del jugador"
+    >
+      {busy ? (
+        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+      ) : (
+        <Send className="h-4 w-4 mr-1" />
+      )}
+      Portal
+    </Button>
+  );
+}
+
+// --- Membership (Socio) card ---
+
+function MembershipCard({
+  player,
+  onChanged,
+}: {
+  player: any;
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const m = player.membership;
+  const [form, setForm] = useState({
+    type: m?.type || "INDIVIDUAL",
+    fee: m?.fee ?? "",
+    billingPeriod: m?.billingPeriod || "ANNUAL",
+    renewalDate: m?.renewalDate
+      ? new Date(m.renewalDate).toISOString().split("T")[0]
+      : "",
+    status: m?.status || "ACTIVE",
+  });
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/players/${player.id}/membership`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: form.type,
+          fee: form.fee === "" ? null : Number(form.fee),
+          billingPeriod: form.billingPeriod,
+          renewalDate: form.renewalDate,
+          status: form.status,
+          autoRenew: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al guardar la membresía");
+        return;
+      }
+      toast.success("Membresía guardada");
+      setEditing(false);
+      onChanged();
+    } catch {
+      toast.error("Error al guardar la membresía");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!confirm("¿Quitar la membresía? El jugador pasará a ser visitante.")) return;
+    setSaving(true);
+    try {
+      await fetch(`/api/players/${player.id}/membership`, { method: "DELETE" });
+      toast.success("Membresía eliminada");
+      setEditing(false);
+      onChanged();
+    } catch {
+      toast.error("Error al eliminar");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-2">
+        <p className="text-xs text-muted-foreground text-center">Membresía</p>
+        {!editing ? (
+          <>
+            {m ? (
+              <div className="text-center space-y-1">
+                <p
+                  className={`text-sm font-medium ${
+                    m.status === "ACTIVE" ? "text-emerald-600" : "text-amber-600"
+                  }`}
+                >
+                  Socio {MEMBERSHIP_TYPE_LABELS[m.type] || m.type}
+                  {m.status !== "ACTIVE" &&
+                    (m.status === "SUSPENDED" ? " (suspendida)" : " (cancelada)")}
+                </p>
+                {m.fee != null && (
+                  <p className="text-xs text-muted-foreground">
+                    {Number(m.fee).toFixed(2)}€{" "}
+                    {m.billingPeriod === "ANNUAL"
+                      ? "al año"
+                      : m.billingPeriod === "QUARTERLY"
+                        ? "al trimestre"
+                        : "al mes"}
+                  </p>
+                )}
+                {m.renewalDate && (
+                  <p className="text-xs text-muted-foreground">
+                    Renueva:{" "}
+                    {new Date(m.renewalDate).toLocaleDateString("es-ES", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-center text-muted-foreground">
+                Visitante (sin membresía)
+              </p>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => setEditing(true)}
+            >
+              {m ? "Editar membresía" : "Hacer socio"}
+            </Button>
+          </>
+        ) : (
+          <div className="space-y-2">
+            <select
+              value={form.type}
+              onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            >
+              {Object.entries(MEMBERSHIP_TYPE_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="Cuota €"
+                value={form.fee}
+                onChange={(e) => setForm((p) => ({ ...p, fee: e.target.value }))}
+              />
+              <select
+                value={form.billingPeriod}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, billingPeriod: e.target.value }))
+                }
+                className="flex h-10 rounded-md border border-input bg-background px-2 text-sm"
+              >
+                <option value="ANNUAL">Anual</option>
+                <option value="QUARTERLY">Trimestral</option>
+                <option value="MONTHLY">Mensual</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Próxima renovación</Label>
+              <Input
+                type="date"
+                value={form.renewalDate}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, renewalDate: e.target.value }))
+                }
+              />
+            </div>
+            <select
+              value={form.status}
+              onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="ACTIVE">Activa</option>
+              <option value="SUSPENDED">Suspendida</option>
+              <option value="CANCELLED">Cancelada</option>
+            </select>
+            <div className="flex gap-2">
+              <Button size="sm" className="flex-1" onClick={save} disabled={saving}>
+                {saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                Guardar
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setEditing(false)}
+                disabled={saving}
+              >
+                Cancelar
+              </Button>
+            </div>
+            {m && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full text-destructive hover:text-destructive"
+                onClick={remove}
+                disabled={saving}
+              >
+                Quitar membresía
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- Packs (Bonos) section ---
+
+function PacksSection({
+  player,
+  onChanged,
+}: {
+  player: any;
+  onChanged: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [busyPackId, setBusyPackId] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: "", totalUses: "10", price: "", expiresAt: "" });
+
+  const packs: any[] = player.packs || [];
+  const activePacks = packs.filter((p) => p.remainingUses > 0);
+
+  const sell = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/players/${player.id}/packs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          totalUses: Number(form.totalUses),
+          price: form.price === "" ? null : Number(form.price),
+          expiresAt: form.expiresAt,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al crear el bono");
+        return;
+      }
+      toast.success("Bono vendido");
+      setForm({ name: "", totalUses: "10", price: "", expiresAt: "" });
+      setOpen(false);
+      onChanged();
+    } catch {
+      toast.error("Error al crear el bono");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const registerPackUse = async (packId: string, name: string) => {
+    if (!confirm(`¿Registrar un uso del bono "${name}"?`)) return;
+    setBusyPackId(packId);
+    try {
+      const res = await fetch(
+        `/api/players/${player.id}/packs?packId=${packId}`,
+        { method: "PATCH" }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al usar el bono");
+        return;
+      }
+      toast.success(`Uso registrado (quedan ${data.remainingUses})`);
+      onChanged();
+    } catch {
+      toast.error("Error al usar el bono");
+    } finally {
+      setBusyPackId(null);
+    }
+  };
+
+  return (
+    <div className="mb-4 border rounded-lg p-4 bg-muted/10 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">
+          Bonos {activePacks.length > 0 && `(${activePacks.length} activos)`}
+        </p>
+        <Button variant="outline" size="sm" onClick={() => setOpen((v) => !v)}>
+          {open ? "Cancelar" : "Vender bono"}
+        </Button>
+      </div>
+
+      {open && (
+        <form onSubmit={sell} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="space-y-1 col-span-2 sm:col-span-1">
+            <Label className="text-xs">Nombre</Label>
+            <Input
+              placeholder="Bono 10 green fees"
+              value={form.name}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              required
+              disabled={saving}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Usos</Label>
+            <Input
+              type="number"
+              min={1}
+              max={100}
+              value={form.totalUses}
+              onChange={(e) => setForm((p) => ({ ...p, totalUses: e.target.value }))}
+              required
+              disabled={saving}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Precio (€)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="450.00"
+              value={form.price}
+              onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+              disabled={saving}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Caducidad</Label>
+            <Input
+              type="date"
+              value={form.expiresAt}
+              onChange={(e) => setForm((p) => ({ ...p, expiresAt: e.target.value }))}
+              disabled={saving}
+            />
+          </div>
+          <div className="col-span-2 sm:col-span-4">
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Vender bono
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {packs.length > 0 ? (
+        <div className="space-y-2">
+          {packs.map((pack) => {
+            const expired = pack.expiresAt && new Date(pack.expiresAt) < new Date();
+            const exhausted = pack.remainingUses <= 0;
+            return (
+              <div
+                key={pack.id}
+                className={`flex items-center justify-between gap-3 py-2 px-3 rounded-md border ${
+                  exhausted || expired ? "opacity-60" : "bg-background"
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{pack.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {pack.remainingUses}/{pack.totalUses} usos restantes
+                    {pack.expiresAt &&
+                      ` · caduca ${new Date(pack.expiresAt).toLocaleDateString("es-ES")}`}
+                    {expired && " (caducado)"}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => registerPackUse(pack.id, pack.name)}
+                  disabled={exhausted || !!expired || busyPackId === pack.id}
+                >
+                  {busyPackId === pack.id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    "Usar"
+                  )}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        !open && (
+          <p className="text-xs text-muted-foreground">
+            Sin bonos. Vende un bono de green fees o clases para fidelizar.
+          </p>
+        )
+      )}
     </div>
   );
 }

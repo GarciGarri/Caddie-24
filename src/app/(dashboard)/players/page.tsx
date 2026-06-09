@@ -45,6 +45,7 @@ interface Player {
   engagementLevel: string;
   preferredLanguage: string;
   tags: PlayerTag[];
+  membership?: { type: string; status: string } | null;
   _count: {
     visits: number;
     conversations: number;
@@ -114,6 +115,7 @@ function PlayersPageInner() {
   const [data, setData] = useState<PlayersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [engagementFilter, setEngagementFilter] = useState<string>("");
+  const [membersFilter, setMembersFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
@@ -146,6 +148,7 @@ function PlayersPageInner() {
       });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (engagementFilter) params.set("engagement", engagementFilter);
+      if (membersFilter) params.set("members", membersFilter);
 
       const res = await fetch(`/api/players?${params}`);
       if (!res.ok) throw new Error("Error fetching players");
@@ -156,7 +159,7 @@ function PlayersPageInner() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, engagementFilter]);
+  }, [page, debouncedSearch, engagementFilter, membersFilter]);
 
   useEffect(() => {
     fetchPlayers();
@@ -311,22 +314,45 @@ function PlayersPageInner() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-muted-foreground">Engagement:</span>
-          {["", "VIP", "HIGH", "MEDIUM", "LOW", "NEW"].map((level) => (
-            <Button
-              key={level}
-              variant={engagementFilter === level ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setEngagementFilter(level);
-                setPage(1);
-              }}
-              className="text-xs"
-            >
-              {level === "" ? "Todos" : engagementLabels[level] || level}
-            </Button>
-          ))}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground">Engagement:</span>
+            {["", "VIP", "HIGH", "MEDIUM", "LOW", "NEW"].map((level) => (
+              <Button
+                key={level}
+                variant={engagementFilter === level ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setEngagementFilter(level);
+                  setPage(1);
+                }}
+                className="text-xs"
+              >
+                {level === "" ? "Todos" : engagementLabels[level] || level}
+              </Button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground">Tipo:</span>
+            {[
+              { value: "", label: "Todos" },
+              { value: "1", label: "Socios" },
+              { value: "0", label: "Visitantes" },
+            ].map((opt) => (
+              <Button
+                key={opt.value}
+                variant={membersFilter === opt.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setMembersFilter(opt.value);
+                  setPage(1);
+                }}
+                className="text-xs"
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -398,8 +424,13 @@ function PlayersPageInner() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm font-medium">
+                          <p className="text-sm font-medium flex items-center gap-1.5">
                             {player.firstName} {player.lastName}
+                            {player.membership?.status === "ACTIVE" && (
+                              <span className="inline-flex items-center rounded px-1 text-[10px] font-medium bg-emerald-100 text-emerald-700">
+                                Socio
+                              </span>
+                            )}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {LANGUAGE_LABELS[player.preferredLanguage] || player.preferredLanguage}
@@ -547,6 +578,10 @@ const HEADER_ALIASES: Record<string, string> = {
   handicap: "handicap",
   "hándicap": "handicap",
   hcp: "handicap",
+  federationlicense: "federationLicense",
+  licencia: "federationLicense",
+  "licencia federativa": "federationLicense",
+  "nº licencia": "federationLicense",
   language: "language",
   idioma: "language",
   birthday: "birthday",
