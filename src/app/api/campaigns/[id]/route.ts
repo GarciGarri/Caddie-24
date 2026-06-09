@@ -72,7 +72,7 @@ export async function PUT(
       });
     }
 
-    // Only allow editing DRAFT campaigns
+    // Only DRAFT and SCHEDULED campaigns can be edited
     const existing = await prisma.campaign.findUnique({
       where: { id: params.id },
     });
@@ -81,9 +81,9 @@ export async function PUT(
       return NextResponse.json({ error: "Campaña no encontrada" }, { status: 404 });
     }
 
-    if (existing.status !== "DRAFT") {
+    if (existing.status !== "DRAFT" && existing.status !== "SCHEDULED") {
       return NextResponse.json(
-        { error: "Solo se pueden editar campañas en borrador" },
+        { error: "Solo se pueden editar campañas en borrador o programadas" },
         { status: 400 }
       );
     }
@@ -98,6 +98,23 @@ export async function PUT(
     }
     if (validated.templateName !== undefined) data.templateName = validated.templateName;
     if (validated.segmentQuery !== undefined) data.segmentQuery = validated.segmentQuery;
+    if (validated.scheduledAt !== undefined) {
+      if (validated.scheduledAt === null || validated.scheduledAt === "") {
+        // Unschedule: back to draft
+        data.scheduledAt = null;
+        data.status = "DRAFT";
+      } else {
+        const date = new Date(validated.scheduledAt);
+        if (date.getTime() <= Date.now()) {
+          return NextResponse.json(
+            { error: "La fecha de programación debe ser futura" },
+            { status: 400 }
+          );
+        }
+        data.scheduledAt = date;
+        data.status = "SCHEDULED";
+      }
+    }
 
     const campaign = await prisma.campaign.update({
       where: { id: params.id },

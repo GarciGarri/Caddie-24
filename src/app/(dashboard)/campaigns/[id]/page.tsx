@@ -78,7 +78,12 @@ export default function CampaignDetailPage() {
   };
 
   const handleSend = async () => {
-    if (!confirm("¿Enviar esta campaña ahora? (simulado)")) return;
+    if (
+      !confirm(
+        "¿Enviar esta campaña ahora? Se enviarán mensajes reales de WhatsApp a todos los destinatarios del segmento."
+      )
+    )
+      return;
     setSending(true);
     try {
       const res = await fetch(`/api/campaigns/${id}/send`, { method: "POST" });
@@ -88,6 +93,29 @@ export default function CampaignDetailPage() {
       } else {
         const data = await res.json();
         toast.error(data.error || "Error al enviar la campaña");
+      }
+    } catch (err) {
+      toast.error("Error de conexión");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleUnschedule = async () => {
+    if (!confirm("¿Cancelar la programación? La campaña volverá a borrador.")) return;
+    setSending(true);
+    try {
+      const res = await fetch(`/api/campaigns/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledAt: null }),
+      });
+      if (res.ok) {
+        toast.success("Programación cancelada");
+        fetchCampaign();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Error al cancelar la programación");
       }
     } catch (err) {
       toast.error("Error de conexión");
@@ -154,6 +182,27 @@ export default function CampaignDetailPage() {
             )}
             Enviar Ahora
           </Button>
+        )}
+        {campaign.status === "SCHEDULED" && (
+          <div className="flex items-center gap-3">
+            {campaign.scheduledAt && (
+              <p className="text-sm text-muted-foreground">
+                Programada para el{" "}
+                <span className="font-medium text-foreground">
+                  {new Date(campaign.scheduledAt).toLocaleString("es-ES", {
+                    day: "numeric",
+                    month: "long",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </p>
+            )}
+            <Button variant="outline" onClick={handleUnschedule} disabled={sending}>
+              {sending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Cancelar programación
+            </Button>
+          </div>
         )}
       </div>
 

@@ -90,6 +90,9 @@ export default function NewCampaignPage() {
   const [previewTotal, setPreviewTotal] = useState(0);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
+  // Scheduling (optional)
+  const [scheduledAt, setScheduledAt] = useState("");
+
   useEffect(() => {
     fetch("/api/templates?status=APPROVED")
       .then((r) => r.json())
@@ -209,6 +212,40 @@ export default function NewCampaignPage() {
         return;
       }
 
+      router.push(`/campaigns/${campaign.id}`);
+    } catch (err) {
+      setError("Error de conexión");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSchedule = async () => {
+    if (!scheduledAt) return;
+    const date = new Date(scheduledAt);
+    if (isNaN(date.getTime()) || date.getTime() <= Date.now()) {
+      setError("La fecha de programación debe ser futura");
+      return;
+    }
+    setSending(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          description,
+          templateName: selectedTemplate,
+          segmentQuery: buildSegment(),
+          scheduledAt: date.toISOString(),
+        }),
+      });
+      const campaign = await res.json();
+      if (!res.ok) {
+        setError(campaign.error || "Error al programar");
+        return;
+      }
       router.push(`/campaigns/${campaign.id}`);
     } catch (err) {
       setError("Error de conexión");
@@ -593,6 +630,45 @@ export default function NewCampaignPage() {
             </CardContent>
           </Card>
 
+          {/* Scheduling (optional) */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="scheduledAt" className="text-sm">
+                    Programar envío (opcional)
+                  </Label>
+                  <Input
+                    id="scheduledAt"
+                    type="datetime-local"
+                    value={scheduledAt}
+                    min={new Date(Date.now() + 5 * 60 * 1000)
+                      .toISOString()
+                      .slice(0, 16)}
+                    onChange={(e) => setScheduledAt(e.target.value)}
+                    className="w-56"
+                    disabled={loading || sending}
+                  />
+                </div>
+                {scheduledAt && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setScheduledAt("")}
+                    disabled={loading || sending}
+                  >
+                    Quitar programación
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Si programas la campaña, se enviará automáticamente a partir de la
+                fecha indicada. Si no, puedes enviarla ahora o guardarla como
+                borrador.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Actions */}
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={() => setStep(2)}>
@@ -611,17 +687,31 @@ export default function NewCampaignPage() {
                 )}
                 Guardar Borrador
               </Button>
-              <Button
-                onClick={handleSendNow}
-                disabled={loading || sending || previewTotal === 0}
-              >
-                {sending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4 mr-2" />
-                )}
-                Enviar Ahora ({previewTotal})
-              </Button>
+              {scheduledAt ? (
+                <Button
+                  onClick={handleSchedule}
+                  disabled={loading || sending || previewTotal === 0}
+                >
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  Programar ({previewTotal})
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSendNow}
+                  disabled={loading || sending || previewTotal === 0}
+                >
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  Enviar Ahora ({previewTotal})
+                </Button>
+              )}
             </div>
           </div>
         </div>

@@ -22,6 +22,11 @@ export const createCampaignSchema = z.object({
   description: z.string().max(2000).optional().or(z.literal("")),
   templateName: z.string().min(1, "Selecciona un template"),
   segmentQuery: segmentQuerySchema,
+  scheduledAt: z
+    .string()
+    .datetime({ offset: true, message: "Fecha de programación inválida" })
+    .nullable()
+    .optional(),
 });
 
 export const updateCampaignSchema = createCampaignSchema.partial();
