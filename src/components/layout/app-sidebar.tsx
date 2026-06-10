@@ -17,6 +17,7 @@ import {
   CloudSun,
   BookOpen,
   Presentation,
+  CalendarCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { useState, useEffect } from "react";
 
 const navItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Reservas", href: "/bookings", icon: CalendarCheck },
   { title: "Jugadores", href: "/players", icon: Users },
   { title: "Bandeja de Entrada", href: "/inbox", icon: MessageSquare },
   { title: "Campañas", href: "/campaigns", icon: Megaphone },

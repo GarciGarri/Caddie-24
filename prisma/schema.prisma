@@ -91,7 +91,11 @@ model Player {
   email               String?         @unique
   phone               String          @unique
   whatsappId          String?         @unique
+  telegramChatId      String?         @unique
+  facebookPsid        String?         @unique
+  instagramId         String?         @unique
   handicap            Float?
+  federationLicense   String?
   birthday            DateTime?
   preferredLanguage   Language        @default(ES)
   avatarUrl           String?
@@ -116,12 +120,156 @@ model Player {
   engagementEvents        EngagementEvent[]
   tournamentRegistrations TournamentRegistration[]
   tournamentResults       TournamentResult[]
+  membership              Membership?
+  packs                   PlayerPack[]
+  bookings                Booking[]
+  journeyLogs             JourneyLog[]
 
   @@index([phone])
   @@index([whatsappId])
   @@index([lastName, firstName])
   @@index([engagementLevel])
   @@map("players")
+}
+
+// ============================================================
+// MEMBERSHIPS (Socios)
+// ============================================================
+
+model Membership {
+  id            String           @id @default(cuid())
+  playerId      String           @unique
+  type          MembershipType   @default(INDIVIDUAL)
+  fee           Decimal?         @db.Decimal(10, 2)
+  billingPeriod BillingPeriod    @default(ANNUAL)
+  startDate     DateTime?
+  renewalDate   DateTime?
+  status        MembershipStatus @default(ACTIVE)
+  autoRenew     Boolean          @default(true)
+  notes         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([renewalDate])
+  @@index([status])
+  @@map("memberships")
+}
+
+enum MembershipType {
+  INDIVIDUAL
+  FAMILIAR
+  JOVEN
+  SENIOR
+  SEMANA
+  CORPORATIVO
+  HONORIFICO
+  OTRO
+}
+
+enum BillingPeriod {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+// ============================================================
+// PACKS (Bonos de green fees / clases)
+// ============================================================
+
+model PlayerPack {
+  id            String    @id @default(cuid())
+  playerId      String
+  name          String
+  totalUses     Int
+  remainingUses Int
+  price         Decimal?  @db.Decimal(10, 2)
+  purchasedAt   DateTime  @default(now())
+  expiresAt     DateTime?
+  notes         String?
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@map("player_packs")
+}
+
+// ============================================================
+// BOOKINGS (Tee sheet ligero)
+// ============================================================
+
+model Booking {
+  id             String        @id @default(cuid())
+  playerId       String
+  date           DateTime      @db.Date
+  teeTime        String // "09:10"
+  playersCount   Int           @default(1)
+  holes          Int           @default(18)
+  buggy          Boolean       @default(false)
+  status         BookingStatus @default(CONFIRMED)
+  source         String        @default("manual") // manual | whatsapp | telegram | portal
+  notes          String?
+  reminderSentAt DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([date, teeTime])
+  @@index([playerId])
+  @@index([status])
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+}
+
+// ============================================================
+// COURSE DAILY STATUS (Estado del campo)
+// ============================================================
+
+model CourseDailyStatus {
+  id              String   @id @default(cuid())
+  date            DateTime @unique @db.Date
+  buggiesAllowed  Boolean  @default(true)
+  trolleysAllowed Boolean  @default(true)
+  greensStatus    String? // normales | invierno | pinchados
+  holesClosed     String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("course_daily_status")
+}
+
+// ============================================================
+// JOURNEY LOGS (Automatizaciones de ciclo de vida)
+// ============================================================
+
+model JourneyLog {
+  id        String   @id @default(cuid())
+  playerId  String
+  type      String // birthday | welcome | winback | renewal | post_visit | booking_reminder
+  dedupeKey String // e.g. "2026" for birthday, booking id for reminders
+  channel   String?
+  sentAt    DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, type, dedupeKey])
+  @@index([type, sentAt])
+  @@map("journey_logs")
 }
 
 enum Language {
@@ -366,12 +514,15 @@ model InternalNote {
 // ============================================================
 
 model Campaign {
-  id              String         @id @default(cuid())
+  id              String          @id @default(cuid())
   name            String
-  description     String?        @db.Text
-  status          CampaignStatus @default(DRAFT)
+  description     String?         @db.Text
+  status          CampaignStatus  @default(DRAFT)
+  channel         CampaignChannel @default(WHATSAPP)
   createdById     String
   templateName    String
+  messageBody     String?         @db.Text // free-text body for TELEGRAM / EMAIL channels
+  emailSubject    String?
   segmentQuery    Json
   scheduledAt     DateTime?
   sentAt          DateTime?
@@ -409,6 +560,12 @@ enum CampaignStatus {
   ANALYZING
   COMPLETED
   CANCELLED
+}
+
+enum CampaignChannel {
+  WHATSAPP
+  TELEGRAM
+  EMAIL
 }
 
 model CampaignRecipient {
@@ -468,6 +625,22 @@ model ClubSettings {
   whatsappBusinessAccountId String?
   whatsappAccessToken       String?         @db.Text
   webhookVerifyToken        String?
+
+  // Omnichannel
+  telegramBotToken          String?
+  telegramWebhookSecret     String?
+  metaPageAccessToken       String?         @db.Text // Messenger + Instagram DMs
+  metaWebhookVerifyToken    String?
+  resendApiKey              String?
+  emailFromAddress          String?
+  emailFromName             String?
+
+  // Bookings (tee sheet)
+  bookingIntervalMinutes    Int?            @default(10)
+  bookingSlotCapacity       Int?            @default(4)
+
+  // Lifecycle journeys configuration (toggles + custom messages)
+  journeysConfig            Json?
 
   voiceTone                 String?         @db.Text
   voiceValues               String?         @db.Text
@@ -627,6 +800,9 @@ model TournamentRegistration {
   paymentStatus   PaymentStatus        @default(PENDING)
   waitlistPosition Int?
   handicapAtRegistration Float?
+  teeTime         String? // start list: "09:10"
+  startHole       Int? // shotgun starts
+  groupNumber     Int?
   registeredAt    DateTime             @default(now())
   cancelledAt     DateTime?
 

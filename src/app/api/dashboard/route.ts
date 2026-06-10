@@ -2,6 +2,24 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isDemoMode, getDemoDashboardData } from "@/lib/services/demo-data";
+import { runDailyJourneys } from "@/lib/services/journeys";
+import { sendBookingReminders } from "@/lib/services/bookings";
+import { processDueScheduledCampaigns } from "@/lib/services/campaign-sender";
+
+// Opportunistic daily processing: journeys/reminders are idempotent
+// (JourneyLog dedupe), so firing them when staff opens the dashboard
+// keeps automations alive even without cron. Throttled per instance.
+let lastOpportunisticRun = 0;
+function runOpportunisticDaily() {
+  const now = Date.now();
+  if (now - lastOpportunisticRun < 10 * 60 * 1000) return;
+  lastOpportunisticRun = now;
+  Promise.allSettled([
+    processDueScheduledCampaigns(),
+    runDailyJourneys(),
+    sendBookingReminders(),
+  ]).catch(() => {});
+}
 
 // GET /api/dashboard — Dashboard KPIs
 export async function GET() {
@@ -18,6 +36,8 @@ export async function GET() {
     if (await isDemoMode()) {
       return NextResponse.json(getDemoDashboardData());
     }
+
+    runOpportunisticDaily();
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

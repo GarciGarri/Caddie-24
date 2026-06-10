@@ -11,6 +11,7 @@ export const createPlayerSchema = z.object({
   handicap: z.coerce.number().min(0).max(54).optional().or(z.literal("")),
   birthday: z.string().optional().or(z.literal("")),
   preferredLanguage: z.enum(["ES", "EN", "DE", "FR"]).default("ES"),
+  federationLicense: z.string().max(50).optional().or(z.literal("")),
   notes: z.string().max(2000).optional().or(z.literal("")),
 });
 

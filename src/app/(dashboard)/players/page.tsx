@@ -8,20 +8,20 @@ import {
   Plus,
   Search,
   Filter,
-  MoreHorizontal,
   Phone,
   Mail,
-  Trophy,
   ChevronLeft,
   ChevronRight,
   Loader2,
   Trash2,
   Eye,
-  Pencil,
   Download,
   Upload,
   FileText,
   X,
+  Crown,
+  UserRound,
+  CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,8 @@ interface Player {
   engagementLevel: string;
   preferredLanguage: string;
   tags: PlayerTag[];
+  membership?: { type: string; status: string; renewalDate: string | null } | null;
+  lastVisitAt?: string | null;
   _count: {
     visits: number;
     conversations: number;
@@ -64,6 +66,9 @@ interface PlayersResponse {
     vipCount: number;
     highCount: number;
     newCount: number;
+    memberCount: number;
+    visitorCount: number;
+    upcomingRenewals: number;
   };
 }
 
@@ -90,6 +95,38 @@ const LANGUAGE_LABELS: Record<string, string> = {
   FR: "Français",
 };
 
+const MEMBERSHIP_TYPE_LABELS: Record<string, string> = {
+  INDIVIDUAL: "Individual",
+  FAMILIAR: "Familiar",
+  JOVEN: "Joven",
+  SENIOR: "Senior",
+  SEMANA: "De semana",
+  CORPORATIVO: "Corporativo",
+  HONORIFICO: "Honorífico",
+  OTRO: "Socio",
+};
+
+function formatRelativeDate(iso: string | null | undefined): string {
+  if (!iso) return "Sin visitas";
+  const d = new Date(iso);
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (days <= 0) return "Hoy";
+  if (days === 1) return "Ayer";
+  if (days < 30) return `Hace ${days} días`;
+  if (days < 60) return "Hace 1 mes";
+  if (days < 365) return `Hace ${Math.floor(days / 30)} meses`;
+  return d.toLocaleDateString("es-ES", { month: "short", year: "numeric" });
+}
+
+function renewalInfo(iso: string | null | undefined): { label: string; soon: boolean } | null {
+  if (!iso) return null;
+  const days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+  if (days < 0) return { label: "Vencida", soon: true };
+  if (days === 0) return { label: "Renueva hoy", soon: true };
+  if (days <= 30) return { label: `Renueva en ${days}d`, soon: true };
+  return { label: `Renueva ${new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}`, soon: false };
+}
+
 function formatPhone(phone: string): string {
   if (!phone) return "";
   const clean = phone.replace(/\s/g, "");
@@ -105,6 +142,40 @@ function formatPhone(phone: string): string {
   return phone;
 }
 
+function KpiCard({
+  icon,
+  bg,
+  value,
+  label,
+  active,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  bg: string;
+  value: number;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button onClick={onClick} className="text-left">
+      <Card
+        className={`transition-colors hover:bg-muted/40 ${
+          active ? "border-primary ring-1 ring-primary/30" : ""
+        }`}
+      >
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className={`rounded-full p-2 ${bg}`}>{icon}</div>
+          <div>
+            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </button>
+  );
+}
+
 function PlayersPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -114,6 +185,11 @@ function PlayersPageInner() {
   const [data, setData] = useState<PlayersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [engagementFilter, setEngagementFilter] = useState<string>("");
+  const [languageFilter, setLanguageFilter] = useState<string>("");
+  const [membershipTypeFilter, setMembershipTypeFilter] = useState<string>("");
+  const [renewingFilter, setRenewingFilter] = useState(false);
+  // tab: "" all · "1" socios · "0" visitantes
+  const [tab, setTab] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
@@ -124,6 +200,8 @@ function PlayersPageInner() {
     if (q !== null) setSearch(q);
     const eng = searchParams.get("engagement");
     if (eng !== null) setEngagementFilter(eng);
+    const members = searchParams.get("members");
+    if (members !== null) setTab(members);
   }, [searchParams]);
 
   // Debounce search
@@ -134,6 +212,19 @@ function PlayersPageInner() {
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Reset page when any filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [tab, engagementFilter, languageFilter, membershipTypeFilter, renewingFilter]);
+
+  // Leaving the socios tab clears socio-only filters
+  useEffect(() => {
+    if (tab !== "1") {
+      setMembershipTypeFilter("");
+      setRenewingFilter(false);
+    }
+  }, [tab]);
 
   const fetchPlayers = useCallback(async () => {
     setLoading(true);
@@ -146,6 +237,10 @@ function PlayersPageInner() {
       });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (engagementFilter) params.set("engagement", engagementFilter);
+      if (languageFilter) params.set("language", languageFilter);
+      if (tab) params.set("members", tab);
+      if (membershipTypeFilter) params.set("membershipType", membershipTypeFilter);
+      if (renewingFilter) params.set("renewing", "1");
 
       const res = await fetch(`/api/players?${params}`);
       if (!res.ok) throw new Error("Error fetching players");
@@ -156,7 +251,7 @@ function PlayersPageInner() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, engagementFilter]);
+  }, [page, debouncedSearch, engagementFilter, languageFilter, tab, membershipTypeFilter, renewingFilter]);
 
   useEffect(() => {
     fetchPlayers();
@@ -183,9 +278,6 @@ function PlayersPageInner() {
 
   const players = data?.players || [];
   const pagination = data?.pagination;
-
-  // Count stats from pagination total (all active) + filter locally for quick stats
-  const totalCount = pagination?.total || 0;
 
   return (
     <div className="space-y-6">
@@ -230,58 +322,71 @@ function PlayersPageInner() {
         />
       )}
 
-      {/* Stats row */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-full bg-primary/10 p-2">
-              <Users className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{totalCount}</p>
-              <p className="text-xs text-muted-foreground">Total Activos</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-full bg-purple-100 p-2">
-              <Trophy className="h-4 w-4 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {data?.stats?.vipCount ?? 0}
-              </p>
-              <p className="text-xs text-muted-foreground">VIP</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-full bg-green-100 p-2">
-              <Users className="h-4 w-4 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {data?.stats?.highCount ?? 0}
-              </p>
-              <p className="text-xs text-muted-foreground">Alto Engagement</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-full bg-gray-100 p-2">
-              <Users className="h-4 w-4 text-gray-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {data?.stats?.newCount ?? 0}
-              </p>
-              <p className="text-xs text-muted-foreground">Nuevos este mes</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI cards — clicables */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          icon={<Users className="h-4 w-4 text-primary" />}
+          bg="bg-primary/10"
+          value={data?.stats ? data.stats.memberCount + data.stats.visitorCount : 0}
+          label="Total activos"
+          active={tab === ""}
+          onClick={() => setTab("")}
+        />
+        <KpiCard
+          icon={<Crown className="h-4 w-4 text-emerald-600" />}
+          bg="bg-emerald-100"
+          value={data?.stats?.memberCount ?? 0}
+          label="Socios"
+          active={tab === "1" && !renewingFilter}
+          onClick={() => {
+            setTab("1");
+            setRenewingFilter(false);
+          }}
+        />
+        <KpiCard
+          icon={<UserRound className="h-4 w-4 text-blue-600" />}
+          bg="bg-blue-100"
+          value={data?.stats?.visitorCount ?? 0}
+          label="Visitantes"
+          active={tab === "0"}
+          onClick={() => setTab("0")}
+        />
+        <KpiCard
+          icon={<CalendarClock className="h-4 w-4 text-amber-600" />}
+          bg="bg-amber-100"
+          value={data?.stats?.upcomingRenewals ?? 0}
+          label="Renuevan (30 días)"
+          active={tab === "1" && renewingFilter}
+          onClick={() => {
+            setTab("1");
+            setRenewingFilter(true);
+          }}
+        />
+      </div>
+
+      {/* Segmentation tabs */}
+      <div className="flex items-center gap-1 border-b">
+        {[
+          { value: "", label: "Todos", icon: Users },
+          { value: "1", label: "Socios", icon: Crown },
+          { value: "0", label: "Visitantes", icon: UserRound },
+        ].map((t) => {
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.value}
+              onClick={() => setTab(t.value)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                tab === t.value
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Search & filter bar */}
@@ -303,7 +408,7 @@ function PlayersPageInner() {
         >
           <Filter className="h-4 w-4 mr-2" />
           Filtros
-          {engagementFilter && (
+          {(engagementFilter || languageFilter || membershipTypeFilter) && (
             <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />
           )}
         </Button>
@@ -311,22 +416,51 @@ function PlayersPageInner() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-muted-foreground">Engagement:</span>
-          {["", "VIP", "HIGH", "MEDIUM", "LOW", "NEW"].map((level) => (
-            <Button
-              key={level}
-              variant={engagementFilter === level ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setEngagementFilter(level);
-                setPage(1);
-              }}
-              className="text-xs"
-            >
-              {level === "" ? "Todos" : engagementLabels[level] || level}
-            </Button>
-          ))}
+        <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground w-24 shrink-0">Engagement</span>
+            {["", "VIP", "HIGH", "MEDIUM", "LOW", "NEW"].map((level) => (
+              <Button
+                key={level}
+                variant={engagementFilter === level ? "default" : "outline"}
+                size="sm"
+                onClick={() => setEngagementFilter(level)}
+                className="text-xs"
+              >
+                {level === "" ? "Todos" : engagementLabels[level] || level}
+              </Button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground w-24 shrink-0">Idioma</span>
+            {["", "ES", "EN", "DE", "FR"].map((lang) => (
+              <Button
+                key={lang}
+                variant={languageFilter === lang ? "default" : "outline"}
+                size="sm"
+                onClick={() => setLanguageFilter(lang)}
+                className="text-xs"
+              >
+                {lang === "" ? "Todos" : LANGUAGE_LABELS[lang] || lang}
+              </Button>
+            ))}
+          </div>
+          {tab === "1" && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground w-24 shrink-0">Tipo de socio</span>
+              {["", ...Object.keys(MEMBERSHIP_TYPE_LABELS)].map((mt) => (
+                <Button
+                  key={mt}
+                  variant={membershipTypeFilter === mt ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMembershipTypeFilter(mt)}
+                  className="text-xs"
+                >
+                  {mt === "" ? "Todos" : MEMBERSHIP_TYPE_LABELS[mt]}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -339,6 +473,9 @@ function PlayersPageInner() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Jugador
                 </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Tipo
+                </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden md:table-cell">
                   Contacto
                 </th>
@@ -348,11 +485,11 @@ function PlayersPageInner() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Engagement
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">
-                  Etiquetas
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden md:table-cell">
+                  Última visita
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">
-                  Visitas
+                  Etiquetas
                 </th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Acciones
@@ -362,7 +499,7 @@ function PlayersPageInner() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center">
+                  <td colSpan={8} className="px-4 py-12 text-center">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                     <p className="text-sm text-muted-foreground mt-2">
                       Cargando jugadores...
@@ -371,10 +508,10 @@ function PlayersPageInner() {
                 </tr>
               ) : players.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center">
+                  <td colSpan={8} className="px-4 py-12 text-center">
                     <Users className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
                     <p className="text-sm text-muted-foreground">
-                      {debouncedSearch || engagementFilter
+                      {debouncedSearch || engagementFilter || languageFilter || tab || membershipTypeFilter || renewingFilter
                         ? "No se encontraron jugadores con esos filtros"
                         : "No hay jugadores aún. ¡Crea el primero!"}
                     </p>
@@ -407,6 +544,31 @@ function PlayersPageInner() {
                         </div>
                       </Link>
                     </td>
+                    <td className="px-4 py-3">
+                      {player.membership?.status === "ACTIVE" ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800 w-fit">
+                            <Crown className="h-3 w-3" />
+                            {MEMBERSHIP_TYPE_LABELS[player.membership.type] || "Socio"}
+                          </span>
+                          {(() => {
+                            const r = renewalInfo(player.membership.renewalDate);
+                            return r ? (
+                              <span
+                                className={`text-[10px] ${r.soon ? "text-amber-600 font-medium" : "text-muted-foreground"}`}
+                              >
+                                {r.label}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 w-fit">
+                          <UserRound className="h-3 w-3" />
+                          Visitante
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5 text-sm">
@@ -434,9 +596,19 @@ function PlayersPageInner() {
                           player.engagementLevel}
                       </span>
                     </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className="text-sm text-muted-foreground">
+                        {formatRelativeDate(player.lastVisitAt)}
+                      </span>
+                      {player._count.visits > 0 && (
+                        <span className="block text-[10px] text-muted-foreground/70">
+                          {player._count.visits} visita{player._count.visits === 1 ? "" : "s"}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
                       <div className="flex gap-1 flex-wrap">
-                        {player.tags.map((tag) => (
+                        {player.tags.slice(0, 3).map((tag) => (
                           <Badge
                             key={tag.id}
                             variant="secondary"
@@ -445,10 +617,12 @@ function PlayersPageInner() {
                             {tag.tag}
                           </Badge>
                         ))}
+                        {player.tags.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{player.tags.length - 3}
+                          </Badge>
+                        )}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground hidden lg:table-cell">
-                      {player._count.visits}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
@@ -547,6 +721,10 @@ const HEADER_ALIASES: Record<string, string> = {
   handicap: "handicap",
   "hándicap": "handicap",
   hcp: "handicap",
+  federationlicense: "federationLicense",
+  licencia: "federationLicense",
+  "licencia federativa": "federationLicense",
+  "nº licencia": "federationLicense",
   language: "language",
   idioma: "language",
   birthday: "birthday",

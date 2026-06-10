@@ -25,6 +25,10 @@ export async function GET(request: NextRequest) {
           limit: parseInt(searchParams.get("limit") || "50"),
           search: searchParams.get("search") || "",
           engagement: searchParams.get("engagement") || undefined,
+          language: searchParams.get("language") || undefined,
+          members: searchParams.get("members") || undefined,
+          membershipType: searchParams.get("membershipType") || undefined,
+          renewing: searchParams.get("renewing") || undefined,
         })
       );
     }
@@ -41,8 +45,24 @@ export async function GET(request: NextRequest) {
       : "asc";
     const engagement = searchParams.get("engagement");
     const language = searchParams.get("language");
+    const membersParam = searchParams.get("members"); // "1" socios, "0" visitantes
+    const membershipType = searchParams.get("membershipType"); // INDIVIDUAL, FAMILIAR...
+    const renewingParam = searchParams.get("renewing"); // "1" socios que renuevan <30 días
 
     const where: any = { isActive: true };
+
+    const now = new Date();
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    if (membersParam === "1" || membershipType || renewingParam === "1") {
+      where.membership = { is: { status: "ACTIVE" } };
+      if (membershipType) where.membership.is.type = membershipType;
+      if (renewingParam === "1") {
+        where.membership.is.renewalDate = { gte: now, lte: in30Days };
+      }
+    } else if (membersParam === "0") {
+      where.membership = null;
+    }
 
     // Search by name, phone, or email
     if (search) {
@@ -64,11 +84,25 @@ export async function GET(request: NextRequest) {
       where.preferredLanguage = language;
     }
 
-    const [players, total, vipCount, highCount, newCount] = await Promise.all([
+    const baseActive = { isActive: true };
+    const activeMember = { is: { status: "ACTIVE" as const } };
+
+    const [
+      players,
+      total,
+      vipCount,
+      highCount,
+      newCount,
+      memberCount,
+      visitorCount,
+      upcomingRenewals,
+    ] = await Promise.all([
       prisma.player.findMany({
         where,
         include: {
           tags: true,
+          membership: { select: { type: true, status: true, renewalDate: true } },
+          visits: { select: { date: true }, orderBy: { date: "desc" }, take: 1 },
           _count: {
             select: {
               visits: true,
@@ -81,28 +115,49 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.player.count({ where }),
-      prisma.player.count({ where: { isActive: true, engagementLevel: "VIP" } }),
-      prisma.player.count({ where: { isActive: true, engagementLevel: "HIGH" } }),
+      prisma.player.count({ where: { ...baseActive, engagementLevel: "VIP" } }),
+      prisma.player.count({ where: { ...baseActive, engagementLevel: "HIGH" } }),
       prisma.player.count({
         where: {
-          isActive: true,
+          ...baseActive,
           engagementLevel: { in: ["NEW"] },
           createdAt: {
-            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+            gte: new Date(now.getFullYear(), now.getMonth(), 1),
           },
+        },
+      }),
+      prisma.player.count({ where: { ...baseActive, membership: activeMember } }),
+      prisma.player.count({ where: { ...baseActive, membership: null } }),
+      prisma.player.count({
+        where: {
+          ...baseActive,
+          membership: { is: { status: "ACTIVE", renewalDate: { gte: now, lte: in30Days } } },
         },
       }),
     ]);
 
+    // Flatten the latest visit date for the table
+    const playersOut = players.map((p) => {
+      const { visits, ...rest } = p as any;
+      return { ...rest, lastVisitAt: visits?.[0]?.date || null };
+    });
+
     return NextResponse.json({
-      players,
+      players: playersOut,
       pagination: {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
       },
-      stats: { vipCount, highCount, newCount },
+      stats: {
+        vipCount,
+        highCount,
+        newCount,
+        memberCount,
+        visitorCount,
+        upcomingRenewals,
+      },
     });
   } catch (error) {
     console.error("Error fetching players:", error);
@@ -142,6 +197,8 @@ export async function POST(request: NextRequest) {
     if (validated.birthday && validated.birthday !== "")
       data.birthday = new Date(validated.birthday);
     if (validated.notes && validated.notes !== "") data.notes = validated.notes;
+    if (validated.federationLicense && validated.federationLicense !== "")
+      data.federationLicense = validated.federationLicense;
 
     const player = await prisma.player.create({
       data,

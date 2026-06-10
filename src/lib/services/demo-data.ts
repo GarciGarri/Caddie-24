@@ -534,10 +534,51 @@ export function getDemoDashboardData() {
   };
 }
 
-export function getDemoPlayersData(params: { page?: number; limit?: number; search?: string; engagement?: string }) {
-  const { page = 1, limit = 50, search = "", engagement } = params;
+// Derive a realistic membership + last visit for each demo player so the
+// socio/visitante differentiation works in demo mode without a DB.
+const DEMO_MEMBERSHIP_TYPES = ["INDIVIDUAL", "FAMILIAR", "SENIOR", "JOVEN", "SEMANA"] as const;
 
-  let filtered = [...DEMO_PLAYERS];
+function demoMembershipFor(p: any): { type: string; status: string; renewalDate: string } | null {
+  const isMember =
+    p.tags?.some((t: any) => t.tag === "socio_premium") ||
+    p.engagementLevel === "VIP" ||
+    (p.engagementLevel === "HIGH" && p._count.visits > 35);
+  if (!isMember) return null;
+  // Stable pseudo-assignment from the id so it doesn't change between calls
+  const seed = parseInt(p.id.replace(/\D/g, "") || "0", 10);
+  const type = DEMO_MEMBERSHIP_TYPES[seed % DEMO_MEMBERSHIP_TYPES.length];
+  // Spread renewals across the next ~120 days; some within 30 (renewing soon)
+  const daysAhead = (seed * 17) % 120;
+  const renewalDate = new Date(Date.now() + daysAhead * 86400000).toISOString();
+  return { type, status: "ACTIVE", renewalDate };
+}
+
+function demoLastVisit(p: any): string | null {
+  if (!p._count.visits) return null;
+  const seed = parseInt(p.id.replace(/\D/g, "") || "0", 10);
+  const daysAgo = (seed * 7) % 90; // 0–90 días
+  return new Date(Date.now() - daysAgo * 86400000).toISOString();
+}
+
+const DEMO_PLAYERS_ENRICHED = DEMO_PLAYERS.map((p) => ({
+  ...p,
+  membership: demoMembershipFor(p),
+  lastVisitAt: demoLastVisit(p),
+}));
+
+export function getDemoPlayersData(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  engagement?: string;
+  language?: string;
+  members?: string;
+  membershipType?: string;
+  renewing?: string;
+}) {
+  const { page = 1, limit = 50, search = "", engagement, language, members, membershipType, renewing } = params;
+
+  let filtered = [...DEMO_PLAYERS_ENRICHED];
 
   if (search) {
     const s = search.toLowerCase();
@@ -554,16 +595,36 @@ export function getDemoPlayersData(params: { page?: number; limit?: number; sear
     filtered = filtered.filter((p) => p.engagementLevel === engagement);
   }
 
+  if (language) {
+    filtered = filtered.filter((p) => p.preferredLanguage === language);
+  }
+
+  if (members === "1") filtered = filtered.filter((p) => p.membership);
+  if (members === "0") filtered = filtered.filter((p) => !p.membership);
+  if (membershipType) filtered = filtered.filter((p) => p.membership?.type === membershipType);
+  if (renewing === "1") {
+    const in30 = Date.now() + 30 * 86400000;
+    filtered = filtered.filter(
+      (p) => p.membership && new Date(p.membership.renewalDate).getTime() <= in30
+    );
+  }
+
   const total = filtered.length;
   const paged = filtered.slice((page - 1) * limit, page * limit);
 
+  const members30 = Date.now() + 30 * 86400000;
   return {
     players: paged,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     stats: {
-      vipCount: DEMO_PLAYERS.filter((p) => p.engagementLevel === "VIP").length,
-      highCount: DEMO_PLAYERS.filter((p) => p.engagementLevel === "HIGH").length,
-      newCount: DEMO_PLAYERS.filter((p) => p.engagementLevel === "NEW").length,
+      vipCount: DEMO_PLAYERS_ENRICHED.filter((p) => p.engagementLevel === "VIP").length,
+      highCount: DEMO_PLAYERS_ENRICHED.filter((p) => p.engagementLevel === "HIGH").length,
+      newCount: DEMO_PLAYERS_ENRICHED.filter((p) => p.engagementLevel === "NEW").length,
+      memberCount: DEMO_PLAYERS_ENRICHED.filter((p) => p.membership).length,
+      visitorCount: DEMO_PLAYERS_ENRICHED.filter((p) => !p.membership).length,
+      upcomingRenewals: DEMO_PLAYERS_ENRICHED.filter(
+        (p) => p.membership && new Date(p.membership.renewalDate).getTime() <= members30
+      ).length,
     },
   };
 }

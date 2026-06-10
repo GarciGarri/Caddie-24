@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
-import { sendTextMessage } from "@/lib/services/whatsapp";
+import { sendToConversation } from "@/lib/services/channels";
 import { createNotificationForAllAdmins } from "@/lib/services/notifications";
 
 // --- Types ---
@@ -25,6 +25,8 @@ interface ClubPublicInfo {
   voiceValues: string | null;
   voiceStyle: string | null;
   voiceExamples: unknown;
+  availabilitySummary: string;
+  courseStatusSummary: string;
   activeTournaments: Array<{
     name: string;
     date: string;
@@ -82,6 +84,15 @@ async function fetchClubPublicInfo(): Promise<ClubPublicInfo> {
     take: 5,
   });
 
+  // Real operational data so the bot doesn't have to guess
+  const { buildAvailabilitySummary, buildCourseStatusSummary } = await import(
+    "@/lib/services/bookings"
+  );
+  const [availabilitySummary, courseStatusSummary] = await Promise.all([
+    buildAvailabilitySummary(),
+    buildCourseStatusSummary(),
+  ]);
+
   return {
     clubName: settings?.clubName || "el club",
     openTime: settings?.fieldOpenTime || null,
@@ -90,6 +101,8 @@ async function fetchClubPublicInfo(): Promise<ClubPublicInfo> {
     voiceValues: settings?.voiceValues || null,
     voiceStyle: settings?.voiceStyle || null,
     voiceExamples: settings?.voiceExamples || null,
+    availabilitySummary,
+    courseStatusSummary,
     activeTournaments: activeTournaments.map((t) => ({
       name: t.name,
       date: t.date.toLocaleDateString("es-ES", {
@@ -146,6 +159,7 @@ REGLAS IMPORTANTES:
 - Sé amable pero directo. No uses lenguaje corporativo excesivo.
 - Si no sabes algo con certeza, di que consultarás con el equipo y les responderán pronto.
 - NUNCA inventes datos de precios, horarios o disponibilidad si no los tienes.
+- Para reservar una salida en firme, di que el equipo confirmará la reserva enseguida (tú no puedes confirmarla).
 - Si la consulta es compleja (reclamaciones, cancelaciones, problemas técnicos), indica que un miembro del equipo les atenderá personalmente.
 ${langInstruction}
 ${voiceInstructions}
@@ -153,6 +167,8 @@ ${voiceInstructions}
 INFORMACIÓN DEL CLUB:
 - Nombre: ${club.clubName}
 ${club.openTime ? `- Horario: ${club.openTime} - ${club.closeTime}` : ""}
+${club.availabilitySummary ? `\nDISPONIBILIDAD REAL DE SALIDAS:\n${club.availabilitySummary}` : ""}
+${club.courseStatusSummary ? `\nESTADO DEL CAMPO HOY: ${club.courseStatusSummary}` : ""}
 ${tournamentInfo}
 
 INFORMACIÓN DEL CLIENTE:
@@ -424,7 +440,6 @@ export async function triggerAutoReply(
   messageContent: string,
   playerId: string,
   inboundMessageId: string,
-  playerPhone: string,
   messageType: string
 ): Promise<void> {
   // Only auto-reply to text messages
@@ -519,7 +534,7 @@ export async function triggerAutoReply(
     case "SEMI_AUTO": {
       if (isSimpleMessage(messageContent)) {
         // Auto-send for simple messages
-        await autoSendReply(conversationId, playerPhone);
+        await autoSendReply(conversationId);
         console.log(`[AutoReply] SEMI_AUTO: Auto-sent (simple message)`);
       } else {
         // Generate draft for complex messages
@@ -534,47 +549,21 @@ export async function triggerAutoReply(
     }
 
     case "FULL_AUTO": {
-      await autoSendReply(conversationId, playerPhone);
+      await autoSendReply(conversationId);
       console.log(`[AutoReply] FULL_AUTO: Auto-sent reply`);
       break;
     }
   }
 }
 
-// --- Helper: Send auto-generated reply ---
+// --- Helper: Send auto-generated reply via the conversation's channel ---
 
-async function autoSendReply(
-  conversationId: string,
-  playerPhone: string
-): Promise<void> {
+async function autoSendReply(conversationId: string): Promise<void> {
   const replyText = await generateAiReply(conversationId);
   if (!replyText) return;
 
-  // Send via WhatsApp
-  const { whatsappMessageId } = await sendTextMessage(playerPhone, replyText);
-
-  // Create outbound message record
-  await prisma.message.create({
-    data: {
-      conversationId,
-      whatsappMessageId,
-      direction: "OUTBOUND",
-      type: "TEXT",
-      content: replyText,
-      status: "SENT",
-      sentBy: "ai",
-      isAiGenerated: true,
-      timestamp: new Date(),
-    },
-  });
-
-  // Update conversation
-  await prisma.conversation.update({
-    where: { id: conversationId },
-    data: {
-      lastMessageAt: new Date(),
-      lastMessagePreview: replyText.substring(0, 255),
-    },
+  await sendToConversation(conversationId, replyText, "ai", {
+    isAiGenerated: true,
   });
 }
 

@@ -9,6 +9,7 @@ const importRowSchema = z.object({
   phone: z.string().min(6).max(20),
   email: z.string().email().optional().or(z.literal("")),
   handicap: z.coerce.number().min(0).max(54).optional(),
+  federationLicense: z.string().max(50).optional().or(z.literal("")),
   language: z.enum(["ES", "EN", "DE", "FR"]).optional(),
   birthday: z.string().optional().or(z.literal("")),
   notes: z.string().max(2000).optional().or(z.literal("")),
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
       phone: string;
       email: string | null;
       handicap: number | null;
+      federationLicense: string | null;
       preferredLanguage: "ES" | "EN" | "DE" | "FR";
       birthday: Date | null;
       notes: string | null;
@@ -100,6 +102,7 @@ export async function POST(request: NextRequest) {
         phone,
         email: data.email ? data.email.trim().toLowerCase() : null,
         handicap: data.handicap ?? null,
+        federationLicense: data.federationLicense?.trim() || null,
         preferredLanguage: data.language || "ES",
         birthday,
         notes: data.notes || null,

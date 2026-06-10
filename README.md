@@ -8,21 +8,32 @@ meteorológica de ocupación en una sola herramienta.
 
 ## Funcionalidades
 
-- **Jugadores (CRM):** fichas con hándicap, idioma, preferencias de juego, etiquetas IA,
-  visitas, consumos y nivel de engagement. Importación/exportación CSV.
-- **Bandeja de entrada WhatsApp:** conversaciones en tiempo real vía Meta Cloud API, con
-  respuestas IA en 4 niveles de automatización (manual → asistido → semiautomático → total),
-  reglas de escalado y horarios de silencio.
-- **Campañas segmentadas:** plantillas de WhatsApp aprobadas por Meta, segmentación por
-  engagement/idioma/hándicap/etiquetas/torneos, envío inmediato o programado, métricas de
-  entrega y lectura.
-- **RGPD:** baja automática de comunicaciones cuando el jugador responde BAJA/STOP
-  (y alta con ALTA); exclusión automática en todas las campañas; gestión manual desde la ficha.
-- **Torneos:** inscripciones, categorías, lista de espera, resultados y leaderboard.
-- **Meteorología:** previsión Open-Meteo, score de jugabilidad, predicción de ocupación e
-  ingresos, registro diario real vs. predicho y automatizaciones.
-- **Equipo:** usuarios con roles (Administrador / Manager / Agente), activación y contraseñas
-  gestionadas desde Configuración → Equipo.
+- **Bandeja de entrada omnicanal:** WhatsApp (Meta Cloud API), **Telegram**, **Instagram DM**,
+  **Facebook Messenger** y **email** en una sola bandeja, con respuestas IA en 4 niveles de
+  automatización (manual → asistido → semiautomático → total), reglas de escalado y horarios
+  de silencio. La IA responde con datos reales: disponibilidad de salidas, estado del campo
+  y torneos abiertos.
+- **Reservas (tee sheet):** hoja de salidas diaria con capacidad por slot, creación y
+  cancelación, y recordatorios automáticos la víspera por el mejor canal de cada jugador.
+- **Estado del campo:** parte diario (buggies, carros, greens, hoyos cerrados) que alimenta
+  a la IA y se muestra en Reservas.
+- **Jugadores (CRM):** fichas con hándicap, licencia federativa, idioma, etiquetas IA,
+  visitas, consumos y engagement. Importación/exportación CSV.
+- **Socios:** membresías (tipo, cuota, periodicidad, renovación, estado), filtro
+  socios/visitantes y recordatorio automático de renovación.
+- **Bonos:** venta y consumo de bonos de green fees/clases con control de usos y caducidad.
+- **Campañas multicanal:** WhatsApp (plantilla aprobada), Telegram o email; segmentación por
+  engagement/idioma/hándicap/etiquetas/torneos/socios; envío inmediato o programado; métricas.
+- **Journeys automáticos:** cumpleaños, winback de inactivos, renovación de socios, encuesta
+  post-visita y bienvenida — configurables y con control antiduplicados.
+- **Torneos:** inscripciones, categorías, lista de espera, **horarios de salida generados y
+  enviados a cada jugador**, resultados con notificación personal y leaderboard.
+- **Portal del jugador:** enlace mágico (sin contraseña) donde el jugador ve sus reservas
+  (y puede cancelarlas), torneos, bonos, resultados y gestiona su consentimiento RGPD.
+- **RGPD:** baja automática respondiendo BAJA/STOP en cualquier canal (alta con ALTA);
+  exclusión en todas las campañas y journeys.
+- **Meteorología:** previsión Open-Meteo, score de jugabilidad, predicción de ocupación.
+- **Equipo:** usuarios con roles (Administrador / Manager / Agente).
 - **Modo demo:** datos ficticios para enseñar el producto sin tocar datos reales.
 
 ## Stack
@@ -63,16 +74,30 @@ Configuración → Equipo.
 Las plantillas de campaña deben estar aprobadas en Meta con el mismo nombre que en
 la sección Templates.
 
+## Canales
+
+- **Telegram:** crea un bot con @BotFather, pega el token en Configuración → Canales y
+  pulsa "Conectar bot" (el webhook se registra solo). Ideal para probar todo el flujo.
+- **Instagram/Messenger:** app de Meta con productos Messenger e Instagram; webhook a
+  `/api/webhook/meta` con el verify token definido en Configuración → Canales.
+- **Email (salida):** API key de [Resend](https://resend.com) + remitente verificado.
+
 ## Crons (Vercel)
 
 | Endpoint | Horario | Función |
 |---|---|---|
 | `/api/cron/check-unanswered` | 9:00 diario | Avisa de conversaciones sin responder |
-| `/api/cron/send-scheduled` | 8:00 diario | Envía campañas programadas vencidas |
+| `/api/cron/daily` | 7:00 diario | Campañas programadas + journeys + recordatorios de reserva |
 
-Las campañas programadas también se despachan automáticamente al abrir la sección
-Campañas, por lo que no dependen únicamente del cron. Define `CRON_SECRET` para
-proteger ambos endpoints.
+Todo lo del cron diario es idempotente y también se dispara al abrir el dashboard,
+por lo que las automatizaciones funcionan aunque el cron falle. Define `CRON_SECRET`
+para proteger los endpoints.
+
+## Despliegue
+
+En Vercel, el build ejecuta `prisma db push` para sincronizar el esquema con la base
+de datos (requiere `DATABASE_URL` y `DIRECT_URL` en las variables de entorno del
+proyecto). Los cambios de esquema de este repo son aditivos.
 
 ## Scripts
 

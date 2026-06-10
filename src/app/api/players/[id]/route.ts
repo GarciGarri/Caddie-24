@@ -21,6 +21,8 @@ export async function GET(
       where: { id: params.id },
       include: {
         tags: true,
+        membership: true,
+        packs: { orderBy: { purchasedAt: "desc" } },
         visits: {
           orderBy: { date: "desc" },
           take: 20,
@@ -111,6 +113,10 @@ export async function PUT(
     }
     if (validated.notes !== undefined) {
       data.notes = validated.notes === "" ? null : validated.notes;
+    }
+    if (validated.federationLicense !== undefined) {
+      data.federationLicense =
+        validated.federationLicense === "" ? null : validated.federationLicense;
     }
 
     const player = await prisma.player.update({

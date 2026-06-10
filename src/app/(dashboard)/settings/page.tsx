@@ -14,6 +14,8 @@ import {
   MapPin,
   Play,
   Loader2,
+  Send,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -35,6 +37,18 @@ const settingsSections = [
     description: "Conexión con Meta, número de teléfono, templates",
     icon: MessageSquare,
     href: "/settings/whatsapp",
+  },
+  {
+    title: "Canales (Telegram, Instagram, Facebook, Email)",
+    description: "Conecta el resto de canales de mensajería del club",
+    icon: Send,
+    href: "/settings/channels",
+  },
+  {
+    title: "Journeys automáticos",
+    description: "Cumpleaños, bienvenida, winback, renovación de socios, post-visita",
+    icon: Sparkles,
+    href: "/settings/journeys",
   },
   {
     title: "Perfil de Voz IA",

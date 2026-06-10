@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 interface Conversation {
   id: string;
   status: string;
+  channel?: string;
   lastMessageAt: string;
   lastMessagePreview: string;
   unreadCount: number;
@@ -41,6 +42,25 @@ interface Conversation {
     engagementLevel: string;
   };
   assignedTo: { id: string; name: string } | null;
+}
+
+const CHANNEL_BADGES: Record<string, { label: string; className: string }> = {
+  whatsapp: { label: "WhatsApp", className: "bg-green-100 text-green-700" },
+  telegram: { label: "Telegram", className: "bg-sky-100 text-sky-700" },
+  messenger: { label: "Messenger", className: "bg-blue-100 text-blue-700" },
+  instagram: { label: "Instagram", className: "bg-pink-100 text-pink-700" },
+  email: { label: "Email", className: "bg-gray-100 text-gray-700" },
+};
+
+function ChannelBadge({ channel }: { channel?: string }) {
+  const conf = CHANNEL_BADGES[channel || "whatsapp"] || CHANNEL_BADGES.whatsapp;
+  return (
+    <span
+      className={`inline-flex items-center rounded px-1 text-[10px] font-medium h-4 ${conf.className}`}
+    >
+      {conf.label}
+    </span>
+  );
 }
 
 interface Message {
@@ -402,6 +422,7 @@ export default function InboxPage() {
                       {conv.lastMessagePreview || "Sin mensajes"}
                     </p>
                     <div className="flex items-center gap-1.5 mt-1">
+                      <ChannelBadge channel={conv.channel} />
                       {conv.isAiBotActive && (
                         <Badge
                           variant="secondary"

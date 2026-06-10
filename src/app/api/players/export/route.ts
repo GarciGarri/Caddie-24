@@ -21,7 +21,10 @@ export async function GET() {
 
     const players = await prisma.player.findMany({
       where: { isActive: true },
-      include: { tags: { select: { tag: true } } },
+      include: {
+        tags: { select: { tag: true } },
+        membership: { select: { type: true, status: true } },
+      },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     });
 
@@ -31,8 +34,10 @@ export async function GET() {
       "phone",
       "email",
       "handicap",
+      "federationLicense",
       "language",
       "engagementLevel",
+      "membership",
       "birthday",
       "tags",
       "notes",
@@ -45,8 +50,12 @@ export async function GET() {
         csvEscape(p.phone),
         csvEscape(p.email),
         csvEscape(p.handicap),
+        csvEscape(p.federationLicense),
         csvEscape(p.preferredLanguage),
         csvEscape(p.engagementLevel),
+        csvEscape(
+          p.membership && p.membership.status === "ACTIVE" ? p.membership.type : ""
+        ),
         csvEscape(p.birthday ? p.birthday.toISOString().split("T")[0] : ""),
         csvEscape(p.tags.map((t) => t.tag).join("|")),
         csvEscape(p.notes),

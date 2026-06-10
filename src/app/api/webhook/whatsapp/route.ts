@@ -4,18 +4,10 @@ import {
   markAsRead as markAsReadOnWhatsApp,
   getMediaUrl,
   normalizePhoneForDb,
-  sendTextMessage,
 } from "@/lib/services/whatsapp";
 import { triggerAutoReply } from "@/lib/services/ai-reply";
 import { createNotificationForAllAdmins } from "@/lib/services/notifications";
-import {
-  isOptOutMessage,
-  isOptInMessage,
-  optOutPlayer,
-  optInPlayer,
-  OPT_OUT_CONFIRMATION,
-  OPT_IN_CONFIRMATION,
-} from "@/lib/services/consent";
+import { processInboundConsent } from "@/lib/services/consent";
 
 // --- GET: Webhook verification ---
 export async function GET(request: NextRequest) {
@@ -201,13 +193,13 @@ async function handleIncomingMessage(
   );
 
   // 8. RGPD: handle unsubscribe / re-subscribe requests before any auto-reply
-  if (type === "TEXT" && isOptOutMessage(content)) {
-    await handleConsentChange(conversation.id, player, senderPhone, "OUT");
-    return;
-  }
-  if (type === "TEXT" && isOptInMessage(content)) {
-    await handleConsentChange(conversation.id, player, senderPhone, "IN");
-    return;
+  if (type === "TEXT") {
+    const consentHandled = await processInboundConsent(
+      conversation.id,
+      player,
+      content
+    );
+    if (consentHandled) return;
   }
 
   // 9. Trigger AI auto-reply (non-blocking)
@@ -216,77 +208,10 @@ async function handleIncomingMessage(
     content,
     player.id,
     inboundMessage.id,
-    senderPhone,
     type
   ).catch((err) =>
     console.error("[Webhook] Auto-reply error:", err)
   );
-}
-
-// --- RGPD consent handling (BAJA / ALTA keywords) ---
-
-async function handleConsentChange(
-  conversationId: string,
-  player: { id: string; firstName: string; lastName: string; preferredLanguage: string },
-  senderPhone: string,
-  direction: "OUT" | "IN"
-): Promise<void> {
-  try {
-    if (direction === "OUT") {
-      await optOutPlayer(player.id);
-    } else {
-      await optInPlayer(player.id);
-    }
-
-    const lang = player.preferredLanguage || "ES";
-    const confirmation =
-      direction === "OUT"
-        ? OPT_OUT_CONFIRMATION[lang] || OPT_OUT_CONFIRMATION.ES
-        : OPT_IN_CONFIRMATION[lang] || OPT_IN_CONFIRMATION.ES;
-
-    // Confirm inside the 24h customer-service window we just opened
-    try {
-      const { whatsappMessageId } = await sendTextMessage(senderPhone, confirmation);
-      await prisma.message.create({
-        data: {
-          conversationId,
-          whatsappMessageId,
-          direction: "OUTBOUND",
-          type: "TEXT",
-          content: confirmation,
-          status: "SENT",
-          sentBy: "system",
-          timestamp: new Date(),
-        },
-      });
-      await prisma.conversation.update({
-        where: { id: conversationId },
-        data: {
-          lastMessageAt: new Date(),
-          lastMessagePreview: confirmation.substring(0, 255),
-        },
-      });
-    } catch (err) {
-      // WhatsApp not configured or send failed — opt-out is still recorded
-      console.error("[Webhook] Consent confirmation send failed:", err);
-    }
-
-    if (direction === "OUT") {
-      createNotificationForAllAdmins({
-        type: "NEW_MESSAGE",
-        title: "Baja de comunicaciones",
-        body: `${player.firstName} ${player.lastName} se ha dado de baja de las comunicaciones comerciales.`,
-        link: `/players/${player.id}`,
-        data: { playerId: player.id },
-      }).catch(() => {});
-    }
-
-    console.log(
-      `[Webhook] Player ${player.id} opted ${direction === "OUT" ? "out of" : "into"} marketing communications`
-    );
-  } catch (err) {
-    console.error("[Webhook] Consent change error:", err);
-  }
 }
 
 // --- Extract message content by type ---

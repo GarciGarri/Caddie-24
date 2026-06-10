@@ -82,6 +82,7 @@ const REG_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 const TABS = [
   { key: "overview", label: "Resumen" },
   { key: "registrations", label: "Inscritos" },
+  { key: "startlist", label: "Salidas" },
   { key: "results", label: "Resultados" },
   { key: "leaderboard", label: "Leaderboard" },
   { key: "communication", label: "Comunicación" },
@@ -282,6 +283,9 @@ export default function TournamentDetailPage() {
           tournament={tournament}
           onRefresh={fetchTournament}
         />
+      )}
+      {activeTab === "startlist" && (
+        <StartListTab tournament={tournament} onRefresh={fetchTournament} />
       )}
       {activeTab === "results" && (
         <ResultsTab tournament={tournament} onRefresh={fetchTournament} />
@@ -852,6 +856,211 @@ function RegistrationsTab({
   );
 }
 
+// ── Start List Tab (Horarios de salida) ───────────────────────
+function StartListTab({
+  tournament,
+  onRefresh,
+}: {
+  tournament: any;
+  onRefresh: () => void;
+}) {
+  const [generating, setGenerating] = useState(false);
+  const [notifying, setNotifying] = useState(false);
+  const [opts, setOpts] = useState({
+    startTime: tournament.teeTime || "09:00",
+    intervalMinutes: "10",
+    groupSize: "4",
+    orderBy: "handicap",
+  });
+
+  const registrations = (tournament.registrations || []).filter(
+    (r: any) => r.status === "REGISTERED" || r.status === "CONFIRMED"
+  );
+  const withTeeTime = registrations.filter((r: any) => r.teeTime);
+
+  // Group by groupNumber for display
+  const groups = new Map<string, any[]>();
+  for (const r of withTeeTime) {
+    const key = `${r.teeTime}·${r.groupNumber ?? ""}`;
+    const list = groups.get(key) || [];
+    list.push(r);
+    groups.set(key, list);
+  }
+  const sortedGroups = Array.from(groups.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
+
+  const generate = async () => {
+    if (
+      withTeeTime.length > 0 &&
+      !confirm("Ya hay salidas generadas. ¿Regenerar todo el cuadrante?")
+    )
+      return;
+    setGenerating(true);
+    try {
+      const res = await fetch(`/api/tournaments/${tournament.id}/startlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "generate",
+          startTime: opts.startTime,
+          intervalMinutes: Number(opts.intervalMinutes),
+          groupSize: Number(opts.groupSize),
+          orderBy: opts.orderBy,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al generar las salidas");
+        return;
+      }
+      toast.success(`Cuadrante generado: ${data.groups} partidas, ${data.players} jugadores`);
+      onRefresh();
+    } catch {
+      toast.error("Error al generar las salidas");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const notify = async () => {
+    if (
+      !confirm(
+        `¿Enviar a cada uno de los ${withTeeTime.length} inscritos su horario de salida por su canal preferido?`
+      )
+    )
+      return;
+    setNotifying(true);
+    try {
+      const res = await fetch(`/api/tournaments/${tournament.id}/startlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "notify" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al notificar");
+        return;
+      }
+      toast.success(
+        `Horarios enviados: ${data.sent} entregados${data.failed ? `, ${data.failed} fallidos` : ""}`
+      );
+    } catch {
+      toast.error("Error al notificar");
+    } finally {
+      setNotifying(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Generator */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Primera salida</Label>
+              <Input
+                type="time"
+                value={opts.startTime}
+                onChange={(e) => setOpts((p) => ({ ...p, startTime: e.target.value }))}
+                className="w-28"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Intervalo (min)</Label>
+              <Input
+                type="number"
+                min={5}
+                max={30}
+                value={opts.intervalMinutes}
+                onChange={(e) =>
+                  setOpts((p) => ({ ...p, intervalMinutes: e.target.value }))
+                }
+                className="w-24"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Jugadores por partida</Label>
+              <select
+                value={opts.groupSize}
+                onChange={(e) => setOpts((p) => ({ ...p, groupSize: e.target.value }))}
+                className="flex h-10 rounded-md border border-input bg-background px-2 text-sm"
+              >
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Orden</Label>
+              <select
+                value={opts.orderBy}
+                onChange={(e) => setOpts((p) => ({ ...p, orderBy: e.target.value }))}
+                className="flex h-10 rounded-md border border-input bg-background px-2 text-sm"
+              >
+                <option value="handicap">Hándicap alto primero</option>
+                <option value="random">Aleatorio</option>
+              </select>
+            </div>
+            <Button onClick={generate} disabled={generating || registrations.length === 0}>
+              {generating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {withTeeTime.length > 0 ? "Regenerar cuadrante" : "Generar cuadrante"}
+            </Button>
+            {withTeeTime.length > 0 && (
+              <Button variant="outline" onClick={notify} disabled={notifying}>
+                {notifying ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                Enviar horarios a los jugadores
+              </Button>
+            )}
+          </div>
+          {registrations.length === 0 && (
+            <p className="text-sm text-muted-foreground mt-3">
+              No hay inscritos todavía. Las salidas se generan a partir de los inscritos.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Start list */}
+      {sortedGroups.length > 0 && (
+        <div className="rounded-lg border divide-y">
+          {sortedGroups.map(([key, regs]) => {
+            const [teeTime] = key.split("·");
+            return (
+              <div key={key} className="flex flex-wrap items-center gap-3 px-4 py-2.5">
+                <span className="font-mono text-sm font-semibold w-14">{teeTime}</span>
+                <span className="text-xs text-muted-foreground w-20">
+                  Partida {regs[0].groupNumber ?? "—"}
+                </span>
+                <div className="flex-1 flex flex-wrap gap-2">
+                  {regs.map((r: any) => (
+                    <span
+                      key={r.id}
+                      className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs"
+                    >
+                      {r.player.firstName} {r.player.lastName}
+                      {r.player.handicap != null && (
+                        <span className="text-muted-foreground">
+                          hcp {r.player.handicap}
+                        </span>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Results Tab ───────────────────────────────────────────────
 function ResultsTab({
   tournament,
@@ -894,6 +1103,34 @@ function ResultsTab({
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [notifyingResults, setNotifyingResults] = useState(false);
+
+  const notifyResults = async () => {
+    if (
+      !confirm(
+        "¿Enviar a cada jugador su posición y resultado por su canal preferido? Guarda los resultados antes de notificar."
+      )
+    )
+      return;
+    setNotifyingResults(true);
+    try {
+      const res = await fetch(`/api/tournaments/${tournament.id}/results/notify`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al notificar resultados");
+        return;
+      }
+      toast.success(
+        `Resultados enviados: ${data.sent} entregados${data.failed ? `, ${data.failed} fallidos` : ""}`
+      );
+    } catch {
+      toast.error("Error al notificar resultados");
+    } finally {
+      setNotifyingResults(false);
+    }
+  };
 
   const updateResult = (playerId: string, field: string, value: any) => {
     setResults((prev) => ({
@@ -977,6 +1214,20 @@ function ResultsTab({
           <Button variant="outline" size="sm" onClick={autoRank}>
             <ChevronUp className="h-3.5 w-3.5 mr-1" />
             Auto-clasificar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={notifyResults}
+            disabled={notifyingResults || existingResults.length === 0}
+            title="Envía a cada jugador su posición por su canal preferido"
+          >
+            {notifyingResults ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+            ) : (
+              <Send className="h-3.5 w-3.5 mr-1" />
+            )}
+            Notificar resultados
           </Button>
           <Button
             size="sm"
